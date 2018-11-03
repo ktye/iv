@@ -63,6 +63,7 @@ NEXT←1
 - [J](http://www.jsoftware.com) (`-aj`)
 - [Kona](https://github.com/kevinlawler/kona) an implementation of K (`-ak` or `-akona`)
 - [Klong](http://t3x.org/klong/) (`-akg` or `-aklong`)
+
 iv/apl and ivy are built in.
 
 J, K and Klong are started in the background as an external process.
@@ -87,6 +88,16 @@ type Nexter interface {
 	Next() (Scalar, int, bool, error)
 }
 ```
+
+## APL Symbols
+APL is a perfect fit for a command line application. It's terse. It fits before the line ends.
+
+But how to enter the all the symbols?
+¯ × ÷ ∘ ∣ ∼ ≠ ≤ ≥ ≬ ⌶ ⋆ ⌾ ⍟ ⌽ ⍉ ⍝ ⍦ ⍧ ⍪ ⍫ ⍬ ⍭ ← ↑ → ↓ ∆ ∇ ∧ ∨ ∩ ∪ ⌈ ⌊ ⊤ ⊥ ⊂ ⊃ ⌿ ⍀
+⍅ ⍆ ⍏ ⍖ ⍊ ⍑ ⍋ ⍒ ⍎ ⍕ ⍱ ⍲ ○
+⍳ ⍴ ⍵ ⍺ ⍶ ⍷ ⍸ ⍹ ⍘ ⍙ ⍚ ⍛ ⍜ ⍮ ¨ ⍡ ⍢ ⍣ ⍤ ⍥ ⍨ ⍩
+
+If you don't want a special keyboard configuration, there are also [completion scripts](../complete) for `bash` and `zsh`.
 
 ## Parallel example
 - TODO: 
