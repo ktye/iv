@@ -10,7 +10,7 @@ import (
 	"github.com/ktye/duit"
 	draw "github.com/ktye/duitdraw"
 	"github.com/ktye/iv/apl"
-	aplimg "github.com/ktye/iv/apl/image"
+	aplimg "github.com/ktye/iv/aplextra/image"
 	"golang.org/x/mobile/event/key"
 )
 
@@ -159,7 +159,9 @@ func (ui *Apl) execute(line string) image.Image {
 		if img, ok := v.(aplimg.Value); ok {
 			im = img.Image
 		} else {
-			fmt.Fprintln(ui, v.String(ui.Apl))
+			// We cannot handle tab's correctly.
+			s := strings.Replace(v.String(ui.Apl), "\t", "        ", -1)
+			fmt.Fprintln(ui, s)
 		}
 	}
 	return im

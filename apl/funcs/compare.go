@@ -13,22 +13,22 @@ func init() {
 	register("≠", compare("≠"))
 	register("≤", compare("≤"))
 	register("≥", compare("≥"))
-	addDoc("=", `= compare equality
+	addDoc("=", `= primitive function: compare equality
 Z←L=R
 `)
-	addDoc("<", `< compare less than
+	addDoc("<", `< primitive function: compare less than
 Z←L<R
 `)
-	addDoc(">", `> compare greater than
+	addDoc(">", `> primitive function: compare greater than
 Z←L>R
 `)
-	addDoc("≠", `≠ compare not equal
+	addDoc("≠", `≠ primitive function: compare not equal
 Z←L≠R
 `)
-	addDoc("≤", `≤ compare less or equal
+	addDoc("≤", `≤ primitive function: compare less or equal
 Z←L≤R
 `)
-	addDoc("≥", `≥ compare greater or equal
+	addDoc("≥", `≥ primitive function: compare greater or equal
 Z←L≥R
 `)
 }

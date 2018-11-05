@@ -9,7 +9,9 @@ import (
 
 func init() {
 	register(".", dot{})
-	// TODO addDoc
+	addDoc(".", `. dyadic operator: outer product, inner product
+Z←L LO . RO R	
+`)
 }
 
 type dot struct {

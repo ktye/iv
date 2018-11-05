@@ -11,7 +11,7 @@ func init() {
 	register("×", both(signum, wrap(multiply)))
 	register("×", stringsRepeat)
 
-	addDoc("×", `× signum, sign of, direction, multiply
+	addDoc("×", `× primitive function: signum, sign of, direction, multiply
 Z←×R: R Bool, Int, Float
 	Z: -1, 0 or 1 depending on the sign of R.
 Z←×R: R Complex

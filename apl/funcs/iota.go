@@ -8,7 +8,7 @@ import (
 
 func init() {
 	register("⍳", both(interval, indexof))
-	addDoc("⍳", `⍳ iota, interval, progression, index of
+	addDoc("⍳", `⍳ primitive function: iota, interval, progression, index of
 Z←⍳R: R nonnegative integer
 	Z: vector of integer sequence 1..R
 Z←⍳R: R = 0

@@ -8,7 +8,16 @@ import (
 
 func init() {
 	register("/", reduction{})
-	// TODO apl.AddDoc
+	addDoc("/", `/ monadic operator: reduce, n-wise reduction, replacate
+Z←L LO / R	
+`)
+}
+
+// Reducer is an interface that custom types may implement.
+// If the reduction operator finds an unknown type on it's left that
+// implements this interface, it forwards the call.
+type Reducer interface {
+	Reduce() apl.FunctionHandle
 }
 
 type reduction struct {
@@ -17,6 +26,12 @@ type reduction struct {
 
 // OperateMonadic returns the derived function f over r (summation).
 func (r reduction) Apply(f, dummy apl.Value) apl.FunctionHandle {
+
+	// Forward custom implementations.
+	if fn, ok := f.(Reducer); ok {
+		return fn.Reduce()
+	}
+
 	return func(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
 		if l != nil {
 			return nwise(a, l, r)

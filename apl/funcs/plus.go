@@ -8,7 +8,7 @@ import (
 
 func init() {
 	register("+", both(conjugate, wrap(add)))
-	addDoc("+", `+ conjugate, add, plus
+	addDoc("+", `+ primitive function: conjugate, add, plus
 Z←+R: R Complex
 	Z: conjugate complex of R
 Z←+R: R Numeric

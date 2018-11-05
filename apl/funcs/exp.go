@@ -9,7 +9,7 @@ import (
 
 func init() {
 	register("*", both(exponential, wrap(power)))
-	addDoc("*", `* exponential, power
+	addDoc("*", `* primitive function: exponential, power
 Z←*R: R numeric
 	Z: e*R exponential with base 2.78...
 Z←L*R: L, R numeric

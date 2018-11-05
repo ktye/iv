@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type Scalar Value
+type Scalar expr
 type Bool bool
 type Int int64
 type Float float64

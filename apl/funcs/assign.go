@@ -8,7 +8,7 @@ import (
 
 func init() {
 	register("←", both(sink, assign))
-	addDoc("←", `← assign, sink
+	addDoc("←", `← primitive function: assign, sink
 ←R: sink R
 	returns the empty array to suppress printing
 Z←R: Z: identifier

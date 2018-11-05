@@ -98,8 +98,8 @@ func (p *parser) expr() (expr, bool, error) {
 			return nil, false, fmt.Errorf("index spec is not followed by ], but %s", t)
 		} else {
 			p.next()
-			f := Primitive("[")
-			return bind(f, left, spec)
+			f := Primitive("⌷")        // sic.
+			return bind(f, spec, left) // sic.
 		}
 	} else if ook && (t.T == scan.RightBrack || t.T == scan.Semicolon) {
 		return left, true, nil

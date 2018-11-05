@@ -6,7 +6,7 @@ import (
 
 func init() {
 	register("-", both(negate, wrap(substract)))
-	addDoc("-", `- negate, substract, minus
+	addDoc("-", `- primitive function: negate, substract, minus
 Z←-R: R Numeric
 	Z: reverse the sign of R
 Z←L-R: L, R numeric: substraction L-R

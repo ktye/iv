@@ -23,24 +23,29 @@ import (
 	"github.com/ktye/duit"
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/funcs"
-	"github.com/ktye/iv/apl/image"
 	"github.com/ktye/iv/apl/operators"
+	"github.com/ktye/iv/aplextra"
+	"github.com/ktye/iv/aplextra/help"
 	ivduit "github.com/ktye/iv/duit"
 )
 
 func main() {
 	var fontsize = 18
 	var quiet bool
+	var extra bool
 	flag.IntVar(&fontsize, "fontsize", fontsize, "size of built-in font")
 	flag.BoolVar(&quiet, "quiet", false, "dont show welcome message")
+	flag.BoolVar(&extra, "extra", true, "register all packages in aplextra")
 	flag.Parse()
 
 	// Start APL.
 	a := apl.New(nil)
-	funcs.Register(a)
-	operators.Register(a)
-	image.Register(a)
-	// ... add more packages here ...
+	if extra {
+		aplextra.RegisterAll(a)
+	} else {
+		funcs.Register(a)
+		operators.Register(a)
+	}
 
 	// Build the gui.
 	registerFont(fontsize)
@@ -53,7 +58,7 @@ func main() {
 	dui.Display.KeyTranslator = ivduit.AplKeyboard{}
 
 	// Use a single apl widget as the only ui element.
-	content := welcome
+	content := `APL\iv` + help.Keyboard + "        "
 	if quiet {
 		content = "        "
 	}
@@ -82,23 +87,3 @@ func main() {
 		}
 	}
 }
-
-// The nice keyboard is from gnu-apl.
-// Is there any other font than APL385 under which it displays correctly?
-// I had to remove the back-tick.
-// Added symbols are: πσδø
-const welcome = `APL\iv
-╔════╦════╦════╦════╦════╦════╦════╦════╦════╦════╦════╦════╦════╦═════════╗
-║ ~⍨ ║ !¡ ║ @€ ║ #£ ║ $⍧ ║ %  ║ ^  ║ &  ║ *⍂ ║ (⍱ ║ )⍲ ║ _≡ ║ +⌹ ║         ║
-║  ◊ ║ 1¨ ║ 2¯ ║ 3< ║ 4≤ ║ 5= ║ 6≥ ║ 7> ║ 8≠ ║ 9∨ ║ 0∧ ║ -× ║ =÷ ║ BACKSP  ║
-╠════╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦═╩══╦══════╣
-║       ║ Q¿ ║ W⌽ ║ E⍷ ║ R  ║ T⍉ ║ Y¥ ║ U  ║ I⍸ ║ O⍥ ║ P⍟ ║ {π ║ }  ║  |⍀  ║
-║  TAB  ║ q? ║ w⍵ ║ e∊ ║ r⍴ ║ t∼ ║ y↑ ║ u↓ ║ i⍳ ║ o○ ║ p⋆ ║ [← ║ ]→ ║  \⍝  ║
-╠═══════╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩═╦══╩══════╣
-║ (CAPS   ║ A⊖ ║ S  ║ D  ║ F⍫ ║ G⍒ ║ H⍋ ║ J⍤ ║ K⌺ ║ L⍞ ║ :σ ║ "δ ║         ║
-║  LOCK)  ║ a⍺ ║ s⌈ ║ d⌊ ║ f_ ║ g∇ ║ h∆ ║ j∘ ║ k' ║ l⎕ ║ ;⊢ ║ '⊣ ║ RETURN  ║
-╠═════════╩═══╦╩═══╦╩═══╦╩═══╦╩═══╦╩═══╦╩═══╦╩═══╦╩═══╦╩═══╦╩═══╦╩═════════╣
-║             ║ Z  ║ X  ║ C⍝ ║ Vø ║ B⍎ ║ N⍕ ║ M⌶ ║ <⍪ ║ >⍙ ║ ?⌿ ║          ║
-║  SHIFT      ║ z⊂ ║ x⊃ ║ c∩ ║ v∪ ║ b⊥ ║ n⊤ ║ m| ║ ,⌷ ║ .⍎ ║ /⍕ ║  SHIFT   ║
-╚═════════════╩════╩════╩════╩════╩════╩════╩════╩════╩════╩════╩══════════╝
-        ` // This is the start position (tabs are not supported for now).

@@ -62,17 +62,22 @@ type Reshaper interface {
 
 // ArrayMaker is an array that can allocate a new array of it's type.
 // An array that implements this interface can be assumed to be able to
-// create arrays of itself of any shape.
+// create arrays of itself for shape with elements >= 0.
 type ArrayMaker interface {
-	MakeArray([]int) Array
+	MakeArray([]int) ArraySetter
+}
+
+// ArraySetter is any Array implementation that has a Set method on top.
+type ArraySetter interface {
+	Array
 	Set(int, Value) error
 }
 
 // MakeArray creates a new array.
 // It makes an array of the same type as the prototype, if it can.
 // Otherwise it returns a general array.
-// Prototpye may be nil.
-func MakeArray(prototype Array, shape []int) Array {
+// The prototype may be nil.
+func MakeArray(prototype Array, shape []int) ArraySetter {
 	var am ArrayMaker
 	if prototype != nil {
 		if m, ok := prototype.(ArrayMaker); ok {
@@ -80,7 +85,7 @@ func MakeArray(prototype Array, shape []int) Array {
 		}
 	}
 
-	if prototype == nil || am == nil {
+	if am == nil {
 		g := GeneralArray{Dims: shape}
 		g.Values = make([]Value, ArraySize(g))
 		return g
@@ -208,6 +213,14 @@ func (v GeneralArray) At(i int) (Value, error) {
 		return v.Values[i], nil
 	}
 	return nil, fmt.Errorf("array index out of range")
+}
+
+func (v GeneralArray) Set(i int, e Value) error {
+	if i < 0 || i >= len(v.Values) {
+		return fmt.Errorf("index out of range")
+	}
+	v.Values[i] = e
+	return nil
 }
 
 func (v GeneralArray) Shape() []int {

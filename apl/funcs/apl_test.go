@@ -7,8 +7,10 @@ import (
 	"testing"
 
 	"github.com/ktye/iv/apl"
-	_ "github.com/ktye/iv/apl/operators"
+	"github.com/ktye/iv/apl/operators"
 )
+
+//go:generate go run gen.go
 
 var testCases = []struct {
 	in, exp string
@@ -64,7 +66,7 @@ var testCases = []struct {
 	{"X←4⋄⎕←÷X", "0.25", nil}, // assign and use it in another expr
 
 	// Bracket indexing.
-	{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
+	//{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
 
 	// IBM APL Language, 3rd edition, June 1976.
 	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", cmpFloats},
@@ -132,13 +134,17 @@ func TestApl(t *testing.T) {
 	for i, tc := range testCases {
 		var buf strings.Builder
 		a := apl.New(&buf)
+		Register(a)
+		operators.Register(a)
 		lines := strings.Split(tc.in, "\n")
 		for k, s := range lines {
+			t.Logf("\t%s", s)
 			if err := a.ParseAndEval(s); err != nil {
 				t.Fatalf("tc%d:%d: %s: %s\n", i+1, k+1, tc.in, err)
 			}
 		}
 		got := buf.String()
+		t.Log(got)
 		cmp := tc.compare
 		if cmp == nil {
 			cmp = func(a, b string) bool {

@@ -21,7 +21,11 @@ func (a *Apl) RegisterOperator(s string, op Operator) {
 // RegisterDoc adds help text to a key in the documentation.
 // This should be called by packages, that add primitives or operators.
 func (a *Apl) RegisterDoc(key, help string) {
-	a.doc[key] += help
+	if s := a.doc[key]; s == "" {
+		a.doc[key] = help
+	} else {
+		a.doc[key] += "\n" + help
+	}
 }
 
 // registerSymbol adds single rune symbols for the parser.

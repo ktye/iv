@@ -1,6 +1,9 @@
 package apl
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // IdxSpec is the value of an index specification.
 type IdxSpec []Value
@@ -18,6 +21,11 @@ func (x IdxSpec) String(a *Apl) string {
 
 func (x IdxSpec) Eval(a *Apl) (Value, error) {
 	return x, nil
+}
+
+// Shape returns the result shape of the index specification applied to an array with shape src.
+func (x IdxSpec) Shape(src []int) ([]int, error) {
+	return nil, fmt.Errorf("TODO apl.IdxSpec.Shape")
 }
 
 // IdxSpec represents an expression of an index specification.
@@ -46,3 +54,5 @@ func (x idxSpec) Eval(a *Apl) (Value, error) {
 	}
 	return idx, nil
 }
+
+// TODO: make idxSpec implement an indexer(?) interface for index assignments.

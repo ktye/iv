@@ -8,12 +8,6 @@ import (
 	"github.com/ktye/iv/apl"
 )
 
-// Register registers a Primitive function which returns a blue image
-// as an example.
-func Register(a *apl.Apl) {
-	a.RegisterPrimitive("⍞", blue)
-}
-
 func blue(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
 	// we ignore both values and return an image value.
 	m := image.NewRGBA(image.Rect(0, 0, 400, 400))

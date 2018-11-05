@@ -8,7 +8,7 @@ import (
 
 func init() {
 	register("÷", both(reciprocal, wrap(divide)))
-	addDoc("÷", `÷ reciprocal, divide
+	addDoc("÷", `÷ primitive function: reciprocal, divide
 Z←÷R: R numeric
 	Z: reciprocal: 1÷R
 Z←L÷R: R numeric

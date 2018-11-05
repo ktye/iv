@@ -8,7 +8,7 @@ import (
 
 func init() {
 	register("⍴", both(shape, reshape))
-	addDoc("⍴", `⍴ shape, reshape
+	addDoc("⍴", `⍴ primitive function: shape, reshape
 Z←⍴R: R Scalar
 	Z: empty array
 Z←⍴R: R array
