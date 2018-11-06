@@ -295,12 +295,12 @@ func (p *parser) derived(lo expr, opsym string) (expr, error) {
 	enter("derived", p.peek())
 	defer leave("derived")
 
-	op, ok := p.a.operators[opsym]
+	ops, ok := p.a.operators[opsym]
 	if ok == false {
 		return nil, fmt.Errorf("not an operator: %s", opsym)
 	}
 
-	if op.IsDyadic() == false {
+	if ops[0].IsDyadic() == false {
 		return &derived{
 			op: opsym,
 			lo: lo,

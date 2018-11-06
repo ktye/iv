@@ -15,8 +15,8 @@ func New(w io.Writer) *Apl {
 		stdout:     w,
 		vars:       make(map[string]Value),
 		Origin:     1,
-		primitives: make(map[Primitive][]FunctionHandle),
-		operators:  make(map[string]Operator),
+		primitives: make(map[Primitive][]PrimitiveHandler),
+		operators:  make(map[string][]Operator),
 		symbols:    make(map[rune]string),
 		doc:        make(map[string]string),
 	}
@@ -30,8 +30,8 @@ type Apl struct {
 	parser
 	stdout     io.Writer
 	vars       map[string]Value
-	primitives map[Primitive][]FunctionHandle
-	operators  map[string]Operator
+	primitives map[Primitive][]PrimitiveHandler
+	operators  map[string][]Operator
 	symbols    map[rune]string
 	doc        map[string]string
 	initscan   bool

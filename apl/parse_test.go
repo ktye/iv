@@ -10,7 +10,7 @@ func TestParse(t *testing.T) {
 	// For testing the parser we register just a couple of dummy primitives and two operators.
 	reg := func(a *Apl) {
 		for _, r := range "+-*!←>" {
-			a.RegisterPrimitive(Primitive(r), handle)
+			a.RegisterPrimitive(Primitive(r), dummy)
 		}
 		a.RegisterOperator("/", reduce{})
 		a.RegisterOperator(".", dot{})
@@ -78,23 +78,37 @@ func TestParse(t *testing.T) {
 	*/
 }
 
-// Dummy Handle.
-var handle FunctionHandle
+// Dummy primitive.
+var dummy dummyPrimitive
+
+type dummyPrimitive struct{}
+
+func (d dummyPrimitive) HandlePrimitive(a *Apl, l, r Value) (bool, Value, error) {
+	return true, EmptyArray{}, nil
+}
+
+var dummyfunc dummyFunction
+
+type dummyFunction struct{}
+
+func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Int(1), nil }
 
 // Monadic operators.
 type reduce struct{}
 
-func (r reduce) IsDyadic() bool                    { return false }
-func (r reduce) Apply(lo, ro Value) FunctionHandle { return handle }
+func (r reduce) IsDyadic() bool                      { return false }
+func (r reduce) Apply(lo, ro Value) (bool, Function) { return true, dummyfunc }
 
 // Dyadic operators.
 type dot struct{}
 
-func (d dot) IsDyadic() bool                    { return true }
-func (d dot) Apply(lo, ro Value) FunctionHandle { return handle }
+func (d dot) IsDyadic() bool                      { return true }
+func (d dot) Apply(lo, ro Value) (bool, Function) { return true, dummyfunc }
 
+/*
 func init() {
 	handle = func(a *Apl, l Value, r Value) (bool, Value, error) {
 		return true, Bool(true), nil
 	}
 }
+*/

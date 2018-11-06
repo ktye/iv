@@ -51,8 +51,8 @@ type Array interface {
 	Eval(*Apl) (Value, error)
 	At(int) (Value, error)
 	Shape() []int
-	ApplyMonadic(*Apl, FunctionHandle) (Value, error)
-	ApplyDyadic(*Apl, Value, bool, FunctionHandle) (Value, error)
+	ApplyMonadic(*Apl, PrimitiveHandler) (Value, error)
+	ApplyDyadic(*Apl, Value, bool, PrimitiveHandler) (Value, error)
 }
 
 // Reshaper is an array that can reshape itself.
@@ -254,9 +254,9 @@ func (v GeneralArray) Reshape(shape []int) Value {
 }
 
 // ApplyMonadic applies the monadic handler to each element of the array.
-func (v GeneralArray) ApplyMonadic(a *Apl, h FunctionHandle) (Value, error) {
+func (v GeneralArray) ApplyMonadic(a *Apl, h PrimitiveHandler) (Value, error) {
 	for i, e := range v.Values {
-		if ok, rv, err := h(a, nil, e); ok == false {
+		if ok, rv, err := h.HandlePrimitive(a, nil, e); ok == false {
 			return nil, fmt.Errorf("monadic handler could not handle %T", e)
 		} else if err != nil {
 			return nil, err
@@ -272,7 +272,7 @@ func (v GeneralArray) ApplyMonadic(a *Apl, h FunctionHandle) (Value, error) {
 // LeftRecv indicates if the receiver is the left value of the dyadic function.
 // The handler only handles basic numeric types of the same type.
 // In the array-array case, each element may be of a different type and needs to be checked.
-func (v GeneralArray) ApplyDyadic(a *Apl, x Value, leftRecv bool, h FunctionHandle) (Value, error) {
+func (v GeneralArray) ApplyDyadic(a *Apl, x Value, leftRecv bool, h PrimitiveHandler) (Value, error) {
 	rv := make([]Value, len(v.Values))
 	dims := make([]int, len(v.Dims))
 	copy(dims, v.Dims)
@@ -297,7 +297,7 @@ func (v GeneralArray) ApplyDyadic(a *Apl, x Value, leftRecv bool, h FunctionHand
 			if leftRecv == false {
 				l, r = r, l
 			}
-			if ok, y, err := h(a, l, r); ok == false {
+			if ok, y, err := h.HandlePrimitive(a, l, r); ok == false {
 				return nil, fmt.Errorf("cannot apply dynamic function on %T and %T", l, r)
 			} else if err != nil {
 				return nil, err
@@ -314,7 +314,7 @@ func (v GeneralArray) ApplyDyadic(a *Apl, x Value, leftRecv bool, h FunctionHand
 			if leftRecv == false {
 				l, r = r, l
 			}
-			if ok, y, err := h(a, l, r); ok == false {
+			if ok, y, err := h.HandlePrimitive(a, l, r); ok == false {
 				return nil, fmt.Errorf("cannot apply dynamic function on %T and %T", l, r)
 			} else if err != nil {
 				return nil, err
@@ -328,13 +328,13 @@ func (v GeneralArray) ApplyDyadic(a *Apl, x Value, leftRecv bool, h FunctionHand
 
 type EmptyArray struct{}
 
-func (e EmptyArray) String(a *Apl) string                                 { return "" }
-func (e EmptyArray) Eval(a *Apl) (Value, error)                           { return e, nil }
-func (e EmptyArray) At(i int) (Value, error)                              { return nil, fmt.Errorf("index out of range") }
-func (e EmptyArray) Shape() []int                                         { return nil }
-func (e EmptyArray) Reshape(s []int) Value                                { return e }
-func (e EmptyArray) ApplyMonadic(a *Apl, h FunctionHandle) (Value, error) { return e, nil }
-func (e EmptyArray) ApplyDyadic(a *Apl, l Value, lr bool, h FunctionHandle) (Value, error) {
+func (e EmptyArray) String(a *Apl) string                                   { return "" }
+func (e EmptyArray) Eval(a *Apl) (Value, error)                             { return e, nil }
+func (e EmptyArray) At(i int) (Value, error)                                { return nil, fmt.Errorf("index out of range") }
+func (e EmptyArray) Shape() []int                                           { return nil }
+func (e EmptyArray) Reshape(s []int) Value                                  { return e }
+func (e EmptyArray) ApplyMonadic(a *Apl, h PrimitiveHandler) (Value, error) { return e, nil }
+func (e EmptyArray) ApplyDyadic(a *Apl, l Value, lr bool, h PrimitiveHandler) (Value, error) {
 	return e, nil
 }
 
@@ -389,10 +389,10 @@ func (b Bitarray) Reshape(shape []int) Value {
 	return v
 }
 
-func (b Bitarray) ApplyMonadic(a *Apl, h FunctionHandle) (Value, error) {
+func (b Bitarray) ApplyMonadic(a *Apl, h PrimitiveHandler) (Value, error) {
 	return b.IntArray().ApplyMonadic(a, h)
 }
-func (b Bitarray) ApplyDyadic(a *Apl, l Value, lr bool, h FunctionHandle) (Value, error) {
+func (b Bitarray) ApplyDyadic(a *Apl, l Value, lr bool, h PrimitiveHandler) (Value, error) {
 	return b.IntArray().ApplyDyadic(a, l, lr, h)
 }
 
