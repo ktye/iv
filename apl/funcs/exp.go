@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	register("*", both(exponential, wrap(power)))
+	register("*", both(exponential, arrayWrap(power)))
 	addDoc("*", `* primitive function: exponential, power
 Z←*R: R numeric
 	Z: e*R exponential with base 2.78...
@@ -32,7 +32,7 @@ func exponential(a *apl.Apl, ignored, v apl.Value) (bool, apl.Value, error) {
 	case apl.Complex:
 		return true, apl.Complex(cmplx.Exp(complex128(v))), nil
 	case apl.Array:
-		rv, err := v.ApplyMonadic(a, exponential)
+		rv, err := v.ApplyMonadic(a, handle(exponential))
 		return true, rv, err
 	default:
 		return false, nil, nil

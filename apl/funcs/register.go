@@ -12,32 +12,47 @@ func Register(a *apl.Apl) {
 	}
 }
 
+// Handle is both, a function but also implements a PrimitiveHandler.
+// If provides a methods that calls the function value itself.
+// This is used to cast a function to a handler.
+type handle func(*apl.Apl, apl.Value, apl.Value) (bool, apl.Value, error)
+
+func (h handle) HandlePrimitive(a *apl.Apl, l apl.Value, r apl.Value) (bool, apl.Value, error) {
+	return h(a, l, r)
+}
+
 // Both wraps a monadic and a dyadic handle.
 // The monadic handle is used if the left argument is nil,
 // otherwise the dyadic is used.
-func both(monadic apl.FunctionHandle, dyadic apl.FunctionHandle) apl.FunctionHandle {
+func both(monadic, dyadic handle) apl.PrimitiveHandler {
+	return defaultHandler{monadic, dyadic}
+}
+
+type defaultHandler struct {
+	monadic, dyadic handle
+}
+
+func (d defaultHandler) HandlePrimitive(a *apl.Apl, l apl.Value, r apl.Value) (bool, apl.Value, error) {
+	if l == nil {
+		return d.monadic(a, l, r)
+	}
+	return d.dyadic(a, l, r)
+}
+
+// ArrayWrap takes a dyadic elementry handler that does not know about arrays,
+// and wraps it with arrayApply.
+func arrayWrap(h handle) handle {
 	return func(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
-		if l == nil {
-			return monadic(a, l, r)
-		}
-		return dyadic(a, l, r)
+		return arrayApply(a, l, r, h)
 	}
 }
 
-// Wrap returns function handle which applies the dyadic elementry function
-// to it's arguments, that may be arrays.
-func wrap(h apl.FunctionHandle) apl.FunctionHandle {
-	return func(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
-		return apply(a, l, r, h)
-	}
-}
-
-// Apply applies the given dyadic function to l and r.
+// ArrayApply applies the given dyadic handle to l and r.
 // If one of them is an array, the dyadic function is applied to each element together with the other value.
 // If both are arrays, the function is applied elementwise, if the shape agrees.
 // If the shape does not agree, it returns an error but accepts the handler.
 // If both functions are numeric scalar, they are promoted to the same type.
-func apply(a *apl.Apl, l, r apl.Value, h apl.FunctionHandle) (bool, apl.Value, error) {
+func arrayApply(a *apl.Apl, l, r apl.Value, h handle) (bool, apl.Value, error) {
 	// If at least one is an array, call the arrays ApplyDyadic method.
 	if v, ok := l.(apl.Array); ok {
 		u, err := v.ApplyDyadic(a, r, true, h)
@@ -57,12 +72,12 @@ func apply(a *apl.Apl, l, r apl.Value, h apl.FunctionHandle) (bool, apl.Value, e
 
 type primitive struct {
 	p apl.Primitive
-	h apl.FunctionHandle
+	h apl.PrimitiveHandler
 }
 
 var primitives []primitive
 
-func register(p apl.Primitive, h apl.FunctionHandle) {
+func register(p apl.Primitive, h apl.PrimitiveHandler) {
 	primitives = append(primitives, primitive{p, h})
 }
 

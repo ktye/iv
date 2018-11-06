@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	register("⌷", index)
+	register("⌷", handle(index))
 
 	addDoc("[", `[] primitive function: indexing, bracket index, ⌷
 

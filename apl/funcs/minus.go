@@ -5,7 +5,7 @@ import (
 )
 
 func init() {
-	register("-", both(negate, wrap(substract)))
+	register("-", both(negate, arrayWrap(substract)))
 	addDoc("-", `- primitive function: negate, substract, minus
 Z←-R: R Numeric
 	Z: reverse the sign of R
@@ -29,7 +29,7 @@ func negate(a *apl.Apl, ignored, v apl.Value) (bool, apl.Value, error) {
 	case apl.Complex:
 		return true, -v, nil
 	case apl.Array:
-		rv, err := v.ApplyMonadic(a, negate)
+		rv, err := v.ApplyMonadic(a, handle(negate))
 		return true, rv, err
 	default:
 		return false, nil, nil

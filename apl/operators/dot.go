@@ -18,10 +18,13 @@ type dot struct {
 	dyadic
 }
 
-func (d dot) Apply(f, g apl.Value) apl.FunctionHandle {
-	return func(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
+func (d dot) Apply(f, g apl.Value) (bool, apl.Function) {
+
+	// TODO: reject unknown types...
+
+	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 		if l == nil {
-			fmt.Errorf("derived function from dot operator is called monadically")
+			return nil, fmt.Errorf("derived function from dot operator is called monadically")
 		}
 
 		// Outer product: f is ∘
@@ -33,7 +36,7 @@ func (d dot) Apply(f, g apl.Value) apl.FunctionHandle {
 		scalarProduct := -1
 		var df, dg apl.Function
 		if fn, ok := f.(apl.Function); ok == false {
-			return true, nil, fmt.Errorf("left argument to dot operator must be a function: %T", f)
+			return nil, fmt.Errorf("left argument to dot operator must be a function: %T", f)
 		} else {
 			df = fn
 			if p, ok := df.(apl.Primitive); ok && p == apl.Primitive("+") {
@@ -42,7 +45,7 @@ func (d dot) Apply(f, g apl.Value) apl.FunctionHandle {
 		}
 
 		if fn, ok := g.(apl.Function); ok == false {
-			return true, nil, fmt.Errorf("right argument to dot operator must be a function: %T", g)
+			return nil, fmt.Errorf("right argument to dot operator must be a function: %T", g)
 		} else {
 			dg = fn
 			if p, ok := df.(apl.Primitive); ok && p == apl.Primitive("×") {
@@ -56,23 +59,25 @@ func (d dot) Apply(f, g apl.Value) apl.FunctionHandle {
 			if reflect.TypeOf(l) == reflect.TypeOf(r) {
 				if sc, ok := l.(scalarProducter); ok {
 					v, err := sc.ScalarProduct(r)
-					return true, v, err
+					return v, err
 				}
 			}
 		}
 
 		return inner(a, l, r, df, dg)
 	}
+
+	return true, function(derived)
 }
 
-func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, error) {
+func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	al, lok := l.(apl.Array)
 	ar, rok := r.(apl.Array)
 
 	if lok == false && rok == false {
 		// Both are scalars, compute l g r.
 		v, err := g.Call(a, al, ar)
-		return true, v, err
+		return v, err
 	}
 
 	// If one is a scalar, convert it to a vector.
@@ -80,7 +85,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, erro
 		rs := ar.Shape()
 		if rs == nil || rs[0] == 0 {
 			// TODO fill function?
-			return true, nil, fmt.Errorf("inner: empty rhs array")
+			return nil, fmt.Errorf("inner: empty rhs array")
 		}
 		u := apl.GeneralArray{Dims: []int{rs[0]}}
 		v := make([]apl.Value, rs[0])
@@ -92,7 +97,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, erro
 	} else if rok == false {
 		ls := al.Shape()
 		if ls == nil || ls[0] == 0 {
-			return true, nil, fmt.Errorf("inner: empty lhs array")
+			return nil, fmt.Errorf("inner: empty lhs array")
 		}
 		u := apl.GeneralArray{Dims: []int{ls[len(ls)-1]}}
 		v := make([]apl.Value, ls[0])
@@ -107,11 +112,11 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, erro
 	ls := al.Shape()
 	rs := ar.Shape()
 	if len(ls) == 0 || len(rs) == 0 {
-		return true, nil, fmt.Errorf("inner: empty array")
+		return nil, fmt.Errorf("inner: empty array")
 	}
 	inner := ls[len(ls)-1]
 	if inner != rs[0] {
-		return true, nil, fmt.Errorf("inner dimensions must agree")
+		return nil, fmt.Errorf("inner dimensions must agree")
 	}
 
 	// If both arrays are vectors, compute a scalar.
@@ -120,25 +125,25 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, erro
 		for k := inner - 1; k >= 0; k-- {
 			lval, err := al.At(k)
 			if err != nil {
-				return true, nil, err
+				return nil, err
 			}
 			rval, err := ar.At(k)
 			if err != nil {
-				return true, nil, err
+				return nil, err
 			}
 			if u, err := g.Call(a, lval, rval); err != nil {
-				return true, nil, err
+				return nil, err
 			} else if k == inner-1 {
 				v = u
 			} else {
 				if u, err := f.Call(a, u, v); err != nil {
-					return true, nil, err
+					return nil, err
 				} else {
 					v = u
 				}
 			}
 		}
-		return true, v, nil
+		return v, nil
 	}
 
 	shape := make([]int, len(ls)+len(rs)-2)
@@ -154,7 +159,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, erro
 	ridx := make([]int, len(rs))
 	for i := range result.Values {
 		if err := apl.ArrayIndexes(shape, idx, i); err != nil {
-			return true, nil, err
+			return nil, err
 		}
 		// Split the indexes in idx into the original indexes of both arrays.
 		copy(lidx, idx[:split])     // The last index is open.
@@ -165,19 +170,19 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, erro
 			ridx[0] = k
 			lval, err := apl.ArrayAt(al, lidx)
 			if err != nil {
-				return true, nil, err
+				return nil, err
 			}
 			rval, err := apl.ArrayAt(ar, ridx)
 			if err != nil {
-				return true, nil, err
+				return nil, err
 			}
 			if u, err := g.Call(a, lval, rval); err != nil {
-				return true, nil, err
+				return nil, err
 			} else if k == inner-1 {
 				v = u
 			} else {
 				if u, err := f.Call(a, u, v); err != nil {
-					return true, nil, err
+					return nil, err
 				} else {
 					v = u
 				}
@@ -185,11 +190,11 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (bool, apl.Value, erro
 		}
 		result.Values[i] = v
 	}
-	return true, result, nil
+	return result, nil
 }
 
-func outer(a *apl.Apl, l, r apl.Value, f apl.Value) (bool, apl.Value, error) {
-	return true, nil, fmt.Errorf("TODO: outer product")
+func outer(a *apl.Apl, l, r apl.Value, f apl.Value) (apl.Value, error) {
+	return nil, fmt.Errorf("TODO: outer product")
 }
 
 // A scalarProducter implements a ScalarProduct which receives an argument of the same type.

@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	register("÷", both(reciprocal, wrap(divide)))
+	register("÷", both(reciprocal, arrayWrap(divide)))
 	addDoc("÷", `÷ primitive function: reciprocal, divide
 Z←÷R: R numeric
 	Z: reciprocal: 1÷R
@@ -27,7 +27,7 @@ func reciprocal(a *apl.Apl, ignored, v apl.Value) (bool, apl.Value, error) {
 	case apl.Complex:
 		return true, apl.Complex(complex(1, 0) / complex128(v)), nil
 	case apl.Array:
-		rv, err := v.ApplyMonadic(a, reciprocal)
+		rv, err := v.ApplyMonadic(a, handle(reciprocal))
 		return true, rv, err
 	default:
 		return false, nil, nil

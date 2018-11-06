@@ -13,39 +13,29 @@ Z←L LO / R
 `)
 }
 
-// Reducer is an interface that custom types may implement.
-// If the reduction operator finds an unknown type on it's left that
-// implements this interface, it forwards the call.
-type Reducer interface {
-	Reduce() apl.FunctionHandle
-}
-
 type reduction struct {
 	monadic
 }
 
 // OperateMonadic returns the derived function f over r (summation).
-func (r reduction) Apply(f, dummy apl.Value) apl.FunctionHandle {
+func (r reduction) Apply(f, dummy apl.Value) (bool, apl.Function) {
 
-	// Forward custom implementations.
-	if fn, ok := f.(Reducer); ok {
-		return fn.Reduce()
-	}
+	// TODO: reject unknown types.
 
-	return func(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
+	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 		if l != nil {
 			return nwise(a, l, r)
 		}
 
 		// TODO compression f is an array.
 		if _, ok := f.(apl.Array); ok {
-			return true, nil, fmt.Errorf("TODO: compression (array/ )")
+			return nil, fmt.Errorf("TODO: compression (array/ )")
 		}
 
 		// Reduction needs a dyadic function to it's left.
 		var d apl.Function
 		if fn, ok := f.(apl.Function); ok == false {
-			return true, nil, fmt.Errorf("left argument to / must be a function: %T", d)
+			return nil, fmt.Errorf("left argument to / must be a function: %T", d)
 		} else {
 			d = fn
 		}
@@ -53,22 +43,22 @@ func (r reduction) Apply(f, dummy apl.Value) apl.FunctionHandle {
 		// If R is a scalar, the operation is not applied and Z←R
 		ar, ok := r.(apl.Array)
 		if ok == false {
-			return true, r, nil
+			return r, nil
 		}
 
 		shape := ar.Shape()
 		if len(shape) == 0 {
-			return true, ar, nil // Not sure if this is ok.
+			return ar, nil // Not sure if this is ok.
 		}
 
 		n := shape[len(shape)-1]
 		if n == 1 {
 			// TODO: If the last axis is 1, the operation is not applied and Z ← (b1↓ρR)ρR
-			return true, nil, fmt.Errorf("reduce on R, with last axis 1: TODO Z ← (b1↓ρR)ρR")
+			return nil, fmt.Errorf("reduce on R, with last axis 1: TODO Z ← (b1↓ρR)ρR")
 		}
 		if n == 0 {
 			// TODO: If the last axis is 0, apply an identity function
-			return true, nil, fmt.Errorf("reduce on R, with last axis 0: TODO apply identity function")
+			return nil, fmt.Errorf("reduce on R, with last axis 0: TODO apply identity function")
 		}
 
 		// Reduce directly, if R is a vector.
@@ -78,11 +68,11 @@ func (r reduction) Apply(f, dummy apl.Value) apl.FunctionHandle {
 			for i := range vec {
 				vec[i], err = ar.At(i)
 				if err != nil {
-					return true, nil, err
+					return nil, err
 				}
 			}
 			v, err := reduce(a, vec, d)
-			return true, v, err
+			return v, err
 		}
 
 		// Create a new array with the last axis removed.
@@ -101,18 +91,20 @@ func (r reduction) Apply(f, dummy apl.Value) apl.FunctionHandle {
 			for i := range lastAxis {
 				lastAxis[i], err = ar.At(m)
 				if err != nil {
-					return true, nil, err
+					return nil, err
 				}
 				m++
 			}
 			if res, err := reduce(a, lastAxis, d); err != nil {
-				return true, nil, fmt.Errorf("cannot reduce: %s", err)
+				return nil, fmt.Errorf("cannot reduce: %s", err)
 			} else {
 				v.Values[k] = res
 			}
 		}
-		return true, v, nil
+		return v, nil
 	}
+
+	return true, function(derived)
 }
 
 func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {
@@ -129,6 +121,6 @@ func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {
 
 // Nwise is the function handle for n-wise recution.
 // l must be a scalar (integer) or a 1 element vector.
-func nwise(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
-	return true, nil, fmt.Errorf("TODO: n-wise reduction")
+func nwise(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
+	return nil, fmt.Errorf("TODO: n-wise reduction")
 }

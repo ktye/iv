@@ -7,12 +7,12 @@ import (
 )
 
 func init() {
-	register("=", compare("="))
-	register("<", compare("<"))
-	register(">", compare(">"))
-	register("≠", compare("≠"))
-	register("≤", compare("≤"))
-	register("≥", compare("≥"))
+	register("=", comparator("="))
+	register("<", comparator("<"))
+	register(">", comparator(">"))
+	register("≠", comparator("≠"))
+	register("≤", comparator("≤"))
+	register("≥", comparator("≥"))
 	addDoc("=", `= primitive function: compare equality
 Z←L=R
 `)
@@ -33,15 +33,19 @@ Z←L≥R
 `)
 }
 
-// Compare returns a dyadic function handle for the given comparison symbol.
-func compare(s string) apl.FunctionHandle {
+// comparator can handle comparisons on basic types called dyadically.
+type comparator string
+
+func (c comparator) HandlePrimitive(a *apl.Apl, r apl.Value, l apl.Value) (bool, apl.Value, error) {
+	symbol := string(c)
+
 	cmp := func(a, b apl.Value) (bool, error) {
 		eq, lt, err := apl.CompareScalars(a, b)
 		// We treat comparison of NaN as an error in any case.
 		if err == apl.ErrCmpCmplx {
-			if s == "=" {
+			if symbol == "=" {
 				return eq, nil
-			} else if s == "≠" {
+			} else if symbol == "≠" {
 				return !eq, nil
 			} else {
 				return false, err
@@ -49,7 +53,7 @@ func compare(s string) apl.FunctionHandle {
 		} else if err != nil {
 			return false, err
 		}
-		switch s {
+		switch symbol {
 		case "=":
 			return eq, nil
 		case "<":
@@ -63,82 +67,81 @@ func compare(s string) apl.FunctionHandle {
 		case "≥":
 			return !lt, nil
 		default:
-			return false, fmt.Errorf("illegal comparision operator: %s", s)
+			return false, fmt.Errorf("illegal comparision operator: %s", symbol)
 		}
 
 	}
-	return func(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
-		if l == nil {
-			return false, nil, nil // compare cannot be used in monadic context.
-		}
-		if apl.IsScalar(l) && apl.IsScalar(r) {
-			b, err := cmp(l, r)
-			return true, apl.Bool(b), err
-		}
-		ar, isa := l.(apl.Array)
-		br, isb := r.(apl.Array)
-		if isa && isb {
-			as := ar.Shape()
-			bs := br.Shape()
-			if len(as) != len(bs) {
-				return true, nil, fmt.Errorf("cannot compare arrays of different size")
-			} else {
-				for i := range as {
-					if as[i] != bs[i] {
-						return true, nil, fmt.Errorf("cannot compare arrays of different size")
-					}
+
+	if l == nil {
+		return false, nil, nil // compare cannot be used in monadic context.
+	}
+	if apl.IsScalar(l) && apl.IsScalar(r) {
+		b, err := cmp(l, r)
+		return true, apl.Bool(b), err
+	}
+	ar, isa := l.(apl.Array)
+	br, isb := r.(apl.Array)
+	if isa && isb {
+		as := ar.Shape()
+		bs := br.Shape()
+		if len(as) != len(bs) {
+			return true, nil, fmt.Errorf("cannot compare arrays of different size")
+		} else {
+			for i := range as {
+				if as[i] != bs[i] {
+					return true, nil, fmt.Errorf("cannot compare arrays of different size")
 				}
 			}
-		} else if isa {
-			shape := make([]int, len(ar.Shape()))
-			copy(shape, ar.Shape())
-			values := make([]apl.Value, apl.ArraySize(ar))
-			for i := range values {
-				values[i] = r
-			}
-			x := apl.GeneralArray{
-				Dims:   shape,
-				Values: values,
-			}
-			br = x
-		} else if isb {
-			shape := make([]int, len(br.Shape()))
-			copy(shape, br.Shape())
-			values := make([]apl.Value, apl.ArraySize(br))
-			for i := range values {
-				values[i] = l
-			}
-			x := apl.GeneralArray{
-				Dims:   shape,
-				Values: values,
-			}
-			ar = x
-		} else {
-			return false, nil, nil
 		}
-
-		// Both ar and br are arryas of the same shape.
+	} else if isa {
 		shape := make([]int, len(ar.Shape()))
 		copy(shape, ar.Shape())
-		res := apl.Bitarray{
-			Bits: make([]apl.Bool, apl.ArraySize(ar)),
-			Dims: shape,
+		values := make([]apl.Value, apl.ArraySize(ar))
+		for i := range values {
+			values[i] = r
 		}
-		for i := range res.Bits {
-			av, err := ar.At(i)
-			if err != nil {
-				return true, nil, err
-			}
-			bv, err := br.At(i)
-			if err != nil {
-				return true, nil, err
-			}
-			if b, err := cmp(av, bv); err != nil {
-				return true, nil, err
-			} else {
-				res.Bits[i] = apl.Bool(b)
-			}
+		x := apl.GeneralArray{
+			Dims:   shape,
+			Values: values,
 		}
-		return true, res, nil
+		br = x
+	} else if isb {
+		shape := make([]int, len(br.Shape()))
+		copy(shape, br.Shape())
+		values := make([]apl.Value, apl.ArraySize(br))
+		for i := range values {
+			values[i] = l
+		}
+		x := apl.GeneralArray{
+			Dims:   shape,
+			Values: values,
+		}
+		ar = x
+	} else {
+		return false, nil, nil
 	}
+
+	// Both ar and br are arryas of the same shape.
+	shape := make([]int, len(ar.Shape()))
+	copy(shape, ar.Shape())
+	res := apl.Bitarray{
+		Bits: make([]apl.Bool, apl.ArraySize(ar)),
+		Dims: shape,
+	}
+	for i := range res.Bits {
+		av, err := ar.At(i)
+		if err != nil {
+			return true, nil, err
+		}
+		bv, err := br.At(i)
+		if err != nil {
+			return true, nil, err
+		}
+		if b, err := cmp(av, bv); err != nil {
+			return true, nil, err
+		} else {
+			res.Bits[i] = apl.Bool(b)
+		}
+	}
+	return true, res, nil
 }

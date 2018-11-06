@@ -8,8 +8,8 @@ import (
 )
 
 func init() {
-	register("×", both(signum, wrap(multiply)))
-	register("×", stringsRepeat)
+	register("×", both(signum, arrayWrap(multiply)))
+	register("×", handle(stringsRepeat))
 
 	addDoc("×", `× primitive function: signum, sign of, direction, multiply
 Z←×R: R Bool, Int, Float
@@ -36,7 +36,7 @@ func signum(a *apl.Apl, ignored, v apl.Value) (bool, apl.Value, error) {
 	case apl.Complex:
 		return true, direction(complex128(v)), nil
 	case apl.Array:
-		rv, err := v.ApplyMonadic(a, signum)
+		rv, err := v.ApplyMonadic(a, handle(signum))
 		return true, rv, err
 	default:
 		return false, nil, nil

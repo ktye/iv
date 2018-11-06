@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	register("+", both(conjugate, wrap(add)))
+	register("+", both(conjugate, arrayWrap(add)))
 	addDoc("+", `+ primitive function: conjugate, add, plus
 Z←+R: R Complex
 	Z: conjugate complex of R
@@ -25,7 +25,7 @@ func conjugate(a *apl.Apl, ignored, v apl.Value) (bool, apl.Value, error) {
 	case apl.Complex:
 		return true, apl.Complex(cmplx.Conj(complex128(v))), nil
 	case apl.Array:
-		rv, err := v.ApplyMonadic(a, conjugate)
+		rv, err := v.ApplyMonadic(a, handle(conjugate))
 		return true, rv, err
 	default:
 		return false, nil, nil

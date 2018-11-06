@@ -20,6 +20,15 @@ type monadic struct{}
 
 func (m monadic) IsDyadic() bool { return false }
 
+// function is both a func and implements the apl.Function interface,
+// by calling itself.
+// It is used to wrap derived functions to satisfy apl.Function.
+type function func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)
+
+func (f function) Call(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
+	return f(a, l, r)
+}
+
 type regop struct {
 	s  string
 	op apl.Operator
