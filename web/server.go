@@ -11,8 +11,8 @@ import (
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/funcs"
-	"github.com/ktye/iv/apl/image"
 	"github.com/ktye/iv/apl/operators"
+	"github.com/ktye/iv/aplextra/image"
 )
 
 func main() {
