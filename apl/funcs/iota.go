@@ -61,10 +61,10 @@ func indexof(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
 	for i := range left {
 		if v, err := la.At(i); err != nil {
 			return true, nil, err
-		} else if n, ok := apl.IntValue(v); !ok {
+		} else if n, ok := apl.ToInt(v); ok == false {
 			return true, nil, fmt.Errorf("left value of iota must contain only integers")
 		} else {
-			left[i] = n
+			left[i] = apl.Int(n)
 		}
 	}
 

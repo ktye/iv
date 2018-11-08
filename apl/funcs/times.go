@@ -81,14 +81,14 @@ func stringsRepeat(a *apl.Apl, l, r apl.Value) (bool, apl.Value, error) {
 	if l == nil {
 		return false, nil, nil // cannot be called in monadic context.
 	}
-	if n, ok := apl.IntValue(l); ok {
+	if n, ok := apl.ToInt(l); ok {
 		if s, ok := r.(apl.String); ok {
-			return true, apl.String(strings.Repeat(string(s), int(n))), nil
+			return true, apl.String(strings.Repeat(string(s), n)), nil
 		}
 	}
 	if s, ok := l.(apl.String); ok {
-		if n, ok := apl.IntValue(r); ok {
-			return true, apl.String(strings.Repeat(string(s), int(n))), nil
+		if n, ok := apl.ToInt(r); ok {
+			return true, apl.String(strings.Repeat(string(s), n)), nil
 		}
 	}
 	return false, nil, nil

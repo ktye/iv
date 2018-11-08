@@ -122,21 +122,40 @@ func CompareScalars(a, b Value) (bool, bool, error) {
 var ErrNaN error
 var ErrCmpCmplx error
 
-// IntValue converts the value to Int.
-// It returns false, if it cannot be converted without truncation.
-func IntValue(v Value) (Int, bool) {
+// ToBool converts numeric scalar or single element array to bool.
+// It returns false if the value is not 0 or 1.
+func ToBool(v Value) (bool, bool) {
+	if n, ok := ToInt(v); ok {
+		if n == 0 {
+			return false, true
+		} else if n == 1 {
+			return true, true
+		}
+	}
+	return false, false
+}
+
+// ToInt converts a numeric scalar or a single element array to an int.
+// It uptypes Bool and downtypes Float and Complex if they have no fractional
+// or imaginary part.
+// If v is not convertable, ToInt returns an error.
+func ToInt(v Value) (int, bool) {
+	v, ok := ScalarValue(v)
+	if ok == false {
+		return 0, false
+	}
 	switch v := v.(type) {
 	case Bool:
 		if v {
-			return Int(1), true
+			return 1, true
 		}
-		return Int(0), true
+		return 0, true
 	case Int:
-		return v, true
+		return int(v), true
 	case Float:
 		i := int(float64(v))
 		if Float(i) == v {
-			return Int(i), true
+			return i, true
 		}
 		return 0, false
 	case Complex:
@@ -146,9 +165,61 @@ func IntValue(v Value) (Int, bool) {
 		}
 		i := int(real(c))
 		if float64(i) == real(c) {
-			return Int(i), true
+			return i, true
 		}
 		return 0, false
+	default:
+		return 0, false
+	}
+}
+
+// ToFloat converts a numeric scalar or single element array to float64.
+// It uptypes Bool and Int and downtypes Complex, if the imaginary part is zero.
+// If v is not convertable, ToComplex returns false.
+func ToFloat(v Value) (float64, bool) {
+	v, ok := ScalarValue(v)
+	if ok == false {
+		return 0, false
+	}
+	switch v := v.(type) {
+	case Bool:
+		if v {
+			return float64(1), true
+		}
+		return float64(0), true
+	case Int:
+		return float64(v), true
+	case Float:
+		return float64(v), true
+	case Complex:
+		if imag(complex128(v)) == 0 {
+			return real(complex128(v)), true
+		}
+	}
+	return 0, false
+}
+
+// ToComplex converts a numeric scalar or a single element array to complex128.
+// It uptypes Bool, Int and Float.
+// If v is not convertable, ToComplex returns false.
+func ToComplex(v Value) (complex128, bool) {
+	v, ok := ScalarValue(v)
+	if ok == false {
+		return 0, false
+	}
+	switch v := v.(type) {
+	case Bool:
+		if v {
+			return complex(1, 0), true
+		}
+		return complex(0, 0), true
+	case Int:
+		return complex(float64(v), 0), true
+	case Float:
+		return complex(float64(v), 0), true
+
+	case Complex:
+		return complex128(v), true
 	default:
 		return 0, false
 	}
