@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	img "image"
+	draw "image/draw"
 	"image/png"
 
 	"github.com/ktye/iv/apl"
@@ -13,7 +13,7 @@ import (
 
 // Value implements an apl.Value which is an image.
 type Value struct {
-	img.Image
+	draw.Image
 }
 
 func (v Value) String(a *apl.Apl) string {
