@@ -34,7 +34,9 @@ func (f function) Call(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 }
 
 func (f function) String(a *apl.Apl) string {
-	return fmt.Sprintf("%T") // TODO: what does this return for s and c?
+	// TODO: This prints as draw.function but not which one.
+	return fmt.Sprintf("%T", f)
+
 }
 
 func must(err error) {
