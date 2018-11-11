@@ -300,7 +300,7 @@ func (p *parser) derived(lo expr, opsym string) (expr, error) {
 		return nil, fmt.Errorf("not an operator: %s", opsym)
 	}
 
-	if ops[0].IsDyadic() == false {
+	if ops[0].DyadicOp() == false {
 		return &derived{
 			op: opsym,
 			lo: lo,

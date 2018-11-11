@@ -83,9 +83,14 @@ var dummy dummyPrimitive
 
 type dummyPrimitive struct{}
 
-func (d dummyPrimitive) HandlePrimitive(a *Apl, l, r Value) (bool, Value, error) {
-	return true, EmptyArray{}, nil
+func (d dummyPrimitive) Call(a *Apl, l, r Value) (Value, error) {
+	return EmptyArray{}, nil
 }
+func (d dummyPrimitive) To(a *Apl, l, r Value) (Value, Value, bool) {
+	return l, r, true
+}
+func (d dummyPrimitive) String(a *Apl) string { return "any" }
+func (d dummyPrimitive) Doc() string          { return "dummy" }
 
 var dummyfunc dummyFunction
 
@@ -96,14 +101,21 @@ func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Int(1), 
 // Monadic operators.
 type reduce struct{}
 
-func (r reduce) IsDyadic() bool                      { return false }
-func (r reduce) Apply(lo, ro Value) (bool, Function) { return true, dummyfunc }
+func (r reduce) To(a *Apl, LO, RO Value) (Value, Value, bool) { return LO, RO, true }
+func (r reduce) String(a *Apl) string                         { return "any" }
+func (r reduce) IsDyadic() bool                               { return false }
+func (r reduce) Derived(a *Apl, lo, ro Value) Function        { return dummyfunc }
+func (r reduce) Doc() string                                  { return "reduce" }
 
 // Dyadic operators.
-type dot struct{}
+type dot struct {
+}
 
-func (d dot) IsDyadic() bool                      { return true }
-func (d dot) Apply(lo, ro Value) (bool, Function) { return true, dummyfunc }
+func (d dot) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
+func (d dot) String(a *Apl) string                       { return "any" }
+func (d dot) IsDyadic() bool                             { return true }
+func (d dot) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
+func (d dot) Doc() string                                { return "dot" }
 
 /*
 func init() {

@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/funcs"
+	"github.com/ktye/iv/apl/primitives"
 	"github.com/ktye/iv/apl/operators"
 )
 
@@ -154,6 +154,6 @@ func list() []string {
 
 func init() {
 	apldoc = apl.New(nil)
+	primitives.Register(apldoc)
 	operators.Register(apldoc)
-	funcs.Register(apldoc)
 }

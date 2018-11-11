@@ -6,8 +6,9 @@ package aplextra
 
 import (
 	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/funcs"
 	"github.com/ktye/iv/apl/operators"
+	"github.com/ktye/iv/apl/primitives"
+	"github.com/ktye/iv/aplextra/draw"
 	"github.com/ktye/iv/aplextra/help"
 	"github.com/ktye/iv/aplextra/image"
 	"github.com/ktye/iv/aplextra/shell"
@@ -15,15 +16,16 @@ import (
 )
 
 // RegisterAll registers all extra packages to apl.
-// It also registers the standard packages apl/funcs and apl/operators.
+// It also registers the standard packages apl/primitives and apl/operators.
 //
 // Usage:
 //	import "github.com/ktye/iv/apl"
 //	a := apl.New(os.Stdout)
 //	RegisterAll(a)
 func RegisterAll(a *apl.Apl) {
-	funcs.Register(a)
+	primitives.Register(a)
 	operators.Register(a)
+	draw.Register(a)
 	help.Register(a)
 	image.Register(a)
 	shell.Register(a)

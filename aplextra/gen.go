@@ -39,8 +39,8 @@ func main() {
 
 import (
 	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/funcs"
 	"github.com/ktye/iv/apl/operators"
+	"github.com/ktye/iv/apl/primitives"
 `)
 
 	for _, d := range dirs {
@@ -49,14 +49,14 @@ import (
 	fmt.Fprintf(w, `)
 
 // RegisterAll registers all extra packages to apl.
-// It also registers the standard packages apl/funcs and apl/operators.
+// It also registers the standard packages apl/primitives and apl/operators.
 //
 // Usage:
 //	import "github.com/ktye/iv/apl"
 //	a := apl.New(os.Stdout)
 //	RegisterAll(a)
 func RegisterAll(a *apl.Apl) {
-	funcs.Register(a)
+	primitives.Register(a)
 	operators.Register(a)
 `)
 	for _, d := range dirs {

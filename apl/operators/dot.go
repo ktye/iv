@@ -5,69 +5,55 @@ import (
 	"reflect"
 
 	"github.com/ktye/iv/apl"
+	. "github.com/ktye/iv/apl/domain"
 )
 
 func init() {
-	register(".", dot{})
-	addDoc(".", `. dyadic operator: outer product, inner product
-Z←L LO . RO R	
-`)
+	register(operator{
+		symbol:  ".",
+		Domain:  DyadicOp(Split(Function(nil), Function(nil))),
+		doc:     "inner product",
+		derived: innerproduct,
+	})
+	register(operator{
+		symbol:  ".",
+		Domain:  DyadicOp(Split(primitive("+"), primitive("×"))),
+		doc:     "scalar product",
+		derived: scalarproduct,
+	})
+	register(operator{
+		symbol:  ".",
+		Domain:  DyadicOp(Split(primitive("∘"), Function(nil))),
+		doc:     "outer product",
+		derived: outer,
+	})
+
 }
 
-type dot struct {
-	dyadic
-}
-
-func (d dot) Apply(f, g apl.Value) (bool, apl.Function) {
-
-	// TODO: reject unknown types...
-
+func innerproduct(a *apl.Apl, f, g apl.Value) apl.Function {
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
-		if l == nil {
-			return nil, fmt.Errorf("derived function from dot operator is called monadically")
-		}
+		f := f.(apl.Function)
+		g := g.(apl.Function)
+		return inner(a, l, r, f, g)
+	}
+	return function(derived)
+}
 
-		// Outer product: f is ∘
-		if p, ok := f.(apl.Primitive); ok && p == apl.Primitive("∘") {
-			return outer(a, l, r, g)
-		}
-
-		// Inner product, both f and g must be dyadic functions.
-		scalarProduct := -1
-		var df, dg apl.Function
-		if fn, ok := f.(apl.Function); ok == false {
-			return nil, fmt.Errorf("left argument to dot operator must be a function: %T", f)
-		} else {
-			df = fn
-			if p, ok := df.(apl.Primitive); ok && p == apl.Primitive("+") {
-				scalarProduct++
-			}
-		}
-
-		if fn, ok := g.(apl.Function); ok == false {
-			return nil, fmt.Errorf("right argument to dot operator must be a function: %T", g)
-		} else {
-			dg = fn
-			if p, ok := df.(apl.Primitive); ok && p == apl.Primitive("×") {
-				scalarProduct++
-			}
-		}
-
+func scalarproduct(a *apl.Apl, f, g apl.Value) apl.Function {
+	df := f.(apl.Primitive) // +
+	dg := g.(apl.Primitive) // ×
+	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 		// Special case for a scalar product.
 		// If both have the same type and implement a ScalarProducter, use the interface.
-		if scalarProduct == 1 {
-			if reflect.TypeOf(l) == reflect.TypeOf(r) {
-				if sc, ok := l.(scalarProducter); ok {
-					v, err := sc.ScalarProduct(r)
-					return v, err
-				}
+		if reflect.TypeOf(l) == reflect.TypeOf(r) {
+			if sc, ok := l.(scalarProducter); ok {
+				v, err := sc.ScalarProduct(r)
+				return v, err
 			}
 		}
-
 		return inner(a, l, r, df, dg)
 	}
-
-	return true, function(derived)
+	return function(derived)
 }
 
 func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
@@ -193,8 +179,10 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	return result, nil
 }
 
-func outer(a *apl.Apl, l, r apl.Value, f apl.Value) (apl.Value, error) {
-	return nil, fmt.Errorf("TODO: outer product")
+func outer(a *apl.Apl, LO, RO apl.Value) apl.Function {
+	return function(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		return nil, fmt.Errorf("TODO: outer product")
+	})
 }
 
 // A scalarProducter implements a ScalarProduct which receives an argument of the same type.

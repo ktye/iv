@@ -79,7 +79,7 @@ func (f *function) String(a *Apl) string {
 // be registered too.
 // Multiple versions for the same symbol may be registered, which
 // are tested in reverse sequence, until one takes over the responsibility.
-// Implementing primitives does not involve using this structure.
+// Implementing primitives does not involve using this type.
 // It is exported, because it's used by operators to build derived functions.
 type Primitive string
 
@@ -98,31 +98,25 @@ func (p Primitive) String(a *Apl) string {
 // If there are multiple handlers registered (primitive function overloading),
 // they are tested in reverse registration order, until the first one takes the
 // responsibility.
-func (p Primitive) Call(a *Apl, l, r Value) (Value, error) {
+func (p Primitive) Call(a *Apl, L, R Value) (Value, error) {
 	if handles := a.primitives[p]; handles == nil {
 		return nil, fmt.Errorf("primitive function %s does not exist", p)
 	} else {
-		for i := len(handles) - 1; i >= 0; i-- {
-			if ok, v, err := handles[i].HandlePrimitive(a, l, r); ok {
-				return v, err
+		for _, h := range handles {
+			if l, r, ok := h.To(a, L, R); ok {
+				return h.Call(a, l, r)
 			}
 		}
-		if l == nil {
-			return nil, fmt.Errorf("primitive is not implemented for the type: %s %T ", p, r)
-		}
-		return nil, fmt.Errorf("primitive is not implemented for the type: %T %s %T ", l, p, r)
 	}
+	if L == nil {
+		return nil, fmt.Errorf("primitive is not implemented: %s %T ", p, R)
+	}
+	return nil, fmt.Errorf("primitive is not implemented: %T %s %T ", L, p, R)
 }
 
 // PrimitiveHandler is the interface that implementations of primitive functions satisfy.
-// The handler decides based upon the input types if it is able to handle the function call
-// and returns true if that is the case.
-// If the it returns false the Value and error are ignored.
-// Returning true and a non-nil error triggeres an evaluation error.
-//
-// The handler is used for both, monadic and dyadic calls.
-// Monadic calls receive a nil value for the first (left) Value argument.
-// It is in the responsitiliby of the function to accept, reject or raise an error.
 type PrimitiveHandler interface {
-	HandlePrimitive(*Apl, Value, Value) (bool, Value, error)
+	Domain
+	Call(*Apl, Value, Value) (Value, error)
+	Doc() string
 }

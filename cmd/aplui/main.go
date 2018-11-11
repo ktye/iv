@@ -22,9 +22,9 @@ import (
 
 	"github.com/ktye/duit"
 	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/funcs"
+	"github.com/ktye/iv/apl/primitives"
 	"github.com/ktye/iv/apl/operators"
-	"github.com/ktye/iv/aplextra"
+
 	"github.com/ktye/iv/aplextra/help"
 	ivduit "github.com/ktye/iv/duit"
 )
@@ -40,12 +40,16 @@ func main() {
 
 	// Start APL.
 	a := apl.New(nil)
+	/* TODO
 	if extra {
 		aplextra.RegisterAll(a)
 	} else {
 		funcs.Register(a)
 		operators.Register(a)
 	}
+	*/
+	primitives.Register(a)
+	operators.Register(a)
 
 	// Build the gui.
 	registerFont(fontsize)

@@ -1,11 +1,9 @@
 package apl
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"math/cmplx"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -83,6 +81,7 @@ func ScalarValue(v Value) (Value, bool) {
 	return v, true
 }
 
+/* TODO remove
 // CompareScalars compares two scalar values and returns
 // if a == b, and if a < b.
 // Values are converted to the same type before comparison.
@@ -121,7 +120,9 @@ func CompareScalars(a, b Value) (bool, bool, error) {
 
 var ErrNaN error
 var ErrCmpCmplx error
+*/
 
+/* TODO remove (ported to domain.Bool)
 // ToBool converts numeric scalar or single element array to bool.
 // It returns false if the value is not 0 or 1.
 func ToBool(v Value) (bool, bool) {
@@ -135,6 +136,7 @@ func ToBool(v Value) (bool, bool) {
 	return false, false
 }
 
+// TODO remove (ported to domain.Int)
 // ToInt converts a numeric scalar or a single element array to an int.
 // It uptypes Bool and downtypes Float and Complex if they have no fractional
 // or imaginary part.
@@ -173,6 +175,7 @@ func ToInt(v Value) (int, bool) {
 	}
 }
 
+// TODO remove (ported to domain)
 // ToFloat converts a numeric scalar or single element array to float64.
 // It uptypes Bool and Int and downtypes Complex, if the imaginary part is zero.
 // If v is not convertable, ToComplex returns false.
@@ -199,6 +202,7 @@ func ToFloat(v Value) (float64, bool) {
 	return 0, false
 }
 
+// TODO remove: ported to domain.
 // ToComplex converts a numeric scalar or a single element array to complex128.
 // It uptypes Bool, Int and Float.
 // If v is not convertable, ToComplex returns false.
@@ -227,6 +231,7 @@ func ToComplex(v Value) (complex128, bool) {
 
 var typeOrder map[reflect.Type]int
 
+// TODO remove
 // SameNumericTypes converts a or b to the higher numeric type.
 // If both types are identical, they are returned, even if not numeric.
 // Otherwise it returns an error, if any of both is not Bool, Int, Float or Complex.
@@ -276,6 +281,7 @@ func SameNumericTypes(a, b Value) (Value, Value, error) {
 	}
 	return a, b, nil
 }
+*/
 
 // Format is used by the stringers of default types.
 type Format struct {
@@ -407,6 +413,7 @@ func (s String) Eval(a *Apl) (Value, error) {
 	return s, nil
 }
 
+/* TODO remove
 func init() {
 	typeOrder = make(map[reflect.Type]int)
 	typeOrder[reflect.TypeOf(Bool(false))] = 1
@@ -416,3 +423,4 @@ func init() {
 	ErrNaN = errors.New("value is NaN")
 	ErrCmpCmplx = errors.New("complex values cannot be ordered")
 }
+*/

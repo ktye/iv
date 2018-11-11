@@ -51,8 +51,8 @@ type Array interface {
 	Eval(*Apl) (Value, error)
 	At(int) (Value, error)
 	Shape() []int
-	ApplyMonadic(*Apl, PrimitiveHandler) (Value, error)
-	ApplyDyadic(*Apl, Value, bool, PrimitiveHandler) (Value, error)
+	//ApplyMonadic(*Apl, PrimitiveHandler) (Value, error)
+	//ApplyDyadic(*Apl, Value, bool, PrimitiveHandler) (Value, error)
 }
 
 // Reshaper is an array that can reshape itself.
@@ -101,6 +101,14 @@ func ArraySize(v Array) int {
 		n *= i
 	}
 	return n
+}
+
+// CopyShape copies the shape of an array.
+func CopyShape(v Array) []int {
+	shape := v.Shape()
+	newshape := make([]int, len(shape))
+	copy(newshape, shape)
+	return newshape
 }
 
 // ArrayIndex converts an index vector to a flat index.
@@ -253,90 +261,13 @@ func (v GeneralArray) Reshape(shape []int) Value {
 	return rv
 }
 
-// ApplyMonadic applies the monadic handler to each element of the array.
-func (v GeneralArray) ApplyMonadic(a *Apl, h PrimitiveHandler) (Value, error) {
-	for i, e := range v.Values {
-		if ok, rv, err := h.HandlePrimitive(a, nil, e); ok == false {
-			return nil, fmt.Errorf("monadic handler could not handle %T", e)
-		} else if err != nil {
-			return nil, err
-		} else {
-			v.Values[i] = rv
-		}
-	}
-	return v, nil
-}
-
-// ApplyDyadic applies the dyadic handle to each element, if the value is a scalar.
-// If it is an array of the same size, it is applied elementwise.
-// LeftRecv indicates if the receiver is the left value of the dyadic function.
-// The handler only handles basic numeric types of the same type.
-// In the array-array case, each element may be of a different type and needs to be checked.
-func (v GeneralArray) ApplyDyadic(a *Apl, x Value, leftRecv bool, h PrimitiveHandler) (Value, error) {
-	rv := make([]Value, len(v.Values))
-	dims := make([]int, len(v.Dims))
-	copy(dims, v.Dims)
-
-	// The argument x is an array as well.
-	if w, ok := x.(Array); ok {
-		ws := w.Shape()
-		if len(ws) != len(v.Dims) {
-			return nil, fmt.Errorf("array ranks mismatch")
-		}
-		for i, k := range ws {
-			if k != v.Dims[i] {
-				return nil, fmt.Errorf("arrays have different size")
-			}
-		}
-		for i, u := range v.Values {
-			wval, _ := w.At(i) // Dimensions are already checked.
-			l, r, err := SameNumericTypes(u, wval)
-			if err != nil {
-				return nil, err
-			}
-			if leftRecv == false {
-				l, r = r, l
-			}
-			if ok, y, err := h.HandlePrimitive(a, l, r); ok == false {
-				return nil, fmt.Errorf("cannot apply dynamic function on %T and %T", l, r)
-			} else if err != nil {
-				return nil, err
-			} else {
-				rv[i] = y
-			}
-		}
-	} else {
-		for i, u := range v.Values {
-			l, r, err := SameNumericTypes(u, x)
-			if err != nil {
-				return nil, err
-			}
-			if leftRecv == false {
-				l, r = r, l
-			}
-			if ok, y, err := h.HandlePrimitive(a, l, r); ok == false {
-				return nil, fmt.Errorf("cannot apply dynamic function on %T and %T", l, r)
-			} else if err != nil {
-				return nil, err
-			} else {
-				rv[i] = y
-			}
-		}
-	}
-	return GeneralArray{rv, dims}, nil
-}
-
 type EmptyArray struct{}
 
-func (e EmptyArray) String(a *Apl) string                                   { return "" }
-func (e EmptyArray) Eval(a *Apl) (Value, error)                             { return e, nil }
-func (e EmptyArray) At(i int) (Value, error)                                { return nil, fmt.Errorf("index out of range") }
-func (e EmptyArray) Shape() []int                                           { return nil }
-func (e EmptyArray) Reshape(s []int) Value                                  { return e }
-func (e EmptyArray) ApplyMonadic(a *Apl, h PrimitiveHandler) (Value, error) { return e, nil }
-func (e EmptyArray) ApplyDyadic(a *Apl, l Value, lr bool, h PrimitiveHandler) (Value, error) {
-	return e, nil
-}
+func (e EmptyArray) String(a *Apl) string       { return "" }
+func (e EmptyArray) Eval(a *Apl) (Value, error) { return e, nil }
+func (e EmptyArray) At(i int) (Value, error)    { return nil, fmt.Errorf("index out of range") }
+func (e EmptyArray) Shape() []int               { return nil }
+func (e EmptyArray) Reshape(s []int) Value      { return e }
 
 // Bitarray is an array implementation which has only boolean values.
 type Bitarray struct {
@@ -389,13 +320,6 @@ func (b Bitarray) Reshape(shape []int) Value {
 	return v
 }
 
-func (b Bitarray) ApplyMonadic(a *Apl, h PrimitiveHandler) (Value, error) {
-	return b.IntArray().ApplyMonadic(a, h)
-}
-func (b Bitarray) ApplyDyadic(a *Apl, l Value, lr bool, h PrimitiveHandler) (Value, error) {
-	return b.IntArray().ApplyDyadic(a, l, lr, h)
-}
-
 // IntArray converts a Bitarray to a GeneralArray containing integers.
 func (b Bitarray) IntArray() GeneralArray {
 	ints := make([]Value, len(b.Bits))
@@ -409,4 +333,55 @@ func (b Bitarray) IntArray() GeneralArray {
 	dims := make([]int, len(b.Dims))
 	copy(dims, b.Dims)
 	return GeneralArray{Dims: dims, Values: ints}
+}
+
+// IntArray is an array implementation which has only int values.
+type IntArray struct {
+	Ints []int
+	Dims []int
+}
+
+func (ar IntArray) String(a *Apl) string {
+	return ArrayString(a, ar)
+}
+
+func (ar IntArray) Eval(a *Apl) (Value, error) {
+	return ar, nil
+}
+
+func (ar IntArray) At(i int) (Value, error) {
+	if i < 0 || i >= len(ar.Ints) {
+		return nil, fmt.Errorf("index exceeds array dimensions")
+	}
+	return Int(ar.Ints[i]), nil
+}
+
+func (ar IntArray) Shape() []int {
+	return ar.Dims
+}
+
+func (ar IntArray) Reshape(shape []int) Value {
+	if len(ar.Ints) == 0 {
+		return EmptyArray{}
+	}
+	size := 1
+	for _, k := range shape {
+		size *= k
+	}
+	if size == 0 {
+		return EmptyArray{}
+	}
+	rv := IntArray{
+		Ints: make([]int, size),
+		Dims: shape,
+	}
+	k := 0
+	for i := range rv.Ints {
+		rv.Ints[i] = ar.Ints[k]
+		k++
+		if k == len(ar.Ints) {
+			k = 0
+		}
+	}
+	return rv
 }

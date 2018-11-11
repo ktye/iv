@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/funcs"
-	"github.com/ktye/iv/apl/operators"
+	"github.com/ktye/iv/apl/primitives"
+	// TODO "github.com/ktye/iv/apl/operators"
 )
 
 // AplIv implements the Apl interface using iv/apl as a backend.
@@ -28,8 +28,8 @@ func newAplIv(rank int) (Apl, error) {
 	// by go as an identifier.
 	var α AplIv
 	α.a = apl.New(os.Stdout)
-	funcs.Register(α.a)
-	operators.Register(α.a)
+	primitives.Register(α.a)
+	// TODO operators.Register(α.a)
 	return &α, nil
 }
 

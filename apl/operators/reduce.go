@@ -4,41 +4,42 @@ import (
 	"fmt"
 
 	"github.com/ktye/iv/apl"
+	. "github.com/ktye/iv/apl/domain"
 )
 
 func init() {
-	register("/", reduction{})
-	addDoc("/", `/ monadic operator: reduce, n-wise reduction, replacate
-Z←L LO / R	
-`)
+	register(operator{
+		symbol:  "/",
+		Domain:  MonadicOp(Function(nil)),
+		doc:     "reduce, n-wise reduction",
+		derived: reduction,
+	})
+	/* TODO APL2 p 220
+	register(operator{
+		symbol:  "/",
+		Domain:  Left(Array(nil)), // scalar or vector, integer
+		doc:     "replicate",
+		derived: replicate,
+	})
+	*/
+	/* TODO APL2 p 85
+	register(operator{
+		symbol:  "/",
+		Domain:  Left(Array(nil)), // scalar or vector, bool
+		doc:     "compress",
+		derived: compress,
+	})
+	*/
 }
 
-type reduction struct {
-	monadic
-}
-
-// OperateMonadic returns the derived function f over r (summation).
-func (r reduction) Apply(f, dummy apl.Value) (bool, apl.Function) {
-
-	// TODO: reject unknown types.
-
+// Reduction returns the derived function f over r.
+func reduction(a *apl.Apl, f, _ apl.Value) apl.Function {
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 		if l != nil {
 			return nwise(a, l, r)
 		}
 
-		// TODO compression f is an array.
-		if _, ok := f.(apl.Array); ok {
-			return nil, fmt.Errorf("TODO: compression (array/ )")
-		}
-
-		// Reduction needs a dyadic function to it's left.
-		var d apl.Function
-		if fn, ok := f.(apl.Function); ok == false {
-			return nil, fmt.Errorf("left argument to / must be a function: %T", d)
-		} else {
-			d = fn
-		}
+		d := f.(apl.Function)
 
 		// If R is a scalar, the operation is not applied and Z←R
 		ar, ok := r.(apl.Array)
@@ -104,7 +105,7 @@ func (r reduction) Apply(f, dummy apl.Value) (bool, apl.Function) {
 		return v, nil
 	}
 
-	return true, function(derived)
+	return function(derived)
 }
 
 func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {

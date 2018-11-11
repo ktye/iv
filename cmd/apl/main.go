@@ -19,8 +19,9 @@ import (
 	"os"
 
 	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/funcs"
 	"github.com/ktye/iv/apl/operators"
+	"github.com/ktye/iv/apl/primitives"
+	// TODO "github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/complete"
 )
 
@@ -76,8 +77,8 @@ func (opt *options) run() error {
 	}
 
 	opt.state = apl.New(opt.stdout)
+	primitives.Register(opt.state)
 	operators.Register(opt.state)
-	funcs.Register(opt.state)
 	opt.state.SetDebug(opt.debug)
 
 	// Load library.

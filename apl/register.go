@@ -5,13 +5,12 @@ import (
 	"unicode/utf8"
 )
 
-// RegisterPrimitive registeres the function handle for the symbol s
-// as a primitive function.
-// Multiple versions may be registered, which can handle different
-// argument type combinations.
-// When the function is applied, the last registered handle is tested first.
+// RegistersPrimitive attaches the primitive handler h to the symbol p.
+// If the symbol exists already, it is overloaded.
+// When the function is applied, the last registered handle is tested
+// first, if the arguments match to the domain of the handler.
 func (a *Apl) RegisterPrimitive(p Primitive, h PrimitiveHandler) {
-	a.primitives[p] = append(a.primitives[p], h)
+	a.primitives[p] = append([]PrimitiveHandler{h}, a.primitives[p]...)
 	a.registerSymbol(string(p))
 }
 
@@ -20,10 +19,10 @@ func (a *Apl) RegisterOperator(s string, op Operator) error {
 	if op == nil {
 		return fmt.Errorf("cannot register a nil operator to %s", s)
 	}
-	if ops, ok := a.operators[s]; ok && ops[0].IsDyadic() != op.IsDyadic() {
+	if ops, ok := a.operators[s]; ok && ops[0].DyadicOp() != op.DyadicOp() {
 		return fmt.Errorf("cannot register operator %s with differing arity", s)
 	}
-	a.operators[s] = append(a.operators[s], op)
+	a.operators[s] = append([]Operator{op}, a.operators[s]...)
 	a.registerSymbol(s)
 	return nil
 }
