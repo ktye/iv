@@ -1,5 +1,7 @@
 package primitives
 
+/* TODO
+
 import (
 	"fmt"
 
@@ -52,3 +54,4 @@ func comparator(symbol string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, 
 		}
 	}
 }
+*/

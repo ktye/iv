@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 )
 
@@ -48,7 +49,10 @@ var testCases = []struct {
 	{"⍳5", "1 2 3 4 5", nil},       // index generation
 	{"⍳0", "", nil},                // empty array
 	{"⍴⍳5", "5", nil},              // shape
+	{"⍴5", "", nil},                // shape of scalar is empty
+	{"⍴⍴5", "0", nil},              // shape of empty is 0
 	{"⍴⍳0", "0", nil},              // empty array has zero dimensions
+	{"⍴⍴⍳0", "1", nil},             // rank of empty array is 1
 	{"2 3⍴1", "1 1 1\n1 1 1", nil}, // shape
 
 	// Basic operators.
@@ -134,6 +138,7 @@ func TestApl(t *testing.T) {
 	for i, tc := range testCases {
 		var buf strings.Builder
 		a := apl.New(&buf)
+		numbers.Register(a)
 		Register(a)
 		operators.Register(a)
 		lines := strings.Split(tc.in, "\n")

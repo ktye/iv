@@ -1,5 +1,6 @@
 package domain
 
+/* TODO move to numbers package
 import (
 	"errors"
 	"fmt"
@@ -142,3 +143,4 @@ func MustPromote(L, R apl.Value) (apl.Value, apl.Value) {
 	R, _ = to.To(nil, R)
 	return L, R
 }
+*/

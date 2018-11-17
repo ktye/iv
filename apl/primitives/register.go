@@ -1,6 +1,8 @@
 package primitives
 
-import "github.com/ktye/iv/apl"
+import (
+	"github.com/ktye/iv/apl"
+)
 
 func Register(a *apl.Apl) {
 	for _, p := range primitives {

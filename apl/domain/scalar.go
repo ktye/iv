@@ -28,7 +28,7 @@ func (s scalar) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		}
 		v, _ = ar.At(0)
 	}
-	return v, true
+	return propagate(a, v, s.child)
 }
 func (s scalar) String(a *apl.Apl) string {
 	name := "scalar"

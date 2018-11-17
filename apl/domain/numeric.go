@@ -1,6 +1,10 @@
 package domain
 
-import "github.com/ktye/iv/apl"
+import (
+	"reflect"
+
+	"github.com/ktye/iv/apl"
+)
 
 // ToNumber accepts scalars and single size arrays.
 // and converts them to scalars if they contain one of the types:
@@ -31,12 +35,8 @@ func (n number) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		}
 		v, _ = ar.At(0)
 	}
-	switch v := v.(type) {
-	case apl.Bool, apl.Int, apl.Float, apl.Complex:
-		if n.child == nil {
-			return v, true
-		}
-		return n.child.To(a, v)
+	if _, ok := a.Tower.Numbers[reflect.TypeOf(v)]; ok {
+		return v, true
 	}
 	return V, false
 }
@@ -51,6 +51,38 @@ func (n number) String(a *apl.Apl) string {
 	return name + " " + n.child.String(a)
 }
 
+// ToIndex converts the scalar to an Index.
+func ToIndex(child SingleDomain) SingleDomain {
+	return index{child}
+}
+
+type index struct {
+	child SingleDomain
+}
+
+func (idx index) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
+	if n, ok := V.(apl.Index); ok {
+		return n, true
+	}
+	if n, ok := V.(apl.Number); ok == false {
+		return V, false
+	} else {
+		if i, ok := n.ToIndex(); ok == false {
+			return V, false
+		} else {
+			return propagate(a, apl.Index(i), idx.child)
+		}
+	}
+}
+func (idx index) String(a *apl.Apl) string {
+	if idx.child == nil {
+		return "index"
+	} else {
+		return "index " + idx.child.String(a)
+	}
+}
+
+/* TODO: convert to new numbers package, if needed.
 // ToBool accepts a number and converts it to Bool.
 // If fails, if it is not 0 or 1.
 func ToBool(child SingleDomain) SingleDomain {
@@ -217,3 +249,4 @@ func toComplex(V apl.Value, convert bool) (apl.Value, bool) {
 	}
 	return V, false
 }
+*/

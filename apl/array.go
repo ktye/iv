@@ -2,9 +2,26 @@ package apl
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 )
+
+// IsScalar returns true,
+// if the Value can be used as a member of an array.
+// It returns false for arrays, functions and identifiers.
+func (a *Apl) isScalar(v Value) bool {
+	if _, ok := v.(Array); ok {
+		return false
+	}
+	if _, ok := v.(Function); ok {
+		return false
+	}
+	if _, ok := v.(Identifier); ok {
+		return false
+	}
+	return true
+}
 
 // array evaluates to a EmptyArray, a single Value or a GeneralArray.
 type array []expr
@@ -22,8 +39,8 @@ func (ar array) Eval(a *Apl) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		if IsScalar(e) == false {
-			return nil, fmt.Errorf("vector element must be scalar: %s", e)
+		if a.isScalar(e) == false {
+			return nil, fmt.Errorf("vector element must be scalar: %T", e)
 		}
 		v[i] = e
 	}
@@ -269,6 +286,7 @@ func (e EmptyArray) At(i int) (Value, error)    { return nil, fmt.Errorf("index 
 func (e EmptyArray) Shape() []int               { return nil }
 func (e EmptyArray) Reshape(s []int) Value      { return e }
 
+/* TODO remove
 // Bitarray is an array implementation which has only boolean values.
 type Bitarray struct {
 	Bits []Bool
@@ -334,33 +352,49 @@ func (b Bitarray) IntArray() GeneralArray {
 	copy(dims, b.Dims)
 	return GeneralArray{Dims: dims, Values: ints}
 }
+*/
 
-// IntArray is an array implementation which has only int values.
-type IntArray struct {
+type Bool bool
+
+func (b Bool) String(a *Apl) string {
+	if b {
+		return "1"
+	}
+	return "0"
+}
+
+type Index int
+
+func (i Index) String(a *Apl) string {
+	return strconv.Itoa(int(i))
+}
+
+// IntdexArray is an array implementation which has only int values.
+type IndexArray struct {
 	Ints []int
 	Dims []int
 }
 
-func (ar IntArray) String(a *Apl) string {
+func (ar IndexArray) String(a *Apl) string {
 	return ArrayString(a, ar)
 }
 
-func (ar IntArray) Eval(a *Apl) (Value, error) {
+func (ar IndexArray) Eval(a *Apl) (Value, error) {
 	return ar, nil
 }
 
-func (ar IntArray) At(i int) (Value, error) {
+func (ar IndexArray) At(i int) (Value, error) {
 	if i < 0 || i >= len(ar.Ints) {
 		return nil, fmt.Errorf("index exceeds array dimensions")
 	}
-	return Int(ar.Ints[i]), nil
+	return Index(ar.Ints[i]), nil
 }
 
-func (ar IntArray) Shape() []int {
+func (ar IndexArray) Shape() []int {
 	return ar.Dims
 }
 
-func (ar IntArray) Reshape(shape []int) Value {
+func (ar IndexArray) Reshape(shape []int) Value {
 	if len(ar.Ints) == 0 {
 		return EmptyArray{}
 	}
@@ -371,7 +405,7 @@ func (ar IntArray) Reshape(shape []int) Value {
 	if size == 0 {
 		return EmptyArray{}
 	}
-	rv := IntArray{
+	rv := IndexArray{
 		Ints: make([]int, size),
 		Dims: shape,
 	}

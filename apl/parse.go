@@ -599,7 +599,7 @@ func (p *parser) scalar() (expr, bool, error) {
 			}
 		}
 	case scan.Number:
-		if n, err := ParseNumber(t.S); err != nil {
+		if n, err := p.a.Tower.Parse(t.S); err != nil {
 			return nil, false, err
 		} else {
 			p.next()

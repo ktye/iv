@@ -29,13 +29,13 @@ type Apl struct {
 	scan.Scanner
 	parser
 	stdout     io.Writer
+	Tower      Tower
 	vars       map[string]Value
 	primitives map[Primitive][]PrimitiveHandler
 	operators  map[string][]Operator
 	symbols    map[rune]string
 	doc        map[string]string
 	initscan   bool
-	format     Format
 	Origin     int
 	debug      bool
 }

@@ -1,20 +1,17 @@
 package apl
 
-import (
-	"fmt"
-	"math"
-	"math/cmplx"
-	"strconv"
-	"strings"
-)
-
+/*
 type Scalar expr
 type Bool bool
 type Int int64
 type Float float64
 type Complex complex128
+*/
+
+// TODO: where to move this?
 type String string
 
+/* TODO remove
 func ParseNumber(s string) (Scalar, error) {
 	s = strings.Replace(s, "¯", "-", -1)
 	parseFloats := func(s string, idx int) (float64, float64, bool) {
@@ -48,7 +45,9 @@ func ParseNumber(s string) (Scalar, error) {
 	}
 	return nil, fmt.Errorf("cannot parse number: %s", s)
 }
+*/
 
+/* TODO is this needed?
 func IsScalar(v Value) bool {
 	switch v.(type) {
 	case Bool, Int, Float, Complex, String:
@@ -57,6 +56,7 @@ func IsScalar(v Value) bool {
 	}
 	return false
 }
+*/
 
 // ScalarArray wraps a Scalar into a size 1 array.
 func ScalarArray(v Value) Value {
@@ -283,6 +283,7 @@ func SameNumericTypes(a, b Value) (Value, Value, error) {
 }
 */
 
+/* TODO move this to the tower.
 // Format is used by the stringers of default types.
 type Format struct {
 	Bool    string
@@ -292,7 +293,9 @@ type Format struct {
 	String  string
 	Minus   bool
 }
+*/
 
+/* TODO remove
 // String formats a Bool as 1 or 0 by default.
 // This can be changed to true/false by setting a.format.Bool to "%t".
 func (b Bool) String(a *Apl) string {
@@ -315,7 +318,9 @@ func (b Bool) toFloat() Float {
 	}
 	return Float(0)
 }
+*/
 
+/* TODO remove
 // String formats i as a decimal string and and uses ¯ for negative numbers.
 // The format can be changed in a.format.Int.
 // A normal minus sign is used, by setting a.format.Minus = true.
@@ -394,19 +399,12 @@ func (c Complex) String(a *Apl) string {
 func (c Complex) Eval(a *Apl) (Value, error) {
 	return c, nil
 }
+*/
 
 // String formats s with %s by default.
 // The format can be changed in Format.String.
 func (s String) String(a *Apl) string {
-	if a == nil {
-		// For program output, replace single " by doubles.
-		return strings.Replace(string(s), `"`, `""`, -1)
-	}
-	format := "%s"
-	if a.format.String != "" {
-		format = a.format.String
-	}
-	return fmt.Sprintf(format, string(s))
+	return string(s)
 }
 
 func (s String) Eval(a *Apl) (Value, error) {

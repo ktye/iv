@@ -1,5 +1,7 @@
 package primitives
 
+/* TODO remove
+
 import (
 	"fmt"
 	"math/cmplx"
@@ -105,3 +107,4 @@ func intTimesString(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 func strrepeat(s string, n int) (apl.Value, error) {
 	return apl.String(strings.Repeat(s, n)), nil
 }
+*/

@@ -1,5 +1,6 @@
 package primitives
 
+/* TODO remove
 import (
 	"fmt"
 	"math/cmplx"
@@ -86,3 +87,4 @@ func floats(L, R apl.Value) (float64, float64) {
 func complexs(L, R apl.Value) (complex128, complex128) {
 	return complex128(L.(apl.Complex)), complex128(R.(apl.Complex))
 }
+*/

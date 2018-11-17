@@ -124,25 +124,25 @@ func (v vector) String(a *apl.Apl) string {
 	return name + " " + v.child.String(a)
 }
 
-// ToIntArray accepts arrays that contain only numbers that are convertibel to ints.
+// ToIndexArray accepts arrays that contain only numbers that are convertibel to ints.
 // It accepts also scalars.
 // Size-0 arrays are returns as empty.
-func ToIntArray(child SingleDomain) SingleDomain {
-	return intarray{child, true}
+func ToIndexArray(child SingleDomain) SingleDomain {
+	return indexarray{child, true}
 }
 
-// IsIntArray accepts only an IntArray.
-func IsIntArray(child SingleDomain) SingleDomain {
-	return intarray{child, false}
+// IsIndexArray accepts only an IntArray.
+func IsIndexArray(child SingleDomain) SingleDomain {
+	return indexarray{child, false}
 }
 
-type intarray struct {
+type indexarray struct {
 	child SingleDomain
 	conv  bool
 }
 
-func (ia intarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
-	_, ok := V.(apl.IntArray)
+func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
+	_, ok := V.(apl.IndexArray)
 	if ia.conv == false && ok == false {
 		return V, false
 	} else if ia.conv == false && ok {
@@ -154,13 +154,17 @@ func (ia intarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	// Try to convert.
 	ar, ok := V.(apl.Array)
 
-	// Scalar
+	// Scalar number
 	if ok == false {
-		if n, ok := toInt(V, true); ok {
-			return propagate(a, apl.IntArray{
-				Ints: []int{int(n.(apl.Int))},
-				Dims: []int{1},
-			}, ia.child)
+		if n, ok := V.(apl.Number); ok {
+			if i, ok := n.ToIndex(); ok {
+				return propagate(a, apl.IndexArray{
+					Ints: []int{i},
+					Dims: []int{1},
+				}, ia.child)
+			} else {
+				return V, false
+			}
 		} else {
 			return V, false
 		}
@@ -172,25 +176,29 @@ func (ia intarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	// Make a new array and try to convert all values.
-	res := apl.IntArray{
+	res := apl.IndexArray{
 		Ints: make([]int, apl.ArraySize(ar)),
 		Dims: apl.CopyShape(ar),
 	}
 
 	for i := range res.Ints {
 		s, _ := ar.At(i)
-		if n, ok := toInt(s, true); ok == false {
-			return V, false
+		if n, ok := s.(apl.Number); ok {
+			if d, ok := n.ToIndex(); ok {
+				res.Ints[i] = d
+			} else {
+				return V, false
+			}
 		} else {
-			res.Ints[i] = int(n.(apl.Int))
+			return V, false
 		}
 	}
 	return propagate(a, res, ia.child)
 }
-func (ia intarray) String(a *apl.Apl) string {
-	name := "intarray"
+func (ia indexarray) String(a *apl.Apl) string {
+	name := "intdexarray"
 	if ia.conv == true {
-		name = "tointarray"
+		name = "tointdexarray"
 	}
 	if ia.child == nil {
 		return name

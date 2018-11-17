@@ -12,42 +12,49 @@ func init() {
 	register(reshape)
 }
 
-var reshape = primitive{
-	symbol: "⍴",
-	doc:    "reshape",
-	Domain: Dyadic(Split(ToVector(ToIntArray(nil)), ToArray(nil))),
-	fn:     rho,
-}
-
 var shape = primitive{
 	symbol: "⍴",
 	doc:    "shape",
 	Domain: Monadic(nil),
-	fn: func(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-		if _, ok := R.(apl.Array); ok == false {
-			return apl.EmptyArray{}, nil
-		}
-		ar := R.(apl.Array)
-		shape := ar.Shape()
-		ret := apl.GeneralArray{
-			Values: make([]apl.Value, len(shape)),
-			Dims:   []int{len(shape)},
-		}
-		for i, n := range shape {
-			ret.Values[i] = apl.Int(n)
-		}
-		return ret, nil
-	},
+	fn:     rho1,
 }
 
-// rho is dyadic reshape, L is empty or int array, R is array.
-func rho(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+var reshape = primitive{
+	symbol: "⍴",
+	doc:    "reshape",
+	Domain: Dyadic(Split(ToVector(ToIndexArray(nil)), ToArray(nil))),
+	fn:     rho2,
+}
+
+// Rho1 returns the shape of R.
+func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	if _, ok := R.(apl.Array); ok == false {
+		return apl.EmptyArray{}, nil
+	}
+	// Shape of an empty array is 0, rank is 1
+	if _, ok := R.(apl.EmptyArray); ok {
+		return apl.IndexArray{Ints: []int{0}, Dims: []int{1}}, nil
+	}
+	ar := R.(apl.Array)
+	shape := ar.Shape()
+	ret := apl.IndexArray{
+		Ints: make([]int, len(shape)),
+		Dims: []int{len(shape)},
+	}
+	for i, n := range shape {
+		ret.Ints[i] = n
+	}
+	return ret, nil
+}
+
+// Rho2 is dyadic reshape, L is empty or index array, R is array.
+func rho2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// L is empty, returns empty.
 	if apl.ArraySize(L.(apl.Array)) == 0 {
 		return apl.EmptyArray{}, nil
 	}
 
-	l := L.(apl.IntArray)
+	l := L.(apl.IndexArray)
 	shape := make([]int, len(l.Ints))
 	copy(shape, l.Ints)
 
