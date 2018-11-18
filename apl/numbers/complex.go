@@ -14,21 +14,21 @@ type Complex complex128
 // String formats a Float as a string.
 // If the format string contains a single %, it is passed to fmt
 // with the complex arguments.
-// If it contains a @, two format strings are assumed and magnitude
+// If it contains an "a", two format strings are assumed and magnitude
 // and degree are passed to fmt.
 // Otherwise real and imag parts are passed.
 // By default - is replaced with ¯, expept if the format string
 // starts with -.
 // Examples:
-//	"%.3f", "%g@%.0f", "-%v", "%.5fJ%.5f"
+//	"%.3f", "%ga%.0f", "-%v", "%.5fJ%.5f"
 func (c Complex) String(a *apl.Apl) string {
-	format, minus := getformat(a, c, "%v@%v")
+	format, minus := getformat(a, c, "%va%v")
 	var s string
 	if strings.Count(format, "%") == 1 {
 		s = fmt.Sprintf(format, complex128(c))
 	} else {
 		a, b := real(c), imag(c)
-		if strings.Index(format, "@") != -1 {
+		if strings.Index(format, "a") != -1 {
 			a, b = cmplx.Polar(complex128(c))
 			b *= 180.0 / math.Pi
 			if b < 0 {
@@ -50,13 +50,13 @@ func (c Complex) String(a *apl.Apl) string {
 }
 
 // ParseComplex parses a Complex from a string.
-// The number may be given as magnitude@angle with the angle in degree,
+// The number may be given as MAGNITUDEaANGLE with the angle in degree,
 // or as realJimag.
 // Both parts are parsed as Floats.
-// If neither @ or J are within the string, it is parsed with 0 imag part.
+// If neither "a" or "J" are within the string, it is parsed with 0 imag part.
 func ParseComplex(s string) (apl.Number, bool) {
 	var c Complex
-	if idx := strings.Index(s, "@"); idx != -1 {
+	if idx := strings.Index(s, "a"); idx != -1 {
 		mag, ok := ParseFloat(s[:idx])
 		if ok == false {
 			return c, false

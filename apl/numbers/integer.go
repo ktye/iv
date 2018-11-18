@@ -31,14 +31,12 @@ func ParseInteger(s string) (apl.Number, bool) {
 	return Integer(0), false
 }
 
-const intmax = Integer(int(^uint(0) >> 1))
-const intmin = Integer(-intmax - 1)
-
 func (i Integer) ToIndex() (int, bool) {
-	if i > intmax || i < intmin {
-		return 0, false
+	n := int(i)
+	if i == Integer(n) {
+		return n, true
 	}
-	return int(i), true
+	return n, false
 }
 
 func intToFloat(i apl.Number) (apl.Number, bool) {

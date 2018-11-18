@@ -8,9 +8,11 @@ import (
 	"github.com/ktye/iv/apl"
 )
 
-// Register sets the default numeric tower.
+// Register sets the default numeric tower Integer->Float->Complex.
 func Register(a *apl.Apl) {
-	a.SetTower(newTower())
+	if err := a.SetTower(newTower()); err != nil {
+		panic(err)
+	}
 }
 
 func newTower() apl.Tower {

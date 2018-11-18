@@ -49,6 +49,7 @@ func main() {
 		operators.Register(a)
 	}
 	*/
+	// big.SetBigTower(a)
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)

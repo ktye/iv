@@ -23,9 +23,9 @@ var testCases = []struct {
 	{"1-2", "¯1", nil}, // negative number
 	{"¯1", "¯1", nil},
 	{"1-¯2", "3", nil},
-	{"1@90", "1@90", nil}, // a complex number
-	{"1@60+1@300", "1@0", nil},
-	{"1J1", "1.4142135623730951@45", nil},
+	{"1a90", "1a90", nil}, // a complex number
+	{"1a60+1a300", "1a0", nil},
+	{"1J1", "1.4142135623730951a45", nil},
 
 	// Vectors.
 	{"1 2 3", "1 2 3", nil},

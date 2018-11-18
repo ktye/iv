@@ -23,8 +23,8 @@ func TestScan(t *testing.T) {
 		{"1", []Token{Token{T: Number, S: "1"}}},
 		{"1.23", []Token{Token{T: Number, S: "1.23"}}},
 		{"1J2", []Token{Token{T: Number, S: "1J2"}}},
-		{"¯1.0E¯6@123.8", []Token{Token{T: Number, S: "-1.0E-6@123.8"}}},
-		{"¯8", []Token{Token{T: Number, S: "-8"}}},
+		{"¯1.0E¯6a123.8", []Token{Token{T: Number, S: "¯1.0E¯6a123.8"}}},
+		{"¯8", []Token{Token{T: Number, S: "¯8"}}},
 		{`+ alpha ≥3.23 "x""yz"`, []Token{
 			Token{T: Symbol, S: "+"},
 			Token{T: Identifier, S: "alpha"},
@@ -35,7 +35,7 @@ func TestScan(t *testing.T) {
 		{`⋄ ⋄1.23E¯5 4.234  0.234⍵`, []Token{
 			Token{T: Diamond, S: "⋄"},
 			Token{T: Diamond, S: "⋄"},
-			Token{T: Number, S: "1.23E-5"},
+			Token{T: Number, S: "1.23E¯5"},
 			Token{T: Number, S: "4.234"},
 			Token{T: Number, S: "0.234"},
 			Token{T: Symbol, S: "⍵"},

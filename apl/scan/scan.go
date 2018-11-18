@@ -198,6 +198,35 @@ func (s *Scanner) nextToken() (Token, error) {
 }
 
 // ScanNumber scans the next number.
+// It starts with a digit, ¯ or dot
+// and stops before a character is not digit, a-zA-Z, dot or ¯.
+// Valid number formats are not known to the scanner.
+// Parsing is done by the parser with the current numerical tower.
+func (s *Scanner) scanNumber(cmplx bool) (Token, error) {
+	var buf strings.Builder
+	for {
+		r := s.nextRune()
+		if r == -1 {
+			return Token{T: Number, S: buf.String()}, nil
+		} else if r >= '0' && r <= '9' {
+			buf.WriteRune(r)
+		} else if r >= 'a' && r <= 'z' {
+			buf.WriteRune(r)
+		} else if r >= 'A' && r <= 'Z' {
+			buf.WriteRune(r)
+		} else if r == '.' {
+			buf.WriteRune(r)
+		} else if r == '¯' {
+			buf.WriteRune(r)
+		} else {
+			s.unreadRune()
+			return Token{T: Number, S: buf.String()}, nil
+		}
+	}
+}
+
+/* TODO remove
+// ScanNumber scans the next number.
 // It may include a minus sign ¯, an exponential part (E or e) and an @ for complex angle.
 // Complex numbers are also accepted by real and imag parts as in 1J2.
 // Numbers may start with a dot.
@@ -286,6 +315,7 @@ func (s *Scanner) scanNumber(cmplx bool) (Token, error) {
 		}
 	}
 }
+*/
 
 // ScanString returns the next token as charstr or chars depending on the quoteChar.
 // " scans the string as charstr and ' as chars.
