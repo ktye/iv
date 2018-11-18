@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/primitives"
 	// TODO "github.com/ktye/iv/apl/operators"
 )
@@ -28,6 +29,7 @@ func newAplIv(rank int) (Apl, error) {
 	// by go as an identifier.
 	var α AplIv
 	α.a = apl.New(os.Stdout)
+	numbers.Register(α.a)
 	primitives.Register(α.a)
 	// TODO operators.Register(α.a)
 	return &α, nil
@@ -73,7 +75,7 @@ func (α *AplIv) AddRule(cond, expr string) error {
 
 func (α *AplIv) ParseScalar(s string) (Scalar, error) {
 	// Iv/apl accepts both ¯, and -.
-	if n, err := apl.ParseNumber(s); err == nil {
+	if n, err := α.a.Tower.Parse(s); err == nil {
 		return n, nil
 	}
 
@@ -96,15 +98,19 @@ func (α *AplIv) Execute(dims []int, array []Scalar, term int, eof bool) error {
 	// termination level E,
 	// End of input marker EOF
 	α.nr++
-	α.a.Assign("N", apl.Int(α.nr))
-	α.a.Assign("E", apl.Int(term))
+	α.a.Assign("N", apl.Index(α.nr))
+	α.a.Assign("E", apl.Index(term))
 	α.a.Assign("EOF", apl.Bool(eof))
 
 	boolean := func(v apl.Value) (bool, error) {
 		if b, ok := v.(apl.Bool); ok {
 			return bool(b), nil
-		} else if i, ok := v.(apl.Int); ok {
+		} else if i, ok := v.(apl.Index); ok {
 			return i == 1, nil
+		} else if n, ok := v.(apl.Number); ok {
+			if i, ok := n.ToIndex(); ok {
+				return i == 1, nil
+			}
 		}
 		return false, fmt.Errorf("expected bool or int, got %T", v)
 	}
