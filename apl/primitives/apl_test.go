@@ -60,6 +60,11 @@ var testCases = []struct {
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
 	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
 
+	// Decode
+	{"3⊥1 2 1", "16", nil},
+	{"3⊥4 3 2 1", "142", nil},
+	{"2⊥1 1 1 1", "15", nil},
+
 	// Variable assignments.
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it
