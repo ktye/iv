@@ -15,6 +15,9 @@ import (
 type arrays struct{}
 
 func (ars arrays) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
+	if L == nil {
+		return L, R, false
+	}
 	isScalar := domain.IsScalar(nil)
 	_, scalarL := isScalar.To(a, L)
 	_, scalarR := isScalar.To(a, R)

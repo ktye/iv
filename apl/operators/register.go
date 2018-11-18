@@ -59,33 +59,3 @@ type function func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)
 func (f function) Call(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 	return f(a, l, r)
 }
-
-/*
-
-type dyadic struct{}
-
-func (d dyadic) IsDyadic() bool { return true }
-
-type monadic struct{}
-
-func (m monadic) IsDyadic() bool { return false }
-
-
-
-type regop struct {
-	s  string
-	op apl.Operator
-}
-
-var operators []regop
-
-func register(s string, op apl.Operator) {
-	operators = append(operators, regop{s, op})
-}
-
-var doc [][2]string
-
-func addDoc(key, text string) {
-	doc = append(doc, [2]string{key, text})
-}
-*/

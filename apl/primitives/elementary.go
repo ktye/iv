@@ -62,6 +62,10 @@ func arith1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 			return res, nil
 		}
 
+		if v, ok := R.(apl.Index); ok {
+			R = a.Tower.FromIndex(int(v))
+		}
+
 		// Uptype and call the function.
 		n, ok := R.(apl.Number)
 		if ok == false {
@@ -98,6 +102,13 @@ func arith2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 			if res, ok := fn(a, L, R); ok {
 				return res, nil
 			}
+		}
+
+		if v, ok := L.(apl.Index); ok {
+			L = a.Tower.FromIndex(int(v))
+		}
+		if v, ok := R.(apl.Index); ok {
+			R = a.Tower.FromIndex(int(v))
 		}
 
 		ln, ok := L.(apl.Number)

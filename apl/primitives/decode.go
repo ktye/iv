@@ -12,7 +12,7 @@ func init() {
 		Domain: Dyadic(Split(ToNumber(nil), ToVector(nil))),
 		fn:     poly,
 	})
-	// TODO: other cases, APL2 p90
+	// TODO: other cases, APL2 p90, DyRef p32
 }
 
 // poly evaluates a polynom. L is a number and R a vector or empty.

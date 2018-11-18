@@ -55,15 +55,19 @@ var testCases = []struct {
 	{"⍴⍴⍳0", "1", nil},             // rank of empty array is 1
 	{"2 3⍴1", "1 1 1\n1 1 1", nil}, // shape
 
-	// Basic operators.
-	{"+/1 2 3", "6", nil},                            // plus reduce
-	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
-	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
+	// Array expressions.
+	{"-⍳3", "¯1 ¯2 ¯3", nil},
 
 	// Decode
 	{"3⊥1 2 1", "16", nil},
 	{"3⊥4 3 2 1", "142", nil},
 	{"2⊥1 1 1 1", "15", nil},
+	// {"24 60 60⊥2 23 12", "8592", nil}, // mixed radix
+
+	// Basic operators.
+	{"+/1 2 3", "6", nil},                            // plus reduce
+	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
+	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
 
 	// Variable assignments.
 	{"X←3", "", nil},          // assign a number
