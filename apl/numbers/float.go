@@ -45,6 +45,10 @@ func floatToComplex(f apl.Number) (apl.Number, bool) {
 	return Complex(complex(float64(f.(Float)), 0)), true
 }
 
+func (f Float) Less(R apl.Value) (apl.Bool, bool) {
+	return apl.Bool(f < R.(Float)), true
+}
+
 func (f Float) Add() (apl.Value, bool) {
 	return f, true
 }

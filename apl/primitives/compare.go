@@ -1,10 +1,6 @@
 package primitives
 
-/* TODO
-
 import (
-	"fmt"
-
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
 )
@@ -23,35 +19,84 @@ func init() {
 	for _, e := range tab {
 		register(primitive{
 			symbol: e.symbol,
-			doc:    "compare " + e.doc,
-			Domain: arithmetic{},
-			fn:     arith(comparator(e.symbol)),
+			doc:    e.doc,
+			Domain: Dyadic(Split(IsScalar(nil), IsScalar(nil))),
+			fn:     arith2(e.symbol, compare(e.symbol)),
+		})
+		register(primitive{
+			symbol: e.symbol,
+			doc:    e.doc,
+			Domain: arrays{},
+			fn:     array2(e.symbol, compare(e.symbol)),
 		})
 	}
 }
 
-func comparator(symbol string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
-	return func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-		eq, lt, err := CompareScalars(L, R)
-		if err != nil {
-			return nil, err
-		}
+func compare(symbol string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bool) {
+	return func(a *apl.Apl, L apl.Value, R apl.Value) (apl.Value, bool) {
 		switch symbol {
 		case "=":
-			return apl.Bool(eq), nil
+			return equals(L, R)
 		case "<":
-			return apl.Bool(lt), nil
+			return less(L, R)
 		case ">":
-			return apl.Bool(!eq && !lt), nil
+			eq, ls, ok := equalless(L, R)
+			if ok == false {
+				return nil, false
+			}
+			return apl.Bool(!eq && !ls), true
 		case "≠":
-			return apl.Bool(!eq), nil
+			eq, ok := equals(L, R)
+			if ok == false {
+				return nil, false
+			}
+			return apl.Bool(!eq), true
 		case "≤":
-			return apl.Bool(eq || lt), nil
+			eq, ls, ok := equalless(L, R)
+			if ok == false {
+				return nil, false
+			}
+			return apl.Bool(eq || ls), true
 		case "≥":
-			return apl.Bool(!lt), nil
-		default:
-			return apl.Bool(false), fmt.Errorf("illegal comparision operator: %s", symbol)
+			eq, ls, ok := equalless(L, R)
+			if ok == false {
+				return nil, false
+			}
+			return apl.Bool(eq || !ls), true
 		}
+		return nil, false
 	}
 }
-*/
+
+func equalless(L, R apl.Value) (apl.Bool, apl.Bool, bool) {
+	eq, ok := equals(L, R)
+	if ok == false {
+		return false, false, false
+	}
+	ls, ok := less(L, R)
+	if ok == false {
+		return false, false, false
+	}
+	return eq, ls, true
+}
+func equals(L, R apl.Value) (apl.Bool, bool) {
+	if eq, ok := L.(equaler); ok {
+		return eq.Equals(R)
+	}
+	return apl.Bool(L == R), true
+}
+
+type equaler interface {
+	Equals(apl.Value) (apl.Bool, bool)
+}
+
+func less(L, R apl.Value) (apl.Bool, bool) {
+	if ls, ok := L.(lesser); ok {
+		return ls.Less(R)
+	}
+	return false, false
+}
+
+type lesser interface {
+	Less(apl.Value) (apl.Bool, bool)
+}

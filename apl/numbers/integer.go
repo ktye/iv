@@ -45,6 +45,10 @@ func intToFloat(i apl.Number) (apl.Number, bool) {
 	return Float(i.(Integer)), true
 }
 
+func (i Integer) Less(R apl.Value) (apl.Bool, bool) {
+	return apl.Bool(i < R.(Integer)), true
+}
+
 func (i Integer) Add() (apl.Value, bool) {
 	return i, true
 }
