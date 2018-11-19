@@ -115,20 +115,22 @@ func (r Rat) Pow() (apl.Value, bool) {
 	return nil, false
 }
 func (l Rat) Pow2(R apl.Value) (apl.Value, bool) {
-	if c := R.(Rat).Rat.Cmp(rat0); c == 0 {
+	neg := false
+	r := R.(Rat).Rat
+	if c := r.Cmp(rat0); c == 0 {
 		return Int{big.NewInt(1)}, true
 	} else if c < 0 {
-		return nil, false
+		neg = true
+		r = r.Neg(r)
 	} else if l.Rat.Cmp(rat0) == 0 {
 		return Int{big.NewInt(0)}, true
 	}
 
-	if R.(Rat).Rat.IsInt() == false {
+	if r.IsInt() == false {
 		return nil, false
 	}
 
-	// R is integer: L**R = (a/b)**R = a**R / b**R
-	e := R.(Rat).Rat.Num()
+	e := r.Num()
 	a := l.Rat.Num()
 	b := l.Rat.Denom()
 	ae := new(big.Int)
@@ -137,5 +139,8 @@ func (l Rat) Pow2(R apl.Value) (apl.Value, bool) {
 	be = be.Exp(b, e, nil)
 	z := new(big.Rat)
 	z.SetFrac(ae, be)
+	if neg {
+		z = z.Inv(z)
+	}
 	return Rat{z}, true
 }
