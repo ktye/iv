@@ -24,7 +24,7 @@ If an item recurs: the value is the index of the first occurence`,
 	})
 }
 
-// interva: R: integer. index generator.
+// interval: R: integer. index generator.
 func interval(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	n := int(R.(apl.Index))
 	if n < 0 {
