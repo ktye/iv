@@ -22,6 +22,7 @@ import (
 
 	"github.com/ktye/duit"
 	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/big"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
@@ -34,24 +35,36 @@ func main() {
 	var fontsize = 18
 	var quiet bool
 	var extra bool
+	var bignum bool
+	var prec uint
 	flag.IntVar(&fontsize, "fontsize", fontsize, "size of built-in font")
 	flag.BoolVar(&quiet, "quiet", false, "dont show welcome message")
 	flag.BoolVar(&extra, "extra", true, "register all packages in aplextra")
+	flag.BoolVar(&bignum, "big", false, "use big numbers int and rational")
+	flag.UintVar(&prec, "prec", 0, "use multi precision floats and complex")
 	flag.Parse()
+
+	if bignum && prec != 0 {
+		fmt.Println("only one of -big and -prec>0 is allowed")
+	}
 
 	// Start APL.
 	a := apl.New(nil)
+	if bignum {
+		big.SetBigTower(a)
+	} else if prec > 0 {
+		big.SetPreciseTower(a, prec)
+	} else {
+		numbers.Register(a)
+	}
 	/* TODO
 	if extra {
 		aplextra.RegisterAll(a)
 	} else {
-		funcs.Register(a)
+		primitives.Register(a)
 		operators.Register(a)
 	}
 	*/
-	//big.SetBigTower(a)
-	//big.SetPreciseTower(a, 512)
-	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
 

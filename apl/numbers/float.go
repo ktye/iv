@@ -18,7 +18,7 @@ func (n Float) String(a *apl.Apl) string {
 	format, minus := getformat(a, n, "%v")
 	s := fmt.Sprintf(format, float64(n))
 	if minus == false {
-		s = strings.Replace(s, "-", "¯", 1)
+		s = strings.Replace(s, "-", "¯", -1)
 	}
 	return s
 }

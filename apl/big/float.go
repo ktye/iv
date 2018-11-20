@@ -1,6 +1,7 @@
 package big
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
@@ -15,8 +16,12 @@ type Float struct {
 }
 
 func (f Float) String(a *apl.Apl) string {
-	// TODO: Use Format %.15f => Text('f', 15), with leading -.
-	return strings.Replace(f.Float.Text('g', -1), "-", "¯", -1)
+	format, minus := getformat(a, f, "%v")
+	s := fmt.Sprintf(format, f.Float)
+	if minus == false {
+		s = strings.Replace(s, "-", "¯", -1)
+	}
+	return s
 }
 
 func ParseFloat(s string, prec uint) (apl.Number, bool) {
@@ -41,7 +46,8 @@ func (f Float) ToIndex() (int, bool) {
 }
 
 func (f Float) cpy() *big.Float {
-	return f.Float.Copy(f.Float)
+	c := new(big.Float)
+	return c.Copy(f.Float)
 }
 
 func (f Float) Equals(R apl.Value) (apl.Bool, bool) {
