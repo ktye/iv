@@ -106,3 +106,17 @@ func (i Integer) Log() (apl.Value, bool) {
 func (i Integer) Log2() (apl.Value, bool) {
 	return nil, false
 }
+
+func (i Integer) Abs() (apl.Value, bool) {
+	if i < 0 {
+		return -i, true
+	}
+	return i, true
+}
+
+func (i Integer) Ceil() (apl.Value, bool) {
+	return i, true
+}
+func (i Integer) Floor() (apl.Value, bool) {
+	return i, true
+}

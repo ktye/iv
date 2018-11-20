@@ -144,3 +144,17 @@ func (i Int) Pow2(R apl.Value) (apl.Value, bool) {
 	z = z.Exp(i.Int, R.(Int).Int, nil)
 	return Int{z}, true
 }
+
+func (i Int) Abs() (apl.Value, bool) {
+	if i.Int.Sign() < 0 {
+		return i.Sub()
+	}
+	return i, true
+}
+
+func (i Int) Ceil() (apl.Value, bool) {
+	return i, true
+}
+func (i Int) Floor() (apl.Value, bool) {
+	return i, true
+}

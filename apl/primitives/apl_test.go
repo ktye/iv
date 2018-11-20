@@ -1,8 +1,9 @@
 package primitives
 
 import (
-	"math"
-	"strconv"
+	"fmt"
+	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -13,10 +14,24 @@ import (
 
 //go:generate go run gen.go
 
+type formatmap map[reflect.Type]string
+
+var format5g formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Float(0)): "%.5g",
+}
+var formatJ formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Complex(0)): "%vJ%v",
+}
+var formatJR5 formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Float(0)):   "%.5g",
+	reflect.TypeOf(numbers.Complex(0)): "%.5gJ%.5g",
+}
+
 var testCases = []struct {
 	in, exp string
-	compare func(string, string) bool
+	formats map[reflect.Type]string
 }{
+
 	// Basics numbers and arithmetics.
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -55,6 +70,33 @@ var testCases = []struct {
 	{"⍴⍴⍳0", "1", nil},             // rank of empty array is 1
 	{"2 3⍴1", "1 1 1\n1 1 1", nil}, // shape
 
+	// Magnitude, Residue, Ceil, Floor, Min, Max
+	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", nil},                  // magnitude
+	{"3 3 ¯3 ¯3|¯5 5 ¯4 4", "1 2 ¯1 ¯2", nil},                  // residue
+	{"0.5|3.12 ¯1 ¯0.6", "0.12 0 0.4", format5g},               // residue
+	{"¯1 0 1|¯5.25 0 2.41", "¯0.25 0 0.41", format5g},          // residue
+	{"1j2|2j3 3j4 5j6", "1J1 ¯1J1 0J1", formatJ},               // complex residue
+	{"4J6|7J10", "3J4", formatJ},                               // complex residue
+	{"¯10 7J10 .3|17 5 10", "¯3 ¯5J7 0.1", formatJR5},          // residue
+	{"⌊¯2.3 0.1 100 3.3", "¯3 0 100 3", nil},                   // floor
+	{"⌊0.5 + 0.4 0.5 0.6", "0 1 1", nil},                       // floor
+	{"⌊1j3.2 3.3j2.5 ¯3.3j¯2.5", "1J3 3J2 ¯3J¯3", formatJ},     // complex floor
+	{"⌊1.5J2.5", "2J2", formatJ},                               // complex floor
+	{"⌊1J2 1.2J2.5 ¯1.2J¯2.5", "1J2 1J2 ¯1J¯3", formatJ},       // complex floor
+	{"⌈¯2.7 3 .5", "¯2 3 1", nil},                              // ceil
+	{"⌈1.5J2.5", "1J3", formatJ},                               // complex ceil
+	{"⌈1J2 1.2J2.5 ¯1.2J¯2.5", "1J2 1J3 ¯1J¯2", formatJ},       // complex ceil
+	{"⌈¯2.3 0.1 100 3.3", "¯2 1 100 4", nil},                   // ceil
+	{"⌈1.2j2.5 1.2j¯2.5", "1J3 1J¯2", formatJ},                 // ceil
+	{"5⌊4 5 7", "4 5 5", nil},                                  // min
+	{"¯2⌊¯3", "¯3", nil},                                       // min
+	{"3.3 0 ¯6.7⌊3.1 ¯4 ¯5", "3.1 ¯4 ¯6.7", nil},               // min
+	{"¯2.1 0.1 15.3 ⌊ ¯3.2 1 22", "¯3.2 0.1 15.3", nil},        // min
+	{"5⌈4 5 7", "5 5 7", nil},                                  // max
+	{"¯2⌈¯3", "¯2", nil},                                       // max
+	{"3.3 0 ¯6.7⌈3.1 ¯4 ¯5", "3.3 0 ¯5", nil},                  // max
+	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", nil}, // max
+
 	// Array expressions.
 	{"-⍳3", "¯1 ¯2 ¯3", nil},
 
@@ -82,7 +124,7 @@ var testCases = []struct {
 	//{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
 
 	// IBM APL Language, 3rd edition, June 1976.
-	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", cmpFloats},
+	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", nil},
 	// the original prints as: "1790.85 1413.02 1819.4 1822.03"
 	{"Area ← 3×4\nX←2+⎕←3×Y←4\nX\nY", "12\n14\n4", nil},
 
@@ -97,7 +139,7 @@ var testCases = []struct {
 	// Tool of thought.
 }
 
-func testCompare(got, exp string, eql func(a, b string) bool) bool {
+func testCompare(got, exp string) bool {
 	got = strings.TrimSpace(got)
 	gotlines := strings.Split(got, "\n")
 	explines := strings.Split(exp, "\n")
@@ -120,36 +162,25 @@ func testCompare(got, exp string, eql func(a, b string) bool) bool {
 	return true
 }
 
-func cmpFloats(a, b string) bool {
-	tol := 1.0E-9
-	eq := func(x, y string) bool {
-		x = strings.Replace(x, "¯", "-", -1)
-		y = strings.Replace(y, "¯", "-", -1)
-		f, err := strconv.ParseFloat(x, 64)
-		if err != nil {
-			return false
-		}
-		g, err := strconv.ParseFloat(x, 64)
-		if err != nil {
-			return false
-		}
-		if e := math.Abs(f - g); e > tol {
-			return false
-		}
-		return true
-	}
-	return testCompare(a, b, eq)
-}
-
 func TestApl(t *testing.T) {
 	// Compare result with expectation but ignores differences in whitespace.
-
 	for i, tc := range testCases {
 		var buf strings.Builder
 		a := apl.New(&buf)
 		numbers.Register(a)
 		Register(a)
 		operators.Register(a)
+
+		// Set numeric formats.
+		if tc.formats != nil {
+			for t, f := range tc.formats {
+				if num, ok := a.Tower.Numbers[t]; ok {
+					num.Format = f
+					a.Tower.Numbers[t] = num
+				}
+			}
+		}
+
 		lines := strings.Split(tc.in, "\n")
 		for k, s := range lines {
 			t.Logf("\t%s", s)
@@ -159,17 +190,17 @@ func TestApl(t *testing.T) {
 		}
 		got := buf.String()
 		t.Log(got)
-		cmp := tc.compare
-		if cmp == nil {
-			cmp = func(a, b string) bool {
-				eq := func(x, y string) bool {
-					return x == y
-				}
-				return testCompare(a, b, eq)
-			}
-		}
-		if cmp(got, tc.exp) == false {
+
+		g := got
+		g = spaces.ReplaceAllString(g, " ")
+		g = newline.ReplaceAllString(g, "\n")
+		g = strings.TrimSpace(g)
+		if g != tc.exp {
+			fmt.Printf("%q != %q\n", g, tc.exp)
 			t.Fatalf("tc%d:\nin>\n%s\ngot>\n%s\nexpected>\n%s", i+1, tc.in, got, tc.exp)
 		}
 	}
 }
+
+var spaces = regexp.MustCompile(`  *`)
+var newline = regexp.MustCompile(`\n *`)

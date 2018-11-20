@@ -21,6 +21,9 @@ func init() {
 		{"÷", "reciprocal", "div, division, divide", div, div2},
 		{"*", "exponential", "power", pow, pow2},
 		{"⍟", "natural logarithm", "log, logarithm", log, log2},
+		{"|", "magnitude, absolute value", "magnitude, absolute value", abs, abs2},
+		{"⌊", "floor", "min, minumum", min, min2},
+		{"⌈", "ceil", "max, maximum", max, max2},
 	}
 
 	for _, e := range tab {
@@ -271,4 +274,109 @@ func log2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 		return d.Log2(R)
 	}
 	return nil, false
+}
+
+// | abs, abs2
+type abser interface {
+	Abs() (apl.Value, bool)
+}
+
+func abs(a *apl.Apl, R apl.Value) (apl.Value, bool) {
+	// Complex numbers should implement their own Abs method.
+	if a, ok := R.(abser); ok {
+		return a.Abs()
+	}
+	zero, r, err := a.Tower.SameType(a.Tower.FromIndex(0), R.(apl.Number))
+	if err != nil {
+		return nil, false
+	}
+	if isless, ok := less(r, zero); ok == false {
+		return nil, false
+	} else if isless {
+		return sub(a, R)
+	} else {
+		return R, true
+	}
+}
+func abs2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
+	// R-L×⌊R÷L+0=L
+	zero, _, err := a.Tower.SameType(a.Tower.FromIndex(0), L.(apl.Number))
+	if err != nil {
+		return nil, false
+	}
+	L0 := zero // 0=L
+	if Lzero, ok := equals(L.(apl.Number), zero); ok == false {
+		return nil, false
+	} else if Lzero {
+		one, _, err := a.Tower.SameType(a.Tower.FromIndex(1), L.(apl.Number))
+		if err != nil {
+			return nil, false
+		}
+		L0 = one
+	}
+	x, ok := add2(a, L, L0)
+	if ok == false {
+		return nil, false
+	}
+	x, ok = div2(a, R, x)
+	if ok == false {
+		return nil, false
+	}
+	x, ok = min(a, x)
+	if ok == false {
+		return nil, false
+	}
+	x, ok = mul2(a, L, x)
+	if ok == false {
+		return nil, false
+	}
+	return sub2(a, R, x)
+}
+
+// ⌊ min, min2
+type floorer interface {
+	Floor() (apl.Value, bool)
+}
+
+// min returns the largest integer that is less or equal to R
+func min(a *apl.Apl, R apl.Value) (apl.Value, bool) {
+	if floor, ok := R.(floorer); ok {
+		return floor.Floor()
+	}
+	return nil, false
+}
+func min2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
+	if isless, ok := less(L, R); ok == false {
+		return nil, false
+	} else {
+		if isless {
+			return L, true
+		} else {
+			return R, true
+		}
+	}
+}
+
+// ⌈ max, max2
+type ceiler interface {
+	Ceil() (apl.Value, bool)
+}
+
+// max returns the smallest integer that is larger or equal to R
+func max(a *apl.Apl, R apl.Value) (apl.Value, bool) {
+	if ceil, ok := R.(ceiler); ok {
+		return ceil.Ceil()
+	}
+	return nil, false
+}
+func max2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
+	if isless, ok := less(L, R); ok == false {
+		return nil, false
+	} else {
+		if isless {
+			return R, true
+		} else {
+			return L, true
+		}
+	}
 }

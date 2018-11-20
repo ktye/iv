@@ -44,14 +44,14 @@ func (c Complex) String(a *apl.Apl) string {
 		s = fmt.Sprintf(format, a, b)
 	}
 	if minus == false {
-		s = strings.Replace(s, "-", "¯", 1)
+		s = strings.Replace(s, "-", "¯", -1)
 	}
 	return s
 }
 
 // ParseComplex parses a Complex from a string.
 // The number may be given as MAGNITUDEaANGLE with the angle in degree,
-// or as realJimag.
+// or as realJimag or REALjIMAG.
 // Both parts are parsed as Floats.
 // If neither "a" or "J" are within the string, it is parsed with 0 imag part.
 func ParseComplex(s string) (apl.Number, bool) {
@@ -77,21 +77,27 @@ func ParseComplex(s string) (apl.Number, bool) {
 			return Complex(complex(0, -f)), true
 		}
 		return Complex(cmplx.Rect(f, float64(deg.(Float))/180.0*math.Pi)), true
-	} else if idx := strings.Index(s, "J"); idx != -1 {
-		re, ok := ParseFloat(s[:idx])
-		if ok == false {
-			return c, false
-		}
-		im, ok := ParseFloat(s[idx+1:])
-		if ok == false {
-			return c, false
-		}
-		return Complex(complex(float64(re.(Float)), float64(im.(Float)))), true
 	} else {
-		if n, ok := ParseFloat(s); ok == false {
-			return c, false
+		idx := strings.Index(s, "J")
+		if idx == -1 {
+			idx = strings.Index(s, "j")
+		}
+		if idx != -1 {
+			re, ok := ParseFloat(s[:idx])
+			if ok == false {
+				return c, false
+			}
+			im, ok := ParseFloat(s[idx+1:])
+			if ok == false {
+				return c, false
+			}
+			return Complex(complex(float64(re.(Float)), float64(im.(Float)))), true
 		} else {
-			return Complex(complex(float64(n.(Float)), 0)), true
+			if n, ok := ParseFloat(s); ok == false {
+				return c, false
+			} else {
+				return Complex(complex(float64(n.(Float)), 0)), true
+			}
 		}
 	}
 }
@@ -173,4 +179,31 @@ func (c Complex) Log2(R apl.Value) (apl.Value, bool) {
 		return e, true
 	}
 	return Complex(r) / Complex(l), true
+}
+
+func (c Complex) Abs() (apl.Value, bool) {
+	// This is a downtype. It only works, if the tower includes Float.
+	return Float(cmplx.Abs(complex128(c))), true
+}
+
+func (c Complex) Floor() (apl.Value, bool) {
+	// APL2 p 133.
+	a, b := real(complex128(c)), imag(complex128(c))
+	fa, fb := math.Floor(a), math.Floor(b)
+	if 1 > (a-fa)+(b-fb) {
+		return Complex(complex(fa, fb)), true
+	} else if 1 <= (a-fa)+(b-fb) && (a-fa) >= (b-fb) {
+		return Complex(complex(1+fa, fb)), true
+	} else if 1 <= (a-fa)+(b-fb) && (a-fa) < (b-fb) {
+		return Complex(complex(fa, 1+fb)), true
+	}
+	fmt.Println("Complex.Floor: unknown case: ", c)
+	return nil, false
+}
+func (c Complex) Ceil() (apl.Value, bool) {
+	f, ok := (-c).Floor()
+	if ok == false {
+		return nil, false
+	}
+	return -f.(Complex), true
 }

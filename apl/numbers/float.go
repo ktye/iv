@@ -115,3 +115,17 @@ func (f Float) Log2(R apl.Value) (apl.Value, bool) {
 	}
 	return Float(r) / Float(l), true
 }
+
+func (f Float) Abs() (apl.Value, bool) {
+	return Float(math.Abs(float64(f))), true
+}
+func (f Float) Abs2(R apl.Value) (apl.Value, bool) {
+	return Float(math.Remainder(float64(f), float64(R.(Float)))), true
+}
+
+func (f Float) Floor() (apl.Value, bool) {
+	return Float(math.Floor(float64(f))), true
+}
+func (f Float) Ceil() (apl.Value, bool) {
+	return Float(math.Ceil(float64(f))), true
+}

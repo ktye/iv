@@ -1,6 +1,7 @@
 package big
 
 import (
+	"math"
 	"math/big"
 	"strings"
 
@@ -115,4 +116,39 @@ func (f Float) Pow2(R apl.Value) (apl.Value, bool) {
 		return numbers.Inf, true
 	}
 	return Float{z}, true
+}
+
+func (f Float) Log() (apl.Value, bool) {
+	if f.Float.Sign() < 0 {
+		return nil, false
+	}
+	return Float{bigfloat.Log(f.Float)}, true
+}
+func (f Float) Log2(R apl.Value) (apl.Value, bool) {
+	if f.Float.Sign() < 0 {
+		return nil, false
+	}
+	r := R.(Float).Float
+	if r.Sign() < 0 {
+		return nil, false
+	}
+	logl := bigfloat.Log(f.Float)
+	logr := bigfloat.Log(r)
+	return Float{logr.Quo(logr, logl)}, true
+}
+
+func (f Float) Abs() (apl.Value, bool) {
+	if f.Float.Sign() < 0 {
+		return f.Sub()
+	}
+	return f, true
+}
+
+func (f Float) Ceil() (apl.Value, bool) {
+	z, _ := f.Float.Float64()
+	return Float{f.cpy().SetFloat64(math.Ceil(z))}, true
+}
+func (f Float) Floor() (apl.Value, bool) {
+	z, _ := f.Float.Float64()
+	return Float{f.cpy().SetFloat64(math.Floor(z))}, true
 }

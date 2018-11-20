@@ -1,6 +1,7 @@
 package big
 
 import (
+	"math"
 	"math/big"
 	"strings"
 
@@ -143,4 +144,22 @@ func (l Rat) Pow2(R apl.Value) (apl.Value, bool) {
 		z = z.Inv(z)
 	}
 	return Rat{z}, true
+}
+
+// Log, Log2 is not defined
+
+func (r Rat) Abs() (apl.Value, bool) {
+	if r.Rat.Sign() < 0 {
+		return r.Sub()
+	}
+	return r, true
+}
+
+func (r Rat) Ceil() (apl.Value, bool) {
+	f, _ := r.Rat.Float64()
+	return Rat{new(big.Rat).SetFloat64(math.Ceil(f))}, true
+}
+func (r Rat) Floor() (apl.Value, bool) {
+	f, _ := r.Rat.Float64()
+	return Rat{new(big.Rat).SetFloat64(math.Floor(f))}, true
 }
