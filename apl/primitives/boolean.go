@@ -20,6 +20,9 @@ func init() {
 		{"⍱", "logical nor", "nor"},
 	}
 
+	// TODO least common multiply: dyadic ^, if L or R are not bool
+	// TODO greatest common divisor: dyadic ∨, if L or R are not bool
+
 	for _, e := range tab {
 		register(primitive{
 			symbol: e.symbol,

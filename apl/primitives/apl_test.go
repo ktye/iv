@@ -143,6 +143,20 @@ var testCases = []struct {
 	// Array expressions.
 	{"-⍳3", "¯1 ¯2 ¯3", nil},
 
+	// Ravel, enlist, catenate, join
+	// TODO ravel with axis
+	// TODO laminate
+	{",2 3⍴⍳6", "1 2 3 4 5 6", nil},     // ravel
+	{"∊2 3⍴⍳6", "1 2 3 4 5 6", nil},     // enlist (identical for simple arrays)
+	{"⍴,3", "1", nil},                   // scalar ravel
+	{"⍴,⍳0", "0", nil},                  // ravel empty array
+	{"1 2 3,4 5 6", "1 2 3 4 5 6", nil}, // catenate
+	{`"abc",1 2`, `abc 1 2`, nil},
+	{"(2 3⍴⍳6),2 2⍴7 8 9 10", "1 2 3 7 8\n4 5 6 9 10", nil},
+	{"2 3≡2,3", "1", nil},                // catenate vector result
+	{"(1 2 3,4 5 6)≡⍳6", "1", nil},       // catenate vector result
+	{"0,2 3⍴1", "0 1 1 1\n0 1 1 1", nil}, // catenate scalar and array
+
 	// Decode
 	{"3⊥1 2 1", "16", nil},
 	{"3⊥4 3 2 1", "142", nil},
