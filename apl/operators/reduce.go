@@ -34,6 +34,16 @@ func init() {
 
 // Reduction returns the derived function f over r.
 func reduction(a *apl.Apl, f, _ apl.Value) apl.Function {
+
+	// Special cases: left, right tack.
+	if p, ok := f.(apl.Primitive); ok {
+		if p == "⊣" {
+			return reduceTack(true)
+		} else if p == "⊢" {
+			return reduceTack(false)
+		}
+	}
+
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 		if l != nil {
 			return nwise(a, l, r)
@@ -124,4 +134,70 @@ func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {
 // l must be a scalar (integer) or a 1 element vector.
 func nwise(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 	return nil, fmt.Errorf("TODO: n-wise reduction")
+}
+
+// reduceTack is the derived function from ⊣/ or ⊢/ .
+type reduceTack bool
+
+func (first reduceTack) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	if L != nil {
+		return nil, fmt.Errorf("tack-reduce can only be applied monadically")
+	}
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		return R, nil
+	}
+	shape := ar.Shape()
+	if len(shape) == 0 {
+		return R, nil
+	}
+
+	// Reduce a vector to a scalar.
+	if len(shape) == 1 {
+		if shape[0] <= 0 {
+			return apl.EmptyArray{}, nil
+		}
+		var v apl.Value
+		var err error
+		if first {
+			v, err = ar.At(0)
+		} else {
+			v, err = ar.At(shape[0] - 1)
+		}
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+
+	// Create a new array
+	inner := shape[len(shape)-1]
+	newshape := apl.CopyShape(ar)
+	newshape = newshape[:len(newshape)-1]
+	ret := apl.GeneralArray{Dims: newshape}
+	ret.Values = make([]apl.Value, apl.ArraySize(ret))
+	i := 0
+	n := 0 // index over inner axis.
+	for k := 0; k < apl.ArraySize(ar); k++ {
+		if first && n == 0 {
+			if v, err := ar.At(k); err != nil {
+				return nil, err
+			} else {
+				ret.Values[i] = v
+				i++
+			}
+		} else if first == false && n == inner-1 {
+			if v, err := ar.At(k); err != nil {
+				return nil, err
+			} else {
+				ret.Values[i] = v
+				i++
+			}
+		}
+		n++
+		if n == inner {
+			n = 0
+		}
+	}
+	return ret, nil
 }

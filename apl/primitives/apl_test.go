@@ -143,6 +143,16 @@ var testCases = []struct {
 	{"3≢1⍴3", "1", nil},       // not match
 	{`""≢⍳0`, "1", nil},       // not match
 
+	// Left tack, right tack. ⊢ ⊣
+	{"⊣1 2 3", "1 2 3", nil},      // monadic left: same
+	{"3 2 1⊣1 2 3", "3 2 1", nil}, // dyadic left
+	{"1 2 3⊢3 2 1", "3 2 1", nil}, // dyadic right
+	{"⊢4", "4", nil},              // monadic right: same
+	{"⊣/1 2 3", "1", nil},         // ⊣ reduction selects the first sub array
+	{"⊢/1 2 3", "3", nil},         // ⊢ reduction selects the last sub array
+	{"⊣/2 3⍴⍳6", "1 4", nil},      // ⊣ reduction over array
+	{"⊢/2 3⍴⍳6", "3 6", nil},      // ⊢ reduction over array
+
 	// Array expressions.
 	{"-⍳3", "¯1 ¯2 ¯3", nil},
 
