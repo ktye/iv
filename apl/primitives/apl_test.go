@@ -63,6 +63,7 @@ var testCases = []struct {
 	{"1 2 3 4 5 ≥ 3", "0 0 1 1 1", nil},     // greater or equal
 	{"2 4 6 8 10<6", "1 1 0 0 0", nil},      // less than
 	{"2 4 6 8 10≤6", "1 1 1 0 0", nil},      // less or equal
+	{"1 2 3 ≠ 1.1 2 3", "1 0 0", nil},       // not equal
 	{"3=3.1 3 ¯2 ¯3 3J0", "0 1 0 0 1", nil}, // equal
 	{"2+2=2", "3", nil},                     // calculating with boolean values
 	{"2×1 2 3=4 2 1", "0 2 0", nil},         // dyadic array
