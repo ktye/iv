@@ -140,60 +140,67 @@ func (c Complex) Div() (apl.Value, bool) {
 	z.im.SetInt64(0)
 	return z.Div2(c)
 }
-func (c Complex) Div2(R apl.Value) (apl.Value, bool) {
-	// Algorithm for robust complex division as described in
-	// Robert L. Smith: Algorithm 116: Complex division. Commun. ACM 5(8): 435 (1962).
-	// adapted from: github.com/Quasilyte/go-complex-nums-emulation/blob/master/complex64.go
+func (l Complex) Div2(R apl.Value) (apl.Value, bool) {
+	// This is not the classical Smith algorithm, but:
+	// Michael Baudin, Robert Smith: A robust complex division in Scilab (2012)
+	// https://archive.org/details/arxiv-1210.4539
+	// It implements compdiv_improved from section 3,
+	// not the scaled version compdiv_robost form sec 3.4.
+
 	r := R.(Complex)
 	if r.re.Sign() == 0 && r.im.Sign() == 0 {
-		return numbers.NaN, true
+		return numbers.Inf, true
+	} else if l.re.Sign() == 0 && l.im.Sign() == 0 {
+		return l.cpy(), true // zero
 	}
-
-	r1 := new(big.Float).Copy(c.re)
-	i1 := new(big.Float).Copy(c.im)
-	r2 := new(big.Float).Copy(r.re)
-	i2 := new(big.Float).Copy(r.im)
-
-	ar2 := new(big.Float).Copy(r2)
-	ar2 = ar2.Abs(ar2) // ar1 = abs(r1)
-	ai2 := new(big.Float).Copy(r2)
-	ai2 = ai2.Abs(ai2) // ai2 = abs(i2)
-
-	ratio := new(big.Float).Copy(r1)
-	denom := new(big.Float).Copy(r1)
-	if ar2.Cmp(ai2) > 0 { // abs(r2) >= abs(i2)
-		ratio = ratio.Quo(i1, r2) // i1 / r2
-		i2 = i2.Mul(ratio, i2)    // ratio * i2
-		denom = denom.Add(r2, i2) // r2 + ratio*i2
-		if denom.Sign() == 0 {
-			return numbers.NaN, true
-		}
-		e := new(big.Float).Copy(i1)
-		e = e.Mul(e, ratio) // i1*ratio
-		e = e.Add(e, r1)    // r1 + i1*ratio
-		e = e.Quo(e, denom) // (r1 + i1*ratio) / denom
-		f := new(big.Float).Copy(r1)
-		f = f.Mul(f, ratio) // r1*ratio
-		f = f.Sub(i1, f)    // i1 - r1*ratio
-		f = f.Quo(f, denom)
-		return Complex{e, f}, true
+	a := new(big.Float).Copy(l.re)
+	b := new(big.Float).Copy(l.im)
+	c := new(big.Float).Copy(r.re)
+	d := new(big.Float).Copy(r.im)
+	dd := new(big.Float).Copy(d) // dd = abs(d)
+	if dd.Sign() < 0 {
+		dd = dd.Neg(dd)
+	}
+	cc := new(big.Float).Copy(c) // cc = abs(c)
+	if cc.Sign() < 0 {
+		cc = cc.Neg(cc)
+	}
+	var e, f *big.Float
+	if dd.Cmp(cc) <= 0 { // abs(d) <= abs(c)
+		e, f = div_(a, b, c, d)
 	} else {
-		ratio = ratio.Quo(r2, i2)    // r2 / i2
-		denom = denom.Mul(ratio, r2) //  ratio*r2
-		denom = denom.Add(denom, i1) // i2 + ratio*r2
-		if denom.Sign() == 0 {
-			return numbers.NaN, true
-		}
-		e := new(big.Float).Copy(r1)
-		e = e.Mul(e, ratio) // r1 * ratio
-		e = e.Add(e, i1)    // r1*ratio + i1
-		e = e.Quo(e, denom) // (r1*ratio + i1) / denom
-		f := new(big.Float).Copy(i1)
-		f = f.Mul(f, ratio) // i1 * ratio
-		f = f.Sub(f, r1)    // i1*ratio - r1
-		f = f.Quo(f, denom) // (i1*ratio - r1) / denom
-		return Complex{e, f}, true
+		e, f = div_(b, a, d, c)
+		f = f.Neg(f)
 	}
+	return Complex{e, f}, true
+}
+
+func div_(a, b, c, d *big.Float) (*big.Float, *big.Float) {
+	r := new(big.Float).Quo(d, c) // r = d/c
+	t := new(big.Float).Mul(d, r) // d*r
+	t = t.Add(t, c)               // c + d*r
+	one := new(big.Float).Copy(t).SetInt64(1)
+	t = t.Quo(one, t) // t = 1/(c + d*r)
+	e := new(big.Float)
+	f := new(big.Float)
+	if r.Sign() != 0 {
+		e = e.Mul(b, r) // b * r
+		e = e.Add(e, a) // a + b*r
+		e = e.Mul(e, t) // e = (a + b*r)*t
+		f = f.Mul(a, r) // a*r
+		f = f.Sub(b, f) // b - a*r
+		f = f.Mul(f, t) // f = (b - a*r)*t
+	} else {
+		e = e.Quo(b, c) // b/c
+		e = e.Mul(e, d) // d * (b/c)
+		e = e.Add(e, a) // a + d*(b/c)
+		e = e.Mul(e, t) // e = (a + d*(b/c))*t
+		f = f.Quo(a, c) // a/c
+		f = f.Mul(f, d) // d*(a/c)
+		f = f.Sub(b, f) // b - d*(a/c)
+		f = f.Mul(f, t) // (b - d*(a/c))*t
+	}
+	return e, f
 }
 
 // TODO func (c Complex) Pow() (apl.Value, bool)
