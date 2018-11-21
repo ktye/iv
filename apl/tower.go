@@ -91,6 +91,17 @@ func (t *Tower) FromBool(b Bool) Number {
 	}
 	return t.FromIndex(0)
 }
+func (t *Tower) ToBool(n Number) (Bool, bool) {
+	if idx, ok := n.ToIndex(); ok == false {
+		return false, false
+	} else if idx < 0 || idx > 1 {
+		return false, false
+	} else if idx == 0 {
+		return false, true
+	} else {
+		return true, true
+	}
+}
 
 // Numeric is a member of the tower.
 // Uptype converts a Number to the next higher class.

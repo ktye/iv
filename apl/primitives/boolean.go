@@ -37,30 +37,40 @@ func init() {
 			fn:     array2(e.symbol, logical(e.logical)),
 		})
 	}
+	register(primitive{
+		symbol: "~",
+		doc:    "logical not",
+		Domain: Monadic(IsScalar(nil)),
+		fn:     arith1("~", logicalNot),
+	})
+	register(primitive{
+		symbol: "~",
+		doc:    "logical not",
+		Domain: Monadic(IsArray(nil)),
+		fn:     array1("~", logicalNot),
+	})
+}
+
+// logical not, R is a Number.
+func logicalNot(a *apl.Apl, R apl.Value) (apl.Value, bool) {
+	b, ok := a.Tower.ToBool(R.(apl.Number))
+	if ok == false {
+		return nil, false
+	}
+	return apl.Bool(!b), true
 }
 
 func logical(logical string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bool) {
 	return func(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
-		boolean := func(v apl.Value) (bool, bool) {
-			if n, ok := v.(apl.Number); ok == false {
-				return false, false
-			} else if m, ok := n.ToIndex(); ok == false {
-				return false, false
-			} else if m < 0 || m > 1 {
-				return false, false
-			} else {
-				return m == 1, true
-			}
-		}
-		l, ok := boolean(L)
+		l, ok := a.Tower.ToBool(L.(apl.Number))
 		if ok == false {
 			return nil, false
 		}
-		r, ok := boolean(R)
+		r, ok := a.Tower.ToBool(R.(apl.Number))
 		if ok == false {
 			return nil, false
 		}
-		var t bool
+		var t apl.Bool
 		switch logical {
 		case "and":
 			t = l && r
@@ -73,6 +83,6 @@ func logical(logical string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bo
 		default:
 			panic(fmt.Sprintf("unknown logical: %s", logical))
 		}
-		return apl.Bool(t), true
+		return t, true
 	}
 }

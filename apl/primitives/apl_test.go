@@ -78,6 +78,9 @@ var testCases = []struct {
 	{"1∨0 1 0 1", "1 1 1 1", nil},         // or
 	{"0 0 1 1⍱0 1 0 1", "1 0 0 0", nil},   // nor
 	{"0 0 1 1⍲0 1 0 1", "1 1 1 0", nil},   // nand
+	{"~0", "1", nil},                      // scalar not
+	{"~1.0", "0", nil},                    // scalar not
+	{"~0 1", "1 0", nil},                  // array not
 	// {"15 1 2 7 ^ 35 1 4 0", "105 1 4 0", nil}, // least common multiple
 	// {"2 3 4 ∧ 0j1 1j2 2j3", "0J2 3J6 8J12", nil},// least common multiple
 	// {"2j2 2j4 ∧ 5j5 4j4", "10J10 ¯4J12", nil},// least common multiple
