@@ -110,6 +110,23 @@ var testCases = []struct {
 	{"3.3 0 ¯6.7⌈3.1 ¯4 ¯5", "3.3 0 ¯5", nil},                  // max
 	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", nil}, // max
 
+	// Match, Not match, tally, depth
+	{"≡5", "0", nil},          // depth
+	{"≡⍳0", "1", nil},         // depth for empty array
+	{`≡"alpha"`, "0", nil},    // a string is a scalarin APLv.
+	{"≢2 3 4⍴⍳10", "2", nil},  // tally
+	{"≢2", "1", nil},          // tally
+	{"≢⍳0", "0", nil},         // tally
+	{"1 2 3≡1 2 3", "1", nil}, // match
+	{"3≡1⍴3", "0", nil},       // match shape
+	{`""≡⍳0`, "0", nil},       // match empty string
+	{`''≡⍳0`, "1", nil},       // this is false in other APLs (here '' is an empty array).
+	{"2.0-1.0≡1>0", "1", nil}, // compare numbers of different type
+	{"1≢2", "1", nil},         // not match
+	{"1≢1", "0", nil},         // not match
+	{"3≢1⍴3", "1", nil},       // not match
+	{`""≢⍳0`, "1", nil},       // not match
+
 	// Array expressions.
 	{"-⍳3", "¯1 ¯2 ¯3", nil},
 

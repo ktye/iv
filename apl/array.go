@@ -113,8 +113,12 @@ func MakeArray(prototype Array, shape []int) ArraySetter {
 
 // ArraySize returns the product of the array shape.
 func ArraySize(v Array) int {
+	shape := v.Shape()
+	if len(shape) == 0 {
+		return 0
+	}
 	n := 1
-	for _, i := range v.Shape() {
+	for _, i := range shape {
 		n *= i
 	}
 	return n
