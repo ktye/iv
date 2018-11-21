@@ -50,12 +50,24 @@ var testCases = []struct {
 
 	// Braces.
 	{"1 2+3 4", "4 6", nil},
-	// TODO: {"1 (2+3) 4", "1 5 6", nil},
+	{"1 (2+3) 4", "1 5 4", nil},
 	{"(1 2)+3 4", "4 6", nil},
 	{"1×2+3×4", "14", nil},
 	{"1×(2+3)×4", "20", nil},
 	{"(3×2)+3×4", "18", nil},
 	{"3×2+3×4", "42", nil},
+
+	// Comparison
+	// Comparison tolerance is not implemented.
+	{"1 2 3 4 5 > 2", "0 0 1 1 1", nil},     // greater than
+	{"1 2 3 4 5 ≥ 3", "0 0 1 1 1", nil},     // greater or equal
+	{"2 4 6 8 10<6", "1 1 0 0 0", nil},      // less than
+	{"2 4 6 8 10≤6", "1 1 1 0 0", nil},      // less or equal
+	{"3=3.1 3 ¯2 ¯3 3J0", "0 1 0 0 1", nil}, // equal
+	{"2+2=2", "3", nil},                     // calculating with boolean values
+	{"2×1 2 3=4 2 1", "0 2 0", nil},         // dyadic array
+	{"-3<4", "¯1", nil},                     // monadic scalar
+	{"-1 2 3=0 2 3", "0 ¯1 ¯1", nil},        // monadic array
 
 	// Multiple expressions.
 	{"1⋄2⋄3", "1", nil},

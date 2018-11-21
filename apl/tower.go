@@ -85,6 +85,13 @@ func (t Tower) SameType(a, b Number) (Number, Number, error) {
 	return a, b, nil
 }
 
+func (t *Tower) FromBool(b Bool) Number {
+	if b {
+		return t.FromIndex(1)
+	}
+	return t.FromIndex(0)
+}
+
 // Numeric is a member of the tower.
 // Uptype converts a Number to the next higher class.
 type Numeric struct {
