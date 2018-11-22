@@ -12,7 +12,13 @@ func init() {
 		symbol:  "/",
 		Domain:  MonadicOp(Function(nil)),
 		doc:     "reduce, n-wise reduction",
-		derived: reduction,
+		derived: reduceLast,
+	})
+	register(operator{
+		symbol:  "⌿",
+		Domain:  MonadicOp(Function(nil)),
+		doc:     "reduce first, n-wise reduction",
+		derived: reduceFirst,
 	})
 	/* TODO APL2 p 220
 	register(operator{
@@ -32,8 +38,16 @@ func init() {
 	*/
 }
 
+func reduceLast(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return reduction(a, f, -1)
+}
+
+func reduceFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return reduction(a, f, 0)
+}
+
 // Reduction returns the derived function f over r.
-func reduction(a *apl.Apl, f, _ apl.Value) apl.Function {
+func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 
 	// Special cases: left, right tack.
 	if p, ok := f.(apl.Primitive); ok {
@@ -62,13 +76,37 @@ func reduction(a *apl.Apl, f, _ apl.Value) apl.Function {
 			return ar, nil // Not sure if this is ok.
 		}
 
-		n := shape[len(shape)-1]
+		if axis < 0 {
+			axis = len(shape) + axis
+		}
+		if axis < 0 || axis >= len(shape) {
+			return nil, fmt.Errorf("reduce: axis rank is %d but axis %d", len(shape), axis)
+		}
+
+		// n is the number of values being reduced (the length if the reduction axis).
+		n := shape[axis]
+
+		// Dims is the shape of the result.
+		dims := make([]int, len(shape)-1)
+		k := 0
+		for i := range shape {
+			if i != axis {
+				dims[k] = shape[i]
+				k++
+			}
+		}
+
+		// If the length of the axis is 1, the result is a reshape.
+		// TODO: if the length of any other axis is 0, this should be triggered as well.
 		if n == 1 {
-			// TODO: If the last axis is 1, the operation is not applied and Z ← (b1↓ρR)ρR
-			return nil, fmt.Errorf("reduce on R, with last axis 1: TODO Z ← (b1↓ρR)ρR")
+			if rs, ok := ar.(apl.Reshaper); ok {
+				return rs.Reshape(dims), nil
+			} else {
+				return nil, fmt.Errorf("reduce with axis length 1: cannot reshape %T", ar)
+			}
 		}
 		if n == 0 {
-			// TODO: If the last axis is 0, apply an identity function
+			// TODO: If the last axis is 0, apply an identity function, DyaRef p 169
 			return nil, fmt.Errorf("reduce on R, with last axis 0: TODO apply identity function")
 		}
 
@@ -86,27 +124,37 @@ func reduction(a *apl.Apl, f, _ apl.Value) apl.Function {
 			return v, err
 		}
 
-		// Create a new array with the last axis removed.
-		dims := make([]int, len(shape)-1)
-		copy(dims, shape[:len(shape)-1])
+		// Create a new array with the given axis removed.
 		values := make([]apl.Value, apl.ArraySize(apl.GeneralArray{Dims: dims}))
 		v := apl.GeneralArray{
 			Dims:   dims,
 			Values: values,
 		}
 
-		var err error
-		lastAxis := make([]apl.Value, n)
-		m := 0
+		vec := make([]apl.Value, n)
+		sidx := make([]int, len(dims)+1) // src index vector
+		tidx := make([]int, len(dims))   // index vector in target array
 		for k := range v.Values {
-			for i := range lastAxis {
-				lastAxis[i], err = ar.At(m)
-				if err != nil {
+			// Copy target index over the source index,
+			// leaving the reduced axis unset.
+			copy(sidx, tidx[:axis])
+			copy(sidx[axis+1:], tidx[axis:])
+			// Iterate over the reduced axis
+			for i := range vec {
+				sidx[axis] = i
+				// TODO: maybe this could be done more efficiently
+				// e.g. by iteration with a fixed increase.
+				if m, err := apl.ArrayIndex(shape, sidx); err != nil {
 					return nil, err
+				} else if val, err := ar.At(m); err != nil {
+					return nil, err
+				} else {
+					vec[i] = val
 				}
-				m++
 			}
-			if res, err := reduce(a, lastAxis, d); err != nil {
+			apl.IncArrayIndex(tidx, dims)
+
+			if res, err := reduce(a, vec, d); err != nil {
 				return nil, fmt.Errorf("cannot reduce: %s", err)
 			} else {
 				v.Values[k] = res

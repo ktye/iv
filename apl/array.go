@@ -166,6 +166,17 @@ func ArrayIndexes(shape []int, res []int, flat int) error {
 	return nil
 }
 
+// IncArrayIndex increases the index vector idx for the given shape.
+func IncArrayIndex(idx []int, shape []int) {
+	for i := 0; i < len(idx); i++ {
+		idx[i]++
+		if idx[i] < shape[i] {
+			break
+		}
+		idx[i] = 0
+	}
+}
+
 // ArrayAt returns the value at the index given by a vector.
 // Usually arrays are indexed by their flat index method At.
 func ArrayAt(v Array, idx []int) (Value, error) {
