@@ -4,6 +4,7 @@ package apl
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 
 	"github.com/ktye/iv/apl/scan"
 	// _ "github.com/ktye/iv/apl/funcs" // Register default funcs
@@ -90,4 +91,11 @@ func (a *Apl) SetDebug(d bool) {
 
 func (a *Apl) SetOutput(w io.Writer) {
 	a.stdout = w
+}
+
+func (a *Apl) GetOutput() io.Writer {
+	if a.stdout == nil {
+		return ioutil.Discard
+	}
+	return a.stdout
 }

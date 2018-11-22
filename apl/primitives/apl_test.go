@@ -194,6 +194,13 @@ var testCases = []struct {
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
 	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
 
+	// Format as a string (other APLs format as character array).
+	// Execute.
+	{"⍕10", "10", nil},   // format as string
+	{`⍎"1+1"`, "2", nil}, // evaluate expression
+	// TODO: dyadic format with specification.
+	// TODO: dyadic execute with namespace.
+
 	// Variable assignments.
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it
