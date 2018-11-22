@@ -24,6 +24,7 @@ func init() {
 		{"|", "magnitude, absolute value", "magnitude, absolute value", abs, abs2},
 		{"⌊", "floor", "min, minumum", min, min2},
 		{"⌈", "ceil", "max, maximum", max, max2},
+		{"!", "factorial", "binomial", factorial, binomial},
 	}
 
 	for _, e := range tab {
@@ -385,4 +386,28 @@ func max2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 			return L, true
 		}
 	}
+}
+
+// ! factorial, binomial
+type gammaer interface {
+	Gamma() (apl.Value, bool)
+}
+type gammaer2 interface {
+	Gamma2(R apl.Value) (apl.Value, bool)
+}
+
+// factorial returns the factorial for non-negative integers.
+// It is not defined for negative integers and applies the gamma function
+// for other arguments.
+func factorial(a *apl.Apl, R apl.Value) (apl.Value, bool) {
+	if g, ok := R.(gammaer); ok {
+		return g.Gamma()
+	}
+	return nil, false
+}
+func binomial(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
+	if g, ok := L.(gammaer2); ok {
+		return g.Gamma2(R)
+	}
+	return nil, false
 }

@@ -120,3 +120,65 @@ func (i Integer) Ceil() (apl.Value, bool) {
 func (i Integer) Floor() (apl.Value, bool) {
 	return i, true
 }
+
+func (i Integer) Gamma() (apl.Value, bool) {
+	// 20 is the limit for int64.
+	if i < 0 || i > 20 {
+		return nil, false
+	} else if i == 0 {
+		return Integer(1), true
+	}
+	n := int64(1)
+	for k := 1; k <= int(i); k++ {
+		n *= int64(k)
+	}
+	return Integer(n), true
+}
+func (L Integer) Gamma2(r apl.Value) (apl.Value, bool) {
+	m1exp := func(n Integer) Integer {
+		if n%2 == 0 {
+			return 1
+		}
+		return -1
+	}
+	R := r.(Integer)
+	// This is the table from APL2 p 66
+	if L >= 0 && R >= 0 && R-L >= 0 {
+		lg, ok := L.Gamma()
+		if ok == false {
+			return nil, false
+		}
+		rg, ok := R.Gamma()
+		if ok == false {
+			return nil, false
+		}
+		rlg, ok := (R - L).Gamma()
+		if ok == false {
+			return nil, false
+		}
+		return rg.(Integer) / (lg.(Integer) * rlg.(Integer)), true
+	} else if L >= 0 && R >= 0 && R-L < 0 {
+		return Integer(0), true
+	} else if L >= 0 && R < 0 && R-L < 0 {
+		v, ok := L.Gamma2(L - (1 + R))
+		if ok == false {
+			return nil, false
+		}
+		return m1exp(L) * v.(Integer), true
+	} else if L < 0 && R >= 0 && R-L >= 0 {
+		return Integer(0), true
+	} else if L < 0 && R < 0 && R-L >= 0 {
+		al1 := 1 + L
+		if al1 < 0 {
+			al1 = -al1
+		}
+		v, ok := (-(R + 1)).Gamma2(al1)
+		if ok == false {
+			return nil, false
+		}
+		return m1exp(R-L) * v.(Integer), true
+	} else if L < 0 && R < 0 && R-L < 0 {
+		return Integer(0), true
+	}
+	return nil, false
+}

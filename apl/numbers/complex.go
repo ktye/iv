@@ -207,3 +207,39 @@ func (c Complex) Ceil() (apl.Value, bool) {
 	}
 	return -f.(Complex), true
 }
+
+func cgamma(z complex128) complex128 {
+	// complex gamma function using Lanczos approximation
+	p := []float64{0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7}
+	if real(z) < 0.5 {
+		// gamma(z) gamma(1-z) = pi/sin(pi*z)
+		return complex(math.Pi, 0) / (cmplx.Sin(math.Pi*z) * cgamma(1-z))
+	}
+	g := 7
+	x := complex(p[0], 0)
+	z -= complex(1, 0)
+	for i := 1; i < g+2; i++ {
+		x += complex(p[i], 0) / (z + complex(float64(i), 0))
+	}
+	t := z + complex(0.5+float64(g), 0)
+	z = cmplx.Pow(t, z+complex(0.5, 0)) * cmplx.Exp(-t) * x
+	sqrt2pi := math.Sqrt(2.0 * math.Pi)
+	return complex(real(z)*sqrt2pi, imag(z)*sqrt2pi)
+}
+func cbeta(a, b complex128) complex128 {
+	// This is not a special implementation.
+	return cgamma(a) * cgamma(b) / cgamma(a+b)
+}
+
+func (c Complex) Gamma() (apl.Value, bool) {
+	return Complex(cgamma(complex128(c) + 1)), true
+}
+func (c Complex) Gamma2(R apl.Value) (apl.Value, bool) {
+	l := complex128(c)
+	r := complex128(R.(Complex))
+	res := Complex(complex128(1.0 / ((r - l) * cbeta(r-l, l+1))))
+	if e, ok := isException(res); ok {
+		return e, true
+	}
+	return res, true
+}

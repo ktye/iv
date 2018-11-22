@@ -22,6 +22,9 @@ var format5g formatmap = map[reflect.Type]string{
 var formatJ formatmap = map[reflect.Type]string{
 	reflect.TypeOf(numbers.Complex(0)): "%vJ%v",
 }
+var format5J formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Complex(0)): "%.5fJ%.5f",
+}
 var formatJR5 formatmap = map[reflect.Type]string{
 	reflect.TypeOf(numbers.Float(0)):   "%.5g",
 	reflect.TypeOf(numbers.Complex(0)): "%.5gJ%.5g",
@@ -125,6 +128,20 @@ var testCases = []struct {
 	{"¯2⌈¯3", "¯2", nil},                                       // max
 	{"3.3 0 ¯6.7⌈3.1 ¯4 ¯5", "3.3 0 ¯5", nil},                  // max
 	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", nil}, // max
+
+	// Factorial, gamma, binomial.
+	{"!4", "24", nil},                                       // factorial
+	{"!1 2 3 4 5", "1 2 6 24 120", nil},                     // factorial
+	{"!3J2", "¯3.01154J1.77017", format5J},                  // complex gamma
+	{"!.5 ¯.05", "0.88623 1.0315", format5g},                // real gamma (APL2 doc: "0.0735042656 1.031453317"?)
+	{"2!5", "10", nil},                                      // binomial
+	{"3.2!5.2", "10.92", format5g},                          // binomial, floats with beta function
+	{"3!¯2", "¯4", nil},                                     // binomial, negative R
+	{"¯6!¯3", "¯10", nil},                                   // binomial negative L and R
+	{"2 3 4!6 18 24", "15 816 10626", format5g},             // binomial
+	{"3!.05 2.5 ¯3.6", "0.015437 0.3125 ¯15.456", format5g}, // binomial
+	{"0 1 2 3!3", "1 3 3 1", nil},                           // binomial coefficients
+	{"2!3J2", "1.00000J5.00000", format5J},                  // binomial complex
 
 	// Match, Not match, tally, depth
 	{"≡5", "0", nil},          // depth

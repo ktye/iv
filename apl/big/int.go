@@ -158,3 +158,21 @@ func (i Int) Ceil() (apl.Value, bool) {
 func (i Int) Floor() (apl.Value, bool) {
 	return i, true
 }
+
+func (i Int) Gamma() (apl.Value, bool) {
+	m, ok := i.ToIndex()
+	if ok == false {
+		return nil, false
+	} else if m == 0 {
+		return apl.Index(1), true
+	} else if m < 0 || m > 300 { // where should be the limit?
+		return nil, false
+	}
+	n := new(big.Int).SetInt64(1)
+	t := new(big.Int)
+	for k := 1; k <= m; k++ {
+		t.SetInt64(int64(k))
+		n = n.Mul(n, t)
+	}
+	return Int{n}, true
+}

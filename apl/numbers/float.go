@@ -129,3 +129,31 @@ func (f Float) Floor() (apl.Value, bool) {
 func (f Float) Ceil() (apl.Value, bool) {
 	return Float(math.Ceil(float64(f))), true
 }
+
+func (f Float) Gamma() (apl.Value, bool) {
+	y := Float(math.Gamma(float64(f) + 1))
+	if e, ok := isException(y); ok {
+		return e, true
+	}
+	return y, true
+}
+
+func beta(a, b float64) float64 {
+	ga, sa := math.Lgamma(a)
+	gb, sb := math.Lgamma(b)
+	gab, sab := math.Lgamma(a + b)
+	sn := float64(sa * sb * sab)
+	return sn * math.Exp(ga+gb-gab)
+}
+func (L Float) Gamma2(R apl.Value) (apl.Value, bool) {
+	// Dyalog: Beta(X,Y) ←→ ÷Y×(X-1)!X+Y-1
+	// Solving for R and L, with: R=X+Y-1 and L=X-1
+	// L!R = (R over L) = 1/((R-L)*beta(R-L, L+1))
+	r := float64(R.(Float))
+	l := float64(L)
+	f := Float(1.0 / ((r - l) * beta(r-l, l+1)))
+	if e, ok := isException(f); ok {
+		return e, true
+	}
+	return f, true
+}
