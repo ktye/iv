@@ -20,6 +20,18 @@ func init() {
 		doc:     "reduce first, n-wise reduction",
 		derived: reduceFirst,
 	})
+	register(operator{
+		symbol:  `\`,
+		Domain:  MonadicOp(Function(nil)),
+		doc:     "scan",
+		derived: scanLast,
+	})
+	register(operator{
+		symbol:  `⍀`,
+		Domain:  MonadicOp(Function(nil)),
+		doc:     "scan first axis",
+		derived: scanFirst,
+	})
 	/* TODO APL2 p 220
 	register(operator{
 		symbol:  "/",
@@ -46,7 +58,15 @@ func reduceFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return reduction(a, f, 0)
 }
 
-// Reduction returns the derived function f over r.
+func scanLast(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return scanArray(a, f, -1)
+}
+
+func scanFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return scanArray(a, f, 0)
+}
+
+// Reduction returns the derived function f/ .
 func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 
 	// Special cases: left, right tack.
@@ -166,9 +186,111 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 	return function(derived)
 }
 
+// ScanArray is the derived function f\ .
+func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
+	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		if L != nil {
+			return nil, fmt.Errorf("scan: derived function is not defined for dyadic context")
+		}
+
+		ar, ok := R.(apl.Array)
+		if ok == false {
+			// If R is scalar, return unchanged.
+			return R, nil
+		}
+
+		d := f.(apl.Function)
+
+		// The result has the same shape as R.
+		dims := apl.CopyShape(ar)
+		res := apl.GeneralArray{
+			Values: make([]apl.Value, apl.ArraySize(ar)),
+			Dims:   dims,
+		}
+
+		if len(dims) == 0 {
+			return apl.EmptyArray{}, nil
+		}
+
+		if axis < 0 {
+			axis = len(dims) + axis
+		}
+		if axis < 0 || axis >= len(dims) {
+			return nil, fmt.Errorf("scan: axis rank is %d but axis %d", len(dims), axis)
+		}
+
+		// Shortcut, if R is a vector
+		if len(dims) == 1 {
+			vec := make([]apl.Value, dims[0])
+			for i := range vec {
+				if v, err := ar.At(i); err != nil {
+					return nil, err
+				} else {
+					vec[i] = v
+				}
+			}
+			vec, err := scan(a, vec, d)
+			if err != nil {
+				return nil, err
+			}
+			return apl.GeneralArray{
+				Values: vec,
+				Dims:   []int{len(vec)},
+			}, nil
+		}
+
+		// Loop over the indexes, with the scan axis length set to 1.
+		lidx := apl.CopyShape(ar)
+		lidx[axis] = 1
+		idx := make([]int, len(lidx))
+		vec := make([]apl.Value, dims[axis])
+		for i := 0; i < apl.ArraySize(apl.GeneralArray{Dims: lidx}); i++ {
+			// Build the scan vector, by iterating over the axis.
+			for k := range vec {
+				idx[axis] = k
+				n, err := apl.ArrayIndex(dims, idx)
+				if err != nil {
+					fmt.Println("idx", idx, "dims", dims) // TODO rm
+					panic("err1")
+					return nil, err
+				}
+				val, err := ar.At(n)
+				if err != nil {
+					fmt.Println("n", n) // TODO rm
+					panic("err2")
+					return nil, err
+				}
+				vec[k] = val
+			}
+			vals, err := scan(a, vec, d)
+			if err != nil {
+				return nil, err
+			}
+
+			// Assign the values to the destination indexes.
+			for k := range vals {
+				idx[axis] = k
+				n, err := apl.ArrayIndex(dims, idx)
+				if err != nil {
+					fmt.Println("n", n) // TODO rm
+					panic("err3")
+					return nil, err
+				}
+				res.Values[n] = vals[k]
+			}
+
+			// Reset the index vector and increment.
+			idx[axis] = 0
+			apl.IncArrayIndex(idx, lidx)
+		}
+		return res, nil
+	}
+	return function(derived)
+}
+
 func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {
 	var err error
-	v := vec[len(vec)-1]
+	v := vec[len(vec)-1] // TODO: copy?
 	for i := len(vec) - 2; i >= 0; i-- {
 		v, err = d.Call(a, vec[i], v)
 		if err != nil {
@@ -176,6 +298,20 @@ func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {
 		}
 	}
 	return v, nil
+}
+
+func scan(a *apl.Apl, vec []apl.Value, d apl.Function) ([]apl.Value, error) {
+	// The ith element of the result is: d/I↑V
+	res := make([]apl.Value, len(vec))
+	res[0] = vec[0] // TODO: copy?
+	for i := 1; i < len(res); i++ {
+		if v, err := reduce(a, vec[:i+1], d); err != nil {
+			return nil, err
+		} else {
+			res[i] = v
+		}
+	}
+	return res, nil
 }
 
 // Nwise is the function handle for n-wise recution.

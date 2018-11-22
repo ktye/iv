@@ -176,7 +176,7 @@ var testCases = []struct {
 	{"2⊥1 1 1 1", "15", nil},
 	// {"24 60 60⊥2 23 12", "8592", nil}, // mixed radix
 
-	// Reduce, Reduce first.
+	// Reduce, reduce first, scan, scan first.
 	{"+/1 2 3", "6", nil},                // reduce vector
 	{"+⌿1 2 3", "6", nil},                // reduce vector (first axis)
 	{"+/2 3 1 ⍴⍳6", "1 2 3\n4 5 6", nil}, // special case: reshape if axis length is 1
@@ -184,6 +184,10 @@ var testCases = []struct {
 	{"⍴+/1 1⍴3", "1", nil},               // reduce vector result
 	{"+/2 3⍴⍳6", "6 15", nil},            // reduce matrix
 	{"+⌿2 3⍴⍳6", "5 7 9", nil},           // reduce matrix (first axis)
+	{`+\1 2 3 4 5`, "1 3 6 10 15", nil},  // scan vector
+	{`+\2 3⍴⍳6`, "1 3 6\n4 9 15", nil},   // scan array
+	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", nil},    // scan first
+	{`-\1 2 3`, "1 ¯1 2", nil},           // scan
 
 	// Basic operators.
 	{"+/1 2 3", "6", nil},                            // plus reduce
