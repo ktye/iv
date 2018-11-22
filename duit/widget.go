@@ -234,7 +234,7 @@ var keymap = map[key.Code]rune{
 // See cmd/aplui/main.go: welcome for the keyboard layout.
 var Keyboard = map[key.Code][2]rune{
 	// Top row.
-	53: {'◊', '⍨'},
+	53: {'⋄', '⍨'},
 	30: {'¨', '¡'},
 	31: {'¯', '€'},
 	32: {'<', '£'},
