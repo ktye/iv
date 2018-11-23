@@ -157,3 +157,72 @@ func (L Float) Gamma2(R apl.Value) (apl.Value, bool) {
 	}
 	return f, true
 }
+
+func (L Float) PiTimes() (apl.Value, bool) {
+	return Float(math.Pi) * L, true
+}
+func (L Float) Trig(R apl.Value) (apl.Value, bool) {
+	x := float64(R.(Float))
+	var y float64
+	switch L {
+	case 0:
+		y = math.Sqrt(1.0 - x*x)
+	case -1:
+		y = math.Asin(x)
+	case 1:
+		y = math.Sin(x)
+	case -2:
+		y = math.Acos(x)
+	case 2:
+		y = math.Cos(x)
+	case -3:
+		y = math.Atan(x)
+	case 3:
+		y = math.Tan(x)
+	case -4:
+		y = 0
+		if x != -1 {
+			y = (x + 1.0) * math.Sqrt((x-1.0)/(x+1.0))
+		}
+	case 4:
+		y = math.Sqrt(1.0 + x*x)
+	case -5:
+		y = math.Asinh(x)
+	case 5:
+		y = math.Sinh(x)
+	case -6:
+		y = math.Acosh(x)
+	case 6:
+		y = math.Cosh(x)
+	case -7:
+		y = math.Atanh(x)
+	case 7:
+		y = math.Tanh(x)
+	case -8:
+		y = -math.Sqrt(x*x - 1.0)
+	case 8:
+		y = math.Sqrt(x*x - 1.0)
+	case -9, 9:
+		y = x // 9: real part
+	case -10:
+		y = x
+	case 10:
+		y = math.Abs(x)
+	case -11:
+		return nil, false
+	case 11:
+		y = x // imag part
+	case -12:
+		return nil, false
+	case 12: // phase
+		y = 1
+		if x == 0 {
+			y = 0
+		} else if x < 0 {
+			y = -1
+		}
+	default:
+		return nil, false
+	}
+	return Float(y), true
+}

@@ -158,3 +158,5 @@ func (f Float) Floor() (apl.Value, bool) {
 	z, _ := f.Float.Float64()
 	return Float{f.cpy().SetFloat64(math.Floor(z))}, true
 }
+
+// TODO Trig

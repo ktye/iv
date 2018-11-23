@@ -23,7 +23,10 @@ var formatJ formatmap = map[reflect.Type]string{
 	reflect.TypeOf(numbers.Complex(0)): "%vJ%v",
 }
 var format5J formatmap = map[reflect.Type]string{
-	reflect.TypeOf(numbers.Complex(0)): "%.5fJ%.5f",
+	reflect.TypeOf(numbers.Complex(0)): "%.5gJ%.5g",
+}
+var format2J formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Complex(0)): "%.2fJ%.2f",
 }
 var formatJR5 formatmap = map[reflect.Type]string{
 	reflect.TypeOf(numbers.Float(0)):   "%.5g",
@@ -133,7 +136,7 @@ var testCases = []struct {
 	{"⍝ Factorial, gamma, binomial.", "", nil},
 	{"!4", "24", nil},                                       // factorial
 	{"!1 2 3 4 5", "1 2 6 24 120", nil},                     // factorial
-	{"!3J2", "¯3.01154J1.77017", format5J},                  // complex gamma
+	{"!3J2", "¯3.0115J1.7702", format5J},                    // complex gamma
 	{"!.5 ¯.05", "0.88623 1.0315", format5g},                // real gamma (APL2 doc: "0.0735042656 1.031453317"?)
 	{"2!5", "10", nil},                                      // binomial
 	{"3.2!5.2", "10.92", format5g},                          // binomial, floats with beta function
@@ -142,7 +145,7 @@ var testCases = []struct {
 	{"2 3 4!6 18 24", "15 816 10626", format5g},             // binomial
 	{"3!.05 2.5 ¯3.6", "0.015437 0.3125 ¯15.456", format5g}, // binomial
 	{"0 1 2 3!3", "1 3 3 1", nil},                           // binomial coefficients
-	{"2!3J2", "1.00000J5.00000", format5J},                  // binomial complex
+	{"2!3J2", "1J5", format5J},                              // binomial complex
 
 	{"⍝ Match, Not match, tally, depth", "", nil},
 	{"≡5", "0", nil},          // depth
@@ -207,6 +210,29 @@ var testCases = []struct {
 	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", nil},    // scan first
 	{`-\1 2 3`, "1 ¯1 2", nil},           // scan
 
+	{"⍝ Pi times, circular, trigonometric", "", nil},
+	{"○0 1 2", "0 3.1416 6.2832", format5g},         // pi times
+	{"*○0J1", "¯1.00J0.00", format2J},               // Euler identity
+	{"0 ¯1 ○ 1", "0 1.5708", format5g},              //
+	{"1○(○1)÷2 3 4", "1 0.86603 0.70711", format5g}, //
+	{"2○(○1)÷3", "0.5", format5g},                   //
+	{"9 11○3.5J¯1.2", "3.5 ¯1.2", nil},              //
+	// {"9 11∘.○3.5J¯1.2 2J3 3J4", "3.5 2 3\n¯1.2 3 4", nil}, // TODO outer product
+	{"¯4○¯1", "0", nil},            //
+	{"3○2", "¯2.185", format5g},    //
+	{"2○1", "0.5403", format5g},    //
+	{"÷3○2", "¯0.45766", format5g}, //
+	{"1○○30÷180", "0.5", format5g},
+	{"2○○45÷180", "0.70711", format5g},
+	{"¯1○1", "1.5708", format5g},
+	{"¯2○.54032023059", "0.99998", format5g},
+	{"(¯1○.5)×180÷○1", "30", format5g},
+	{"(¯3○1)×180÷○1", "45", format5g},
+	{"5○1", "1.1752", format5g},
+	{"6○1", "1.5431", format5g},
+	{"¯5○1.175201194", "1", format5g},
+	{"¯6○1.543080635", "1", format5g},
+
 	{"⍝ Basic operators.", "", nil},
 	{"+/1 2 3", "6", nil},                            // plus reduce
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
@@ -255,6 +281,16 @@ var testCases = []struct {
 	{"{⍺×⍵}/2 3 4", "24", nil}, // TODO
 
 	// Tool of thought.
+
+	// github.com/DhavalDalal/APL-For-FP-Programmers
+	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
+	// primes1←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} // 01-primes
+	// primes2←{(~X∊X∘.×X)⌿X←2↓⍳⍵} // 01-primes
+	// ⎕IO←0 ⋄ sieve ← {⍸⊃{~⍵[⍺]:⍵ ⋄ 0@(⍺×2↓⍳⌈(≢⍵)÷⍺)⊢⍵}/⌽(⊂0 0,(⍵-2)⍴1),⍳⍵} // 02-sieve
+	// ⎕IO←0 ⋄ triples←{{⍵/⍨(2⌷x)=+⌿2↑x←×⍨⍵}⍉↑,1+⍳⍵ ⍵ ⍵}// 03-pythagoreans
+	// ⎕IO←0 ⋄ '-:'⊣@(' '=⊢)¨(14⍴(4⍴1),0)(17⍴1 1 0)\¨⊂⍉(⎕D,6↑⎕A)[(12⍴16)⊤?10⍴2*48] // 04-MacAddress
+	// life←{⊃1 ⍵∨.∧3 4=+⌿,1 0 ¯1∘.⊖1 0 ¯1⌽¨⊂⍵} // 05-life
+	// life2←{3=s-⍵∧4=s←{+/,⍵}⌺3 3⊢⍵} // 05-life
 }
 
 func testCompare(got, exp string) bool {

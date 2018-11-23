@@ -243,3 +243,69 @@ func (c Complex) Gamma2(R apl.Value) (apl.Value, bool) {
 	}
 	return res, true
 }
+
+func (c Complex) PiTimes() (apl.Value, bool) {
+	return Complex(complex(math.Pi, 0)) * c, true
+}
+func (L Complex) Trig(R apl.Value) (apl.Value, bool) {
+	x := complex128(R.(Complex))
+	var y complex128
+	switch L {
+	case 0:
+		y = cmplx.Sqrt(1.0 - x*x)
+	case -1:
+		y = cmplx.Asin(x)
+	case 1:
+		y = cmplx.Sin(x)
+	case -2:
+		y = cmplx.Acos(x)
+	case 2:
+		y = cmplx.Cos(x)
+	case -3:
+		y = cmplx.Atan(x)
+	case 3:
+		y = cmplx.Tan(x)
+	case -4:
+		y = 0
+		if x != -1 {
+			y = (x + 1.0) * cmplx.Sqrt((x-1.0)/(x+1.0))
+		}
+	case 4:
+		y = cmplx.Sqrt(1.0 + x*x)
+	case -5:
+		y = cmplx.Asinh(x)
+	case 5:
+		y = cmplx.Sinh(x)
+	case -6:
+		y = cmplx.Acosh(x)
+	case 6:
+		y = cmplx.Cosh(x)
+	case -7:
+		y = cmplx.Atanh(x)
+	case 7:
+		y = cmplx.Tanh(x)
+	case -8:
+		y = -cmplx.Sqrt(x*x - 1.0)
+	case 8:
+		y = cmplx.Sqrt(x*x - 1.0)
+	case -9:
+		y = x
+	case 9:
+		return Float(real(x)), true
+	case -10:
+		return R.(Complex).Add()
+	case 10:
+		return Float(cmplx.Abs(x)), true
+	case -11:
+		y = x * complex(0, 1)
+	case 11:
+		return Float(imag(x)), true
+	case -12:
+		y = cmplx.Exp(x * complex(0, 1))
+	case 12: // phase
+		return Float(cmplx.Phase(x)), true
+	default:
+		return nil, false
+	}
+	return Complex(y), true
+}

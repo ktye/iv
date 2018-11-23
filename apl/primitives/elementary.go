@@ -25,6 +25,7 @@ func init() {
 		{"⌊", "floor", "min, minumum", min, min2},
 		{"⌈", "ceil", "max, maximum", max, max2},
 		{"!", "factorial", "binomial", factorial, binomial},
+		{"○", "pi times", "circular, trigonometric", pitimes, circular},
 	}
 
 	for _, e := range tab {
@@ -408,6 +409,27 @@ func factorial(a *apl.Apl, R apl.Value) (apl.Value, bool) {
 func binomial(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	if g, ok := L.(gammaer2); ok {
 		return g.Gamma2(R)
+	}
+	return nil, false
+}
+
+// ○ pitimes, circular
+type pitimer interface {
+	PiTimes() (apl.Value, bool)
+}
+type triger interface {
+	Trig(R apl.Value) (apl.Value, bool)
+}
+
+func pitimes(a *apl.Apl, R apl.Value) (apl.Value, bool) {
+	if p, ok := R.(pitimer); ok {
+		return p.PiTimes()
+	}
+	return nil, false
+}
+func circular(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
+	if t, ok := L.(triger); ok {
+		return t.Trig(R)
 	}
 	return nil, false
 }
