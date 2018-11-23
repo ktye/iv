@@ -2,6 +2,9 @@ package apl
 
 import (
 	"os"
+	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -14,6 +17,9 @@ func TestParse(t *testing.T) {
 		}
 		a.RegisterOperator("/", reduce{})
 		a.RegisterOperator(".", dot{})
+		if err := a.SetTower(newTower()); err != nil {
+			panic(err)
+		}
 	}
 
 	testCases := []struct {
@@ -96,14 +102,14 @@ var dummyfunc dummyFunction
 
 type dummyFunction struct{}
 
-func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Int(1), nil }
+func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Index(1), nil }
 
 // Monadic operators.
 type reduce struct{}
 
 func (r reduce) To(a *Apl, LO, RO Value) (Value, Value, bool) { return LO, RO, true }
 func (r reduce) String(a *Apl) string                         { return "any" }
-func (r reduce) IsDyadic() bool                               { return false }
+func (r reduce) DyadicOp() bool                               { return false }
 func (r reduce) Derived(a *Apl, lo, ro Value) Function        { return dummyfunc }
 func (r reduce) Doc() string                                  { return "reduce" }
 
@@ -113,14 +119,26 @@ type dot struct {
 
 func (d dot) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
 func (d dot) String(a *Apl) string                       { return "any" }
-func (d dot) IsDyadic() bool                             { return true }
+func (d dot) DyadicOp() bool                             { return true }
 func (d dot) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
 func (d dot) Doc() string                                { return "dot" }
 
-/*
-func init() {
-	handle = func(a *Apl, l Value, r Value) (bool, Value, error) {
-		return true, Bool(true), nil
+func newTower() Tower {
+	m := make(map[reflect.Type]Numeric)
+	m[reflect.TypeOf(Index(0))] = Numeric{
+		Class: 0,
+		Parse: func(s string) (Number, bool) {
+			s = strings.Replace(s, "¯", "-", -1)
+			n, err := strconv.Atoi(s)
+			if err != nil {
+				return nil, false
+			}
+			return Index(n), true
+		},
+		Uptype: func(n Number) (Number, bool) { return nil, false },
 	}
+	t := Tower{
+		Numbers: m,
+	}
+	return t
 }
-*/

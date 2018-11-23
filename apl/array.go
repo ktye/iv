@@ -389,7 +389,12 @@ func (i Bool) Less(v Value) (Bool, bool) {
 type Index int
 
 func (i Index) String(a *Apl) string {
-	return strconv.Itoa(int(i))
+	s := strconv.Itoa(int(i))
+	return strings.Replace(s, "-", "¯", 1)
+}
+
+func (i Index) ToIndex() (int, bool) {
+	return int(i), true
 }
 
 func (i Index) Less(v Value) (Bool, bool) {
