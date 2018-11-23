@@ -190,6 +190,8 @@ func (s *Scanner) nextToken() (Token, error) {
 			return Token{T: Diamond, S: "⋄"}, nil
 		case ' ', '\r', '\t':
 			continue // ignore whitespace, newline should not be present.
+		case '⍝':
+			return Token{T: Endl}, nil
 		default:
 			return Token{}, fmt.Errorf("unexpected rune: %U (%d %c)", r, r, r)
 		}
