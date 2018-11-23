@@ -411,6 +411,15 @@ func (s String) Eval(a *Apl) (Value, error) {
 	return s, nil
 }
 
+// Less implements primitives.lesser to be used for comparison and sorting.
+func (s String) Less(r Value) (Bool, bool) {
+	b, ok := r.(String)
+	if ok == false {
+		return false, false
+	}
+	return s < b, true
+}
+
 /* TODO remove
 func init() {
 	typeOrder = make(map[reflect.Type]int)

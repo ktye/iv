@@ -218,6 +218,17 @@ var testCases = []struct {
 	// TODO: dyadic format with specification.
 	// TODO: dyadic execute with namespace.
 
+	// Grade up, grade down, sort.
+	{"⍋23 11 13 31 12", "2 5 3 1 4", nil},                             // grade up
+	{"⍋23 14 23 12 14", "4 2 5 1 3", nil},                             // identical subarrays
+	{"⍋5 3⍴4 16 37 2 9 26 5 11 63 3 18 45 5 11 54", "2 4 1 5 3", nil}, // grade up rank 2                   //
+	{"⍋22.5 1 15 3 ¯4", "5 2 4 3 1", nil},                             // grade up
+	{"⍒33 11 44 66 22", "4 3 1 5 2", nil},                             // grade down                                                  //
+	{"⍋'alpha'", "1 5 4 2 3", nil},                                    // strings grade up
+	{"'ABCDE'⍒'BEAD'", "2 4 1 3", nil},                                // grade down with collating sequence
+	// TODO: dyadic grade up/down is only implemented for L vector
+	// {"A←423 11 13 31 12⋄A[⍋A]","11 12 13 23 31",nil}, // sort
+
 	// Variable assignments.
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it

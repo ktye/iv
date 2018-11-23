@@ -378,10 +378,26 @@ func (b Bool) String(a *Apl) string {
 	return "0"
 }
 
+func (i Bool) Less(v Value) (Bool, bool) {
+	j, ok := v.(Bool)
+	if ok == false {
+		return false, false
+	}
+	return i == false && j == true, true
+}
+
 type Index int
 
 func (i Index) String(a *Apl) string {
 	return strconv.Itoa(int(i))
+}
+
+func (i Index) Less(v Value) (Bool, bool) {
+	j, ok := v.(Index)
+	if ok == false {
+		return false, false
+	}
+	return i < j, true
 }
 
 // IntdexArray is an array implementation which has only int values.
