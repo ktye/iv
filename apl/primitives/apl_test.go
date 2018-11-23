@@ -35,7 +35,7 @@ var testCases = []struct {
 	formats map[reflect.Type]string
 }{
 
-	// Basics numbers and arithmetics.
+	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
 	{"1-2", "¯1", nil}, // negative number
@@ -45,13 +45,13 @@ var testCases = []struct {
 	{"1a60+1a300", "1a0", nil},
 	{"1J1", "1.4142135623730951a45", nil},
 
-	// Vectors.
+	{"⍝ Vectors.", "", nil},
 	{"1 2 3", "1 2 3", nil},
 	{"1+1 2 3", "2 3 4", nil},
 	{"1 2 3+¯1", "0 1 2", nil},
 	{"1 2 3+4 5 6", "5 7 9", nil},
 
-	// Braces.
+	{"⍝ Braces.", "", nil},
 	{"1 2+3 4", "4 6", nil},
 	{"1 (2+3) 4", "1 5 4", nil},
 	{"(1 2)+3 4", "4 6", nil},
@@ -60,8 +60,7 @@ var testCases = []struct {
 	{"(3×2)+3×4", "18", nil},
 	{"3×2+3×4", "42", nil},
 
-	// Comparison
-	// Comparison tolerance is not implemented.
+	{"⍝ Comparison", "", nil},
 	{"1 2 3 4 5 > 2", "0 0 1 1 1", nil},     // greater than
 	{"1 2 3 4 5 ≥ 3", "0 0 1 1 1", nil},     // greater or equal
 	{"2 4 6 8 10<6", "1 1 0 0 0", nil},      // less than
@@ -72,8 +71,9 @@ var testCases = []struct {
 	{"2×1 2 3=4 2 1", "0 2 0", nil},         // dyadic array
 	{"-3<4", "¯1", nil},                     // monadic scalar
 	{"-1 2 3=0 2 3", "0 ¯1 ¯1", nil},        // monadic array
+	{"⍝ TODO Comparison tolerance is not implemented.", "", nil},
 
-	// Boolean logical
+	{"⍝ Boolean, logical", "", nil},
 	{"0 1 0 1 ^ 0 0 1 1", "0 0 0 1", nil}, // and
 	{"0 1 0 1 ∧ 0 0 1 1", "0 0 0 1", nil}, // accept both ^ and ∧
 	{"0^0 0 1 1", "0 0 0 0", nil},         // or
@@ -84,15 +84,16 @@ var testCases = []struct {
 	{"~0", "1", nil},                      // scalar not
 	{"~1.0", "0", nil},                    // scalar not
 	{"~0 1", "1 0", nil},                  // array not
+	{"⍝ TODO: dyadic: least common multiple, greatest common divisor", "", nil},
 	// {"15 1 2 7 ^ 35 1 4 0", "105 1 4 0", nil}, // least common multiple
 	// {"2 3 4 ∧ 0j1 1j2 2j3", "0J2 3J6 8J12", nil},// least common multiple
 	// {"2j2 2j4 ∧ 5j5 4j4", "10J10 ¯4J12", nil},// least common multiple
 	// {"15 1 2 7 ∨ 35 1 4 0", "5 1 2 7", nil}, // greatest common divisor
 
-	// Multiple expressions.
+	{"⍝ Multiple expressions.", "", nil},
 	{"1⋄2⋄3", "1", nil},
 
-	// Iota and reshape.
+	{"⍝ Iota and reshape.", "", nil},
 	{"⍳5", "1 2 3 4 5", nil},       // index generation
 	{"⍳0", "", nil},                // empty array
 	{"⍴⍳5", "5", nil},              // shape
@@ -102,7 +103,7 @@ var testCases = []struct {
 	{"⍴⍴⍳0", "1", nil},             // rank of empty array is 1
 	{"2 3⍴1", "1 1 1\n1 1 1", nil}, // shape
 
-	// Magnitude, Residue, Ceil, Floor, Min, Max
+	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "", nil},
 	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", nil},                  // magnitude
 	{"3 3 ¯3 ¯3|¯5 5 ¯4 4", "1 2 ¯1 ¯2", nil},                  // residue
 	{"0.5|3.12 ¯1 ¯0.6", "0.12 0 0.4", format5g},               // residue
@@ -129,7 +130,7 @@ var testCases = []struct {
 	{"3.3 0 ¯6.7⌈3.1 ¯4 ¯5", "3.3 0 ¯5", nil},                  // max
 	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", nil}, // max
 
-	// Factorial, gamma, binomial.
+	{"⍝ Factorial, gamma, binomial.", "", nil},
 	{"!4", "24", nil},                                       // factorial
 	{"!1 2 3 4 5", "1 2 6 24 120", nil},                     // factorial
 	{"!3J2", "¯3.01154J1.77017", format5J},                  // complex gamma
@@ -143,7 +144,7 @@ var testCases = []struct {
 	{"0 1 2 3!3", "1 3 3 1", nil},                           // binomial coefficients
 	{"2!3J2", "1.00000J5.00000", format5J},                  // binomial complex
 
-	// Match, Not match, tally, depth
+	{"⍝ Match, Not match, tally, depth", "", nil},
 	{"≡5", "0", nil},          // depth
 	{"≡⍳0", "1", nil},         // depth for empty array
 	{`≡"alpha"`, "0", nil},    // a string is a scalarin APLv.
@@ -160,7 +161,7 @@ var testCases = []struct {
 	{"3≢1⍴3", "1", nil},       // not match
 	{`""≢⍳0`, "1", nil},       // not match
 
-	// Left tack, right tack. ⊢ ⊣
+	{"⍝ Left tack, right tack. ⊢ ⊣", "", nil},
 	{"⊣1 2 3", "1 2 3", nil},      // monadic left: same
 	{"3 2 1⊣1 2 3", "3 2 1", nil}, // dyadic left
 	{"1 2 3⊢3 2 1", "3 2 1", nil}, // dyadic right
@@ -170,12 +171,10 @@ var testCases = []struct {
 	{"⊣/2 3⍴⍳6", "1 4", nil},      // ⊣ reduction over array
 	{"⊢/2 3⍴⍳6", "3 6", nil},      // ⊢ reduction over array
 
-	// Array expressions.
+	{"⍝ Array expressions.", "", nil},
 	{"-⍳3", "¯1 ¯2 ¯3", nil},
 
-	// Ravel, enlist, catenate, join
-	// TODO ravel with axis
-	// TODO laminate
+	{"⍝ Ravel, enlist, catenate, join", "", nil},
 	{",2 3⍴⍳6", "1 2 3 4 5 6", nil},     // ravel
 	{"∊2 3⍴⍳6", "1 2 3 4 5 6", nil},     // enlist (identical for simple arrays)
 	{"⍴,3", "1", nil},                   // scalar ravel
@@ -186,14 +185,16 @@ var testCases = []struct {
 	{"2 3≡2,3", "1", nil},                // catenate vector result
 	{"(1 2 3,4 5 6)≡⍳6", "1", nil},       // catenate vector result
 	{"0,2 3⍴1", "0 1 1 1\n0 1 1 1", nil}, // catenate scalar and array
+	{"⍝ TODO ravel with axis", "", nil},
+	{"⍝ TODO laminate", "", nil},
 
-	// Decode
+	{"⍝ Decode", "", nil},
 	{"3⊥1 2 1", "16", nil},
 	{"3⊥4 3 2 1", "142", nil},
 	{"2⊥1 1 1 1", "15", nil},
-	// {"24 60 60⊥2 23 12", "8592", nil}, // mixed radix
+	{"⍝ TODO 24 60 60⊥2 23 12 (mixed radix)", "", nil}, // {"24 60 60⊥2 23 12", "8592", nil}, // mixed radix
 
-	// Reduce, reduce first, scan, scan first.
+	{"⍝ Reduce, reduce first, scan, scan first.", "", nil},
 	{"+/1 2 3", "6", nil},                // reduce vector
 	{"+⌿1 2 3", "6", nil},                // reduce vector (first axis)
 	{"+/2 3 1 ⍴⍳6", "1 2 3\n4 5 6", nil}, // special case: reshape if axis length is 1
@@ -206,19 +207,18 @@ var testCases = []struct {
 	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", nil},    // scan first
 	{`-\1 2 3`, "1 ¯1 2", nil},           // scan
 
-	// Basic operators.
+	{"⍝ Basic operators.", "", nil},
 	{"+/1 2 3", "6", nil},                            // plus reduce
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
 	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
 
-	// Format as a string (other APLs format as character array).
-	// Execute.
+	{"⍝ Format as a string, Execute", "", nil},
 	{"⍕10", "10", nil},   // format as string
 	{`⍎"1+1"`, "2", nil}, // evaluate expression
-	// TODO: dyadic format with specification.
-	// TODO: dyadic execute with namespace.
+	{"⍝ TODO: dyadic format with specification.", "", nil},
+	{"⍝ TODO: dyadic execute with namespace.", "", nil},
 
-	// Grade up, grade down, sort.
+	{"⍝ Grade up, grade down, sort.", "", nil},
 	{"⍋23 11 13 31 12", "2 5 3 1 4", nil},                             // grade up
 	{"⍋23 14 23 12 14", "4 2 5 1 3", nil},                             // identical subarrays
 	{"⍋5 3⍴4 16 37 2 9 26 5 11 63 3 18 45 5 11 54", "2 4 1 5 3", nil}, // grade up rank 2                   //
@@ -226,10 +226,10 @@ var testCases = []struct {
 	{"⍒33 11 44 66 22", "4 3 1 5 2", nil},                             // grade down                                                  //
 	{"⍋'alpha'", "1 5 4 2 3", nil},                                    // strings grade up
 	{"'ABCDE'⍒'BEAD'", "2 4 1 3", nil},                                // grade down with collating sequence
-	// TODO: dyadic grade up/down is only implemented for L vector
+	{"⍝ TODO dyadic grade up/down is only implemented for vector L", "", nil},
 	// {"A←423 11 13 31 12⋄A[⍋A]","11 12 13 23 31",nil}, // sort
 
-	// Variable assignments.
+	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it
 	{"X←3⋄X←4", "", nil},      // assign and overwrite
@@ -238,15 +238,15 @@ var testCases = []struct {
 	{"f←+⋄⎕←3 f 3", "6", nil}, // assign a function and apply
 	{"X←4⋄⎕←÷X", "0.25", nil}, // assign and use it in another expr
 
-	// Bracket indexing.
-	//{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
+	{"⍝ Bracket indexing.", "", nil},
+	{"⍝ TODO: A←⍳6 ⋄ ⎕←A[1]", "", nil}, //{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
 
-	// IBM APL Language, 3rd edition, June 1976.
+	{"⍝ IBM APL Language, 3rd edition, June 1976.", "", nil},
 	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", nil},
 	// the original prints as: "1790.85 1413.02 1819.4 1822.03"
 	{"Area ← 3×4\nX←2+⎕←3×Y←4\nX\nY", "12\n14\n4", nil},
 
-	// Lambda expressions.
+	{"⍝ Lambda expressions.", "", nil},
 	{"{2×⍵}3", "6", nil},           // lambda in monadic context
 	{"2{⍺+3{⍺×⍵}⍵+2}2", "14", nil}, // nested lambas
 	{"2{(⍺+3){⍺×⍵}⍵+⍺{⍺+1+⍵}1+2}2", "40", nil},
@@ -283,6 +283,16 @@ func testCompare(got, exp string) bool {
 func TestApl(t *testing.T) {
 	// Compare result with expectation but ignores differences in whitespace.
 	for i, tc := range testCases {
+
+		if strings.HasPrefix(tc.in, "⍝") {
+			if strings.HasPrefix(tc.in, "⍝ TODO") {
+				t.Log(tc.in)
+			} else {
+				t.Log("\n" + tc.in)
+			}
+			continue
+		}
+
 		var buf strings.Builder
 		a := apl.New(&buf)
 		numbers.Register(a)
