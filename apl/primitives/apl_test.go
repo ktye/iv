@@ -255,6 +255,19 @@ var testCases = []struct {
 	{"⍝ TODO dyadic grade up/down is only implemented for vector L", "", nil},
 	// {"A←423 11 13 31 12⋄A[⍋A]","11 12 13 23 31",nil}, // sort
 
+	{"⍝ Reverse, rotate", "", nil},
+	{"⌽1 2 3 4 5", "5 4 3 2 1", nil},                                                  // reverse vector
+	{"⌽2 3⍴⍳6", "3 2 1\n6 5 4", nil},                                                  // reverse matrix
+	{"⊖2 3⍴⍳6", "4 5 6\n1 2 3", nil},                                                  // reverse first
+	{"⌽'DESSERTS'", "S T R E S S E D", nil},                                           // reverse strings
+	{"1⌽1 2 3 4", "2 3 4 1", nil},                                                     // rotate vector
+	{"10⌽1 2 3 4", "3 4 1 2", nil},                                                    // rotate vector
+	{"¯1⌽1 2 3 4", "4 1 2 3", nil},                                                    // rotate vector negative
+	{"(-7)⌽1 2 3 4", "2 3 4 1", nil},                                                  // rotate vector negative
+	{"1 2⌽2 3⍴⍳6", "2 3 1\n6 4 5", nil},                                               // rotate array
+	{"(2 2⍴2 ¯3 3 ¯2)⌽2 2 4⍴⍳16", "3 4 1 2\n6 7 8 5\n\n12 9 10 11\n15 16 13 14", nil}, // rotate array
+	{"(2 3⍴2 ¯3 3 ¯2 1 2)⊖2 2 3⍴⍳12", "1 8 9\n4 11 6\n\n7 2 3\n10 5 12", nil},         // rotate array
+
 	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it

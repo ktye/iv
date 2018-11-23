@@ -144,7 +144,7 @@ func ArrayIndex(shape []int, idx []int) (int, error) {
 			return -1, fmt.Errorf("index exceeds array dimension %d", i+1)
 		}
 		n += times * idx[i]
-		times = shape[i]
+		times *= shape[i]
 	}
 	return n, nil
 }
@@ -168,7 +168,7 @@ func ArrayIndexes(shape []int, res []int, flat int) error {
 
 // IncArrayIndex increases the index vector idx for the given shape.
 func IncArrayIndex(idx []int, shape []int) {
-	for i := 0; i < len(idx); i++ {
+	for i := len(idx) - 1; i >= 0; i-- {
 		idx[i]++
 		if idx[i] < shape[i] {
 			break
