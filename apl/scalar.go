@@ -9,7 +9,6 @@ type Complex complex128
 */
 
 // TODO: where to move this?
-type String string
 
 /* TODO remove
 func ParseNumber(s string) (Scalar, error) {
@@ -58,6 +57,7 @@ func IsScalar(v Value) bool {
 }
 */
 
+/*
 // ScalarArray wraps a Scalar into a size 1 array.
 func ScalarArray(v Value) Value {
 	return GeneralArray{
@@ -80,6 +80,7 @@ func ScalarValue(v Value) (Value, bool) {
 	}
 	return v, true
 }
+*/
 
 /* TODO remove
 // CompareScalars compares two scalar values and returns
@@ -400,25 +401,6 @@ func (c Complex) Eval(a *Apl) (Value, error) {
 	return c, nil
 }
 */
-
-// String formats s with %s by default.
-// The format can be changed in Format.String.
-func (s String) String(a *Apl) string {
-	return string(s)
-}
-
-func (s String) Eval(a *Apl) (Value, error) {
-	return s, nil
-}
-
-// Less implements primitives.lesser to be used for comparison and sorting.
-func (s String) Less(r Value) (Bool, bool) {
-	b, ok := r.(String)
-	if ok == false {
-		return false, false
-	}
-	return s < b, true
-}
 
 /* TODO remove
 func init() {
