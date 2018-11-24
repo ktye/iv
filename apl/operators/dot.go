@@ -19,7 +19,7 @@ func init() {
 		symbol:  ".",
 		Domain:  DyadicOp(Split(primitive("+"), primitive("×"))),
 		doc:     "scalar product",
-		derived: scalarproduct,
+		derived: Scalarproduct,
 	})
 	register(operator{
 		symbol:  ".",
@@ -39,7 +39,7 @@ func innerproduct(a *apl.Apl, f, g apl.Value) apl.Function {
 	return function(derived)
 }
 
-func scalarproduct(a *apl.Apl, f, g apl.Value) apl.Function {
+func Scalarproduct(a *apl.Apl, f, g apl.Value) apl.Function {
 	df := f.(apl.Primitive) // +
 	dg := g.(apl.Primitive) // ×
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {

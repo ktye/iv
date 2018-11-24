@@ -192,10 +192,13 @@ var testCases = []struct {
 	{"⍝ TODO laminate", "", nil},
 
 	{"⍝ Decode", "", nil},
-	{"3⊥1 2 1", "16", nil},
-	{"3⊥4 3 2 1", "142", nil},
-	{"2⊥1 1 1 1", "15", nil},
-	{"⍝ TODO 24 60 60⊥2 23 12 (mixed radix)", "", nil}, // {"24 60 60⊥2 23 12", "8592", nil}, // mixed radix
+	{"3⊥1 2 1", "16", nil},                                // decode
+	{"3⊥4 3 2 1", "142", nil},                             // decode
+	{"2⊥1 1 1 1", "15", nil},                              // decode
+	{"1 2 3⊥3 2 1", "25", nil},                            // decode mixed radix
+	{"1J1⊥1 2 3 4", "5J9", format5J},                      // decode complex
+	{"24 60 60⊥2 23 12", "8592", nil},                     // convert 2h23min12s to seconds
+	{"(2 1⍴2 10)⊥3 2⍴ 1 4 0 3 1 2", "5 24\n101 432", nil}, // decode arrays
 
 	{"⍝ Reduce, reduce first, scan, scan first.", "", nil},
 	{"+/1 2 3", "6", nil},                // reduce vector
