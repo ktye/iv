@@ -132,38 +132,34 @@ func CopyShape(v Array) []int {
 	return newshape
 }
 
-// ArrayIndex converts an index vector to a flat index.
-func ArrayIndex(shape []int, idx []int) (int, error) {
-	if len(idx) != len(shape) {
-		return -1, fmt.Errorf("array index has wrong rank")
+// IdxConverter can convert between flat and slice array indexes.
+type IdxConverter []int
+
+// NewIdxConverter returns an IdxConverter and an empty index slice.
+func NewIdxConverter(shape []int) (IdxConverter, []int) {
+	ic := make([]int, len(shape))
+	ic[len(ic)-1] = 1
+	for i := len(ic) - 2; i >= 0; i-- {
+		ic[i] = ic[i+1] * shape[i+1]
 	}
-	n := 0
-	times := 1
-	for i := len(idx) - 1; i >= 0; i-- {
-		if idx[i] < 0 || idx[i] >= shape[i] {
-			return -1, fmt.Errorf("index exceeds array dimension %d", i+1)
-		}
-		n += times * idx[i]
-		times *= shape[i]
-	}
-	return n, nil
+	return ic, make([]int, len(ic))
 }
 
-// ArrayIndexes converts a flat index to an index vector.
-func ArrayIndexes(shape []int, res []int, flat int) error {
-	if len(shape) == 0 || len(shape) != len(res) {
-		return fmt.Errorf("wrong arguments to ArrayIndexes")
+// Index converts the index slice to a flat index.
+func (ic IdxConverter) Index(idx []int) int {
+	n := 0
+	for i := range ic {
+		n += ic[i] * idx[i]
 	}
+	return n
+}
 
-	for i := len(res) - 1; i >= 0; i-- {
-		if shape[i] == 0 {
-			return fmt.Errorf("cannot compute indexes with zero dimension")
-		}
-		res[i] = flat % shape[i]
-		flat -= res[i]
-		flat /= shape[i]
+// Indexes converts the flat index n to an index slice and stores the result in idx.
+func (ic IdxConverter) Indexes(n int, idx []int) {
+	for i := range ic {
+		idx[i] = n / ic[i]
+		n -= idx[i] * ic[i]
 	}
-	return nil
 }
 
 // IncArrayIndex increases the index vector idx for the given shape.
@@ -175,16 +171,6 @@ func IncArrayIndex(idx []int, shape []int) {
 		}
 		idx[i] = 0
 	}
-}
-
-// ArrayAt returns the value at the index given by a vector.
-// Usually arrays are indexed by their flat index method At.
-func ArrayAt(v Array, idx []int) (Value, error) {
-	n, err := ArrayIndex(v.Shape(), idx)
-	if err != nil {
-		return nil, err
-	}
-	return v.At(n)
 }
 
 // ArrayString can be used by an array implementation.
@@ -300,74 +286,6 @@ func (e EmptyArray) Eval(a *Apl) (Value, error) { return e, nil }
 func (e EmptyArray) At(i int) (Value, error)    { return nil, fmt.Errorf("index out of range") }
 func (e EmptyArray) Shape() []int               { return nil }
 func (e EmptyArray) Reshape(s []int) Value      { return e }
-
-/* TODO remove
-// Bitarray is an array implementation which has only boolean values.
-type Bitarray struct {
-	Bits []Bool
-	Dims []int
-}
-
-func (b Bitarray) String(a *Apl) string {
-	return ArrayString(a, b)
-}
-
-func (b Bitarray) Eval(a *Apl) (Value, error) {
-	return b, nil
-}
-
-func (b Bitarray) At(i int) (Value, error) {
-	if i < 0 || i >= len(b.Bits) {
-		return nil, fmt.Errorf("index exceeds array dimensions")
-	}
-	return b.Bits[i], nil
-}
-
-func (b Bitarray) Shape() []int {
-	return b.Dims
-}
-
-func (b Bitarray) Reshape(shape []int) Value {
-	if len(b.Bits) == 0 {
-		return EmptyArray{}
-	}
-	size := 1
-	for _, k := range shape {
-		size *= k
-	}
-	if size == 0 {
-		return EmptyArray{}
-	}
-	v := Bitarray{
-		Bits: make([]Bool, size),
-		Dims: shape,
-	}
-	k := 0
-	for i := range v.Bits {
-		v.Bits[i] = b.Bits[k]
-		k++
-		if k == len(b.Bits) {
-			k = 0
-		}
-	}
-	return v
-}
-
-// IntArray converts a Bitarray to a GeneralArray containing integers.
-func (b Bitarray) IntArray() GeneralArray {
-	ints := make([]Value, len(b.Bits))
-	for i, v := range b.Bits {
-		if v {
-			ints[i] = Int(1)
-		} else {
-			ints[i] = Int(0)
-		}
-	}
-	dims := make([]int, len(b.Dims))
-	copy(dims, b.Dims)
-	return GeneralArray{Dims: dims, Values: ints}
-}
-*/
 
 type Bool bool
 

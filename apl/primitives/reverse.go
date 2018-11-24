@@ -64,17 +64,13 @@ func reverse(a *apl.Apl, R apl.Value, axis int) (apl.Value, error) {
 	}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 
-	src := make([]int, len(shape)) // src index vector
+	ic, src := apl.NewIdxConverter(shape)
 	dst := make([]int, len(shape)) // dst index vector
 	for i := range res.Values {
 		copy(src, dst) // sic: copy dst over src
 		src[axis] = shape[axis] - src[axis] - 1
 
-		k, err := apl.ArrayIndex(shape, src)
-		if err != nil {
-			return nil, err
-		}
-		v, err := ar.At(k)
+		v, err := ar.At(ic.Index(src))
 		if err != nil {
 			return nil, err
 		}
@@ -182,19 +178,17 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		Dims:   apl.CopyShape(ar),
 		Values: make([]apl.Value, apl.ArraySize(ar)),
 	}
-	src := make([]int, len(shape))   // src index vector
-	dst := make([]int, len(shape))   // dst index vector
-	idx := make([]int, len(shape)-1) // rot index vector
+	lic, idx := apl.NewIdxConverter(lshape)
+	ric, src := apl.NewIdxConverter(shape)
+	dst := make([]int, len(shape))
 	axsize := shape[axis]
 	for i := range res.Values {
 		// Calculate the rotation number n.
 		// Copy dst over idx, omitting axis
 		copy(idx, dst[:axis])
 		copy(idx[axis:], dst[axis+1:])
-		il, err := apl.ArrayIndex(lshape, idx)
-		if err != nil {
-			return nil, err
-		}
+
+		il := lic.Index(idx)
 		nl, err := al.At(il)
 		if err != nil {
 			return nil, err
@@ -204,12 +198,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		copy(src, dst)                        // sic: copy dst over src
 		src[axis] = rot(dst[axis], n, axsize) // replace the axis by it's rotation
 
-		k, err := apl.ArrayIndex(shape, src)
-		if err != nil {
-			return nil, err
-		}
-
-		v, err := ar.At(k)
+		v, err := ar.At(ric.Index(src))
 		if err != nil {
 			return nil, err
 		}

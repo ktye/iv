@@ -152,8 +152,8 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 		}
 
 		vec := make([]apl.Value, n)
-		sidx := make([]int, len(dims)+1) // src index vector
-		tidx := make([]int, len(dims))   // index vector in target array
+		ic, sidx := apl.NewIdxConverter(shape)
+		tidx := make([]int, len(dims))
 		for k := range v.Values {
 			// Copy target index over the source index,
 			// leaving the reduced axis unset.
@@ -164,9 +164,7 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 				sidx[axis] = i
 				// TODO: maybe this could be done more efficiently
 				// e.g. by iteration with a fixed increase.
-				if m, err := apl.ArrayIndex(shape, sidx); err != nil {
-					return nil, err
-				} else if val, err := ar.At(m); err != nil {
+				if val, err := ar.At(ic.Index(sidx)); err != nil {
 					return nil, err
 				} else {
 					vec[i] = val
@@ -242,22 +240,14 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 		// Loop over the indexes, with the scan axis length set to 1.
 		lidx := apl.CopyShape(ar)
 		lidx[axis] = 1
-		idx := make([]int, len(lidx))
+		ic, idx := apl.NewIdxConverter(dims)
 		vec := make([]apl.Value, dims[axis])
 		for i := 0; i < apl.ArraySize(apl.GeneralArray{Dims: lidx}); i++ {
 			// Build the scan vector, by iterating over the axis.
 			for k := range vec {
 				idx[axis] = k
-				n, err := apl.ArrayIndex(dims, idx)
+				val, err := ar.At(ic.Index(idx))
 				if err != nil {
-					fmt.Println("idx", idx, "dims", dims) // TODO rm
-					panic("err1")
-					return nil, err
-				}
-				val, err := ar.At(n)
-				if err != nil {
-					fmt.Println("n", n) // TODO rm
-					panic("err2")
 					return nil, err
 				}
 				vec[k] = val
@@ -270,13 +260,7 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 			// Assign the values to the destination indexes.
 			for k := range vals {
 				idx[axis] = k
-				n, err := apl.ArrayIndex(dims, idx)
-				if err != nil {
-					fmt.Println("n", n) // TODO rm
-					panic("err3")
-					return nil, err
-				}
-				res.Values[n] = vals[k]
+				res.Values[ic.Index(idx)] = vals[k]
 			}
 
 			// Reset the index vector and increment.

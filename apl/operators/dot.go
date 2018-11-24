@@ -139,14 +139,13 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	result.Values = make([]apl.Value, apl.ArraySize(result))
 
 	// Iterate of all elements of the resulting array.
-	idx := make([]int, len(shape))
+	ic, idx := apl.NewIdxConverter(shape)
+	lic, lidx := apl.NewIdxConverter(ls)
+	ric, ridx := apl.NewIdxConverter(rs)
 	split := len(ls) - 1
-	lidx := make([]int, len(ls))
-	ridx := make([]int, len(rs))
 	for i := range result.Values {
-		if err := apl.ArrayIndexes(shape, idx, i); err != nil {
-			return nil, err
-		}
+		ic.Indexes(i, idx)
+
 		// Split the indexes in idx into the original indexes of both arrays.
 		copy(lidx, idx[:split])     // The last index is open.
 		copy(ridx[1:], idx[split:]) // The first index is open.
@@ -154,14 +153,16 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 		for k := inner - 1; k >= 0; k-- {
 			lidx[len(lidx)-1] = k
 			ridx[0] = k
-			lval, err := apl.ArrayAt(al, lidx)
+
+			lval, err := al.At(lic.Index(lidx))
 			if err != nil {
 				return nil, err
 			}
-			rval, err := apl.ArrayAt(ar, ridx)
+			rval, err := ar.At(ric.Index(ridx))
 			if err != nil {
 				return nil, err
 			}
+
 			if u, err := g.Call(a, lval, rval); err != nil {
 				return nil, err
 			} else if k == inner-1 {
