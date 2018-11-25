@@ -10,13 +10,13 @@ import (
 func init() {
 	register(primitive{
 		symbol: "⍉",
-		doc:    "transpose, reverse axes",
+		doc:    "cant, transpose, reverse axes",
 		Domain: Monadic(IsArray(nil)),
 		fn:     transpose,
 	})
 	register(primitive{
 		symbol: "⍉",
-		doc:    "transpose, general transpose",
+		doc:    "cant, transpose, general transpose",
 		Domain: Dyadic(Split(ToIndexArray(nil), IsArray(nil))),
 		fn:     transpose,
 	})
@@ -105,7 +105,61 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 		return flat, shape, nil
 	}
 
-	// Case 2: There are duplicate axes.
+	return nil, nil, fmt.Errorf("TODO: duplicate axis")
 
-	return nil, nil, fmt.Errorf("transpose: TODO: repeated axes")
+	// Case 2: There are duplicate axes.
+	// The rank of the result is the rank of R minus the duplicated axes.
+	rank := max - a.Origin + 1
+	shape := make([]int, rank)
+
+	// Build the shape of the result.
+	dup := make([][]int, rank) // dup holds the axis of R with origin 0
+	for i := range shape {
+		// 2 2 1 => [[1 2], [3]]
+		// 2 1 2 => [[1 3], [2]]
+		// 1 1 2 => [[1 2], [3]]
+		// TODO: this is wrong...
+		dup[i] = append(dup[i], i)
+		for k := i + 1; k < len(al.Ints); k++ { // range al.Ints {
+			//if n-a.Origin == i {
+			if al.Ints[i] == al.Ints[k] {
+				dup[i] = append(dup[i], k)
+			}
+		}
+		if len(dup[i]) == 0 {
+			return nil, nil, fmt.Errorf("transpose: len(dup_i)=0: this should not happen")
+		} else if len(dup[i]) == 1 {
+			shape[i] = rs[dup[i][0]]
+		} else {
+			min := rs[al.Ints[dup[i][0]]]
+			for _, d := range dup[i] {
+				if m := rs[al.Ints[d]-a.Origin]; m < min {
+					min = m
+				}
+			}
+			shape[i] = min
+		}
+	}
+	fmt.Println("dup", dup)
+
+	// Iterate over the result indexes and map backwards.
+	flat := make([]int, apl.ArraySize(apl.GeneralArray{Dims: shape}))
+	fidx := make([]int, len(shape))
+	ic, ridx := apl.NewIdxConverter(rs)
+	for i := range flat {
+		for k, f := range fidx {
+			for _, g := range dup[k] {
+				ridx[g] = f
+			}
+		}
+		flat[i] = ic.Index(ridx)
+		apl.IncArrayIndex(fidx, shape)
+	}
+	fmt.Println("flat", flat)
+	fmt.Println("shape", shape)
+	return flat, shape, nil
+
+	// TODO: the result needs to be transposed
+	// by: ((L⍳L)=⍳⍴L)/L
+
 }

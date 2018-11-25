@@ -291,21 +291,18 @@ var testCases = []struct {
 	{"(2 3⍴2 ¯3 3 ¯2 1 2)⊖2 2 3⍴⍳12", "1 8 9\n4 11 6\n\n7 2 3\n10 5 12", nil},         // rotate array
 
 	{"⍝ Transpose", "", nil},
-	//{"⍉2 3 4⍴⍳24", "?", nil},
-	{"⍉3 1⍴1 2 3", "1 2 3", nil},                // transpose
-	{"⍴⍉2 3⍴⍳6", "3 2", nil},                    // transpose
-	{"+/+/1 3 2⍉2 3 4⍴⍳24", "78 222", nil},      // transpose
-	{"+/+/3 2 1⍉2 3 4⍴⍳24", "66 72 78 84", nil}, // transpose
-	{"+/+/2 1 3⍉2 3 4⍴⍳24", "68 100 132", nil},  // transpose
-	/*
-		{"1 1 1⍉2 3 3⍴⍳18", "1 14", nil},                              // transpose
-		{"1 1 1⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A 6", nil},                // transpose
-		{"1 1 2⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A B C D\n5 6 7 8", nil},   // transpose
-		{"2 2 1⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A 5\nB 6\nC 7\nD 8", nil}, // transpose
-		{"1 2 1⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A F K\n1 6 11", nil},      // transpose
-		{"1 2 2⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A E I\n2 6 10", nil},      // transpose
-		{"⍝ TODO selective specification", "", nil},
-	*/
+	{"⍉3 1⍴1 2 3", "1 2 3", nil},                                  // transpose
+	{"⍴⍉2 3⍴⍳6", "3 2", nil},                                      // transpose
+	{"+/+/1 3 2⍉2 3 4⍴⍳24", "78 222", nil},                        // transpose
+	{"+/+/3 2 1⍉2 3 4⍴⍳24", "66 72 78 84", nil},                   // transpose
+	{"+/+/2 1 3⍉2 3 4⍴⍳24", "68 100 132", nil},                    // transpose
+	{"1 1 1⍉2 3 3⍴⍳18", "1 14", nil},                              // transpose
+	{"1 1 1⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A 6", nil},                // transpose
+	{"1 1 2⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A B C D\n5 6 7 8", nil},   // transpose
+	{"2 2 1⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A 5\nB 6\nC 7\nD 8", nil}, // transpose
+	{"1 2 1⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A F K\n1 6 11", nil},      // transpose
+	{"1 2 2⍉2 3 4⍴'ABCDEFGHIJLK',⍳12", "A E I\n2 6 10", nil},      // transpose
+	{"⍝ TODO selective specification", "", nil},
 
 	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
