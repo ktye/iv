@@ -127,10 +127,8 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	flor := arith1("⌊", min)
 	fmul := arith2("×", mul2)
 	fsub := arith2("-", sub2)
-	//abs := arith1("|", abs)
 	mod := arith2("|", abs2)
 	eq := arith2("=", compare("="))
-	ge := arith2("≥", compare("≥"))
 	enc := func(rad []apl.Value, r apl.Value, vec []apl.Value) error {
 		var p apl.Value
 		for i := range rad {
@@ -165,35 +163,9 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return err
 		}
 		if zerold.(apl.Bool) == false {
-			isge, err := ge(a, vec[0], rad[0])
+			vec[0], err = mod(a, rad[0], vec[0])
 			if err != nil {
 				return err
-			}
-
-			// For complex number support, we could use
-			// abs(vec[0]/rad[0]) > 1 instead of vec[0] > rad[0].
-			// But this is is different from Dyalog, where
-			// 	3 2J3⊤2 <-> 0J2 ¯1J2
-			// instead of 0J¯1 ¯1J2
-			// Why is that?
-			// dv, err := fdiv(a, vec[0], rad[0])
-			// if err != nil {
-			// 	return err
-			// }
-			// dv, err = abs(a, nil, dv)
-			// if err != nil {
-			// 	return err
-			// }
-			// isge, err := ge(a, dv, apl.Index(1))
-			// if err != nil {
-			// 	return err
-			// }
-
-			if isge.(apl.Bool) == true {
-				vec[0], err = mod(a, rad[0], vec[0])
-				if err != nil {
-					return err
-				}
 			}
 		}
 		return nil

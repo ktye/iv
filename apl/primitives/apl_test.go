@@ -215,9 +215,9 @@ var testCases = []struct {
 	{"10 10 10⊤215 345 7", "2 3 0\n1 4 0\n5 5 7", nil},    // encode
 	{"(4 2⍴8 2)⊤15", "0 1\n0 1\n1 1\n7 1", nil},           // encode
 	{"⍝ TODO 3 2J3⊤2", "", nil},                           // encode complex
-	//{"0 2J3⊤2", "0J¯1 ¯1J2", format5J},                     // encode complex (Dyalog)
-	//{"3 2J3⊤2", "0J2 ¯1J2", format5J},                     // encode complex (Dyalog) why is it not representable?
-	//{"3 2J3⊤2 1", "0J2 0J2\n¯1J2 ¯2J2", format5J},         // complex encode (Dyalog)
+	{"0 2J3⊤2", "0J¯1 ¯1J2", format5J},                    // encode complex (Dyalog)
+	{"3 2J3⊤2", "0J2 ¯1J2", format5J},                     // encode complex (Dyalog) why is it not representable?
+	{"3 2J3⊤2 1", "0J2 0J2\n¯1J2 ¯2J2", format5J},         // complex encode (Dyalog)
 
 	{"⍝ Reduce, reduce first, scan, scan first.", "", nil},
 	{"+/1 2 3", "6", nil},                // reduce vector
