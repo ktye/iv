@@ -191,7 +191,7 @@ var testCases = []struct {
 	{"⍝ TODO ravel with axis", "", nil},
 	{"⍝ TODO laminate", "", nil},
 
-	{"⍝ Decode", "", nil},
+	{"⍝ Decode, encode", "", nil},
 	{"3⊥1 2 1", "16", nil},                                // decode
 	{"3⊥4 3 2 1", "142", nil},                             // decode
 	{"2⊥1 1 1 1", "15", nil},                              // decode
@@ -199,6 +199,25 @@ var testCases = []struct {
 	{"1J1⊥1 2 3 4", "5J9", format5J},                      // decode complex
 	{"24 60 60⊥2 23 12", "8592", nil},                     // convert 2h23min12s to seconds
 	{"(2 1⍴2 10)⊥3 2⍴ 1 4 0 3 1 2", "5 24\n101 432", nil}, // decode arrays
+	{"2 2 2 2⊤15", "1 1 1 1", nil},                        // encode
+	{"10⊤5 15 125", "5 5 5", nil},                         // encode
+	{"⍴10⊤5 15 125", "3", nil},                            // encode
+	{"⍴(1 1⍴10)⊤5 15 125", "1 1 3", nil},                  // encode
+	{"0 10⊤5 15 125", "0 1 12\n5 5 5", nil},               // encode
+	{"0 1⊤1.25 10.5", "1 10\n0.25 0.5", nil},              // encode
+	{"24 60 60⊤8592", "2 23 12", nil},                     // encode
+	{"10⊥2 2 2 2⊤15", "1111", nil},                        // encode
+	{"2 2 2 2 2⊤15", "0 1 1 1 1", nil},                    // encode
+	{"2 2 2⊤15", "1 1 1", nil},                            // encode
+	{"((⌊1+2⍟135)⍴2)⊤135", "1 0 0 0 0 1 1 1", nil},        // encode
+	{"24 60 60⊤162507", "21 8 27", nil},                   // encode
+	{"0 24 60 60⊤162507", "1 21 8 27", nil},               // encode
+	{"10 10 10⊤215 345 7", "2 3 0\n1 4 0\n5 5 7", nil},    // encode
+	{"(4 2⍴8 2)⊤15", "0 1\n0 1\n1 1\n7 1", nil},           // encode
+	{"⍝ TODO 3 2J3⊤2", "", nil},                           // encode complex
+	//{"0 2J3⊤2", "0J¯1 ¯1J2", format5J},                     // encode complex (Dyalog)
+	//{"3 2J3⊤2", "0J2 ¯1J2", format5J},                     // encode complex (Dyalog) why is it not representable?
+	//{"3 2J3⊤2 1", "0J2 0J2\n¯1J2 ¯2J2", format5J},         // complex encode (Dyalog)
 
 	{"⍝ Reduce, reduce first, scan, scan first.", "", nil},
 	{"+/1 2 3", "6", nil},                // reduce vector

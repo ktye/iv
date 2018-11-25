@@ -15,6 +15,12 @@ func init() {
 		Domain: Dyadic(Split(ToArray(nil), ToArray(nil))),
 		fn:     decode,
 	})
+	register(primitive{
+		symbol: "⊤",
+		doc:    "encode, representation",
+		Domain: Dyadic(nil),
+		fn:     encode,
+	})
 }
 
 func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
@@ -86,4 +92,183 @@ func extendAxis(ar apl.Array, axis, n int) (apl.Array, []int) {
 		apl.IncArrayIndex(ridx, res.Dims)
 	}
 	return res, res.Dims
+}
+
+func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	al, lok := L.(apl.Array)
+	ar, rok := R.(apl.Array)
+
+	// If L is a scalar, return L|R.
+	if lok == false {
+		if rok == false {
+			mod := arith2("|", abs2)
+			return mod(a, L, R)
+		} else {
+			mod := array2("|", abs2)
+			return mod(a, L, R)
+		}
+	}
+
+	ls := al.Shape()
+	rs := []int{}
+	if rok {
+		rs = ar.Shape()
+	}
+
+	// The shape of the result is the catenation of the shapes of L and R.
+	shape := make([]int, len(ls)+len(rs))
+	copy(shape[:len(ls)], ls)
+	copy(shape[len(ls):], rs)
+	res := apl.GeneralArray{Dims: shape}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
+
+	// enc represents r in the given radix power vector and sets the result to vec.
+	fdiv := arith2("/", div2)
+	flor := arith1("⌊", min)
+	fmul := arith2("×", mul2)
+	fsub := arith2("-", sub2)
+	//abs := arith1("|", abs)
+	mod := arith2("|", abs2)
+	eq := arith2("=", compare("="))
+	ge := arith2("≥", compare("≥"))
+	enc := func(rad []apl.Value, r apl.Value, vec []apl.Value) error {
+		var p apl.Value
+		for i := range rad {
+			p = apl.Index(1)
+			if i < len(rad)-1 {
+				p = rad[i+1]
+			}
+			v, err := fdiv(a, r, p)
+			if err != nil {
+				return err
+			}
+			// Dont take the residue for the last value.
+			if i < len(rad)-1 {
+				v, err = flor(a, nil, v)
+				if err != nil {
+					return err
+				}
+			}
+			vec[i] = v
+			u, err := fmul(a, v, p)
+			if err != nil {
+				return err
+			}
+			r, err = fsub(a, r, u)
+			if err != nil {
+				return err
+			}
+		}
+		// If L has no zero lead, numbers exceeding the representation is incomplete.
+		zerold, err := eq(a, rad[0], apl.Index(0))
+		if err != nil {
+			return err
+		}
+		if zerold.(apl.Bool) == false {
+			isge, err := ge(a, vec[0], rad[0])
+			if err != nil {
+				return err
+			}
+
+			// For complex number support, we could use
+			// abs(vec[0]/rad[0]) > 1 instead of vec[0] > rad[0].
+			// But this is is different from Dyalog, where
+			// 	3 2J3⊤2 <-> 0J2 ¯1J2
+			// instead of 0J¯1 ¯1J2
+			// Why is that?
+			// dv, err := fdiv(a, vec[0], rad[0])
+			// if err != nil {
+			// 	return err
+			// }
+			// dv, err = abs(a, nil, dv)
+			// if err != nil {
+			// 	return err
+			// }
+			// isge, err := ge(a, dv, apl.Index(1))
+			// if err != nil {
+			// 	return err
+			// }
+
+			if isge.(apl.Bool) == true {
+				vec[0], err = mod(a, rad[0], vec[0])
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	// Apply the powerradix vector to r and set the result
+	vec := make([]apl.Value, shape[0])
+	apply := func(rad []apl.Value, r apl.Value, n, off int) error {
+		if err := enc(rad, r, vec); err != nil {
+			return err
+		}
+		for i := range vec {
+			res.Values[i*n+off] = vec[i] // TODO copy?
+		}
+		return nil
+	}
+
+	// Powerradix recursively multiplies from the right.
+	// The index 0 value is preserved to determine
+	// underrepesented values.
+	powerradix := func(rad []apl.Value) error {
+		for i := len(rad) - 2; i > 0; i-- {
+			v, err := fmul(a, rad[i], rad[i+1])
+			if err != nil {
+				return err
+			}
+			rad[i] = v
+		}
+		return nil
+	}
+
+	// Number of iterations over L omitting the first axis
+	NL := 1
+	if len(ls) > 1 {
+		NL = apl.ArraySize(apl.GeneralArray{Dims: ls[1:]})
+	}
+	// Number of iterations over R
+	NR := 0
+	if rok {
+		NR = apl.ArraySize(ar)
+	}
+	// Number of result elements divided by length of first axis
+	NN := 1
+	if len(shape) > 1 {
+		NN = apl.ArraySize(apl.GeneralArray{Dims: shape[1:]})
+	}
+	rad := make([]apl.Value, shape[0])
+	off := 0
+	for i := 0; i < NL; i++ {
+		// Build radix vec from the first axis of L
+		for k := 0; k < len(rad); k++ {
+			v, err := al.At(k*NL + i)
+			if err != nil {
+				return nil, err
+			}
+			rad[k] = v
+		}
+		powerradix(rad)
+
+		if rok == false {
+			if err := apply(rad, R, NN, off); err != nil {
+				return nil, err
+			}
+			off++
+		}
+		for k := 0; k < NR; k++ {
+			r, err := ar.At(k)
+			if err != nil {
+				return nil, err
+			}
+			if err := apply(rad, r, NN, off); err != nil {
+				return nil, err
+			}
+			off++
+		}
+	}
+	return res, nil
 }
