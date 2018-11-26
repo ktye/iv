@@ -17,12 +17,27 @@ func init() {
 	register(primitive{
 		symbol: "⍉",
 		doc:    "cant, transpose, general transpose",
+		Domain: Dyadic(Split(IsArray(nil), IsNumber(nil))), // This matches (⍳0)⍉5
+		fn:     transpose,
+	})
+	register(primitive{
+		symbol: "⍉",
+		doc:    "cant, transpose, general transpose",
 		Domain: Dyadic(Split(ToIndexArray(nil), IsArray(nil))),
 		fn:     transpose,
 	})
 }
 
 func transpose(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	// Special case: L is the empty array and R is scalar: return R.
+	if _, ok := L.(apl.EmptyArray); ok {
+		if _, ok := R.(apl.Array); ok == false {
+			return R, nil
+		} else {
+			return nil, fmt.Errorf("transpose: L is empty, R not scalar")
+		}
+	}
+
 	idx, shape, err := transposeIndexes(a, L, R)
 	if err != nil {
 		return nil, err
@@ -68,7 +83,15 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 		return nil, nil, fmt.Errorf("transpose: length of L must be the rank of R")
 	}
 
-	// All values of ⍳⌈/L must be included in L
+	// Add 1 to L, if Origin is 0.
+	if a.Origin == 0 {
+		for i := range al.Ints {
+			al.Ints[i] += 1
+		}
+	}
+
+	// All values of ⍳⌈/L must be included in L.
+	// Iso requires both: ^/L∊⍳⌈/0,L and ^/(⍳⌈/0,L)∊L to evaluate to 1.
 	max := -1
 	m := make(map[int]bool)
 	for _, v := range al.Ints {
@@ -86,80 +109,37 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 		}
 	}
 
-	// Case 1: All axes are included.
-	if max-a.Origin == len(rs)-1 {
-		flat := make([]int, apl.ArraySize(ar))
-		shape := make([]int, len(rs))
-		for i := range shape {
-			shape[i] = rs[al.Ints[i]-a.Origin]
+	maxRS := 0
+	for _, i := range rs {
+		if i > maxRS {
+			maxRS = i
 		}
-		ic, idx := apl.NewIdxConverter(shape)
-		ridx := make([]int, len(rs))
-		for i := range flat {
-			for k := range idx {
-				idx[k] = ridx[al.Ints[k]-a.Origin]
-			}
-			flat[ic.Index(idx)] = i
-			apl.IncArrayIndex(ridx, rs)
-		}
-		return flat, shape, nil
 	}
 
-	return nil, nil, fmt.Errorf("TODO: duplicate axis")
-
-	// Case 2: There are duplicate axes.
-	// The rank of the result is the rank of R minus the duplicated axes.
-	rank := max - a.Origin + 1
-	shape := make([]int, rank)
-
-	// Build the shape of the result.
-	dup := make([][]int, rank) // dup holds the axis of R with origin 0
+	// Element i of shape is ⌊/(L=i)/⍴R.
+	shape := make([]int, max)
 	for i := range shape {
-		// 2 2 1 => [[1 2], [3]]
-		// 2 1 2 => [[1 3], [2]]
-		// 1 1 2 => [[1 2], [3]]
-		// TODO: this is wrong...
-		dup[i] = append(dup[i], i)
-		for k := i + 1; k < len(al.Ints); k++ { // range al.Ints {
-			//if n-a.Origin == i {
-			if al.Ints[i] == al.Ints[k] {
-				dup[i] = append(dup[i], k)
-			}
-		}
-		if len(dup[i]) == 0 {
-			return nil, nil, fmt.Errorf("transpose: len(dup_i)=0: this should not happen")
-		} else if len(dup[i]) == 1 {
-			shape[i] = rs[dup[i][0]]
-		} else {
-			min := rs[al.Ints[dup[i][0]]]
-			for _, d := range dup[i] {
-				if m := rs[al.Ints[d]-a.Origin]; m < min {
-					min = m
+		min := maxRS
+		for k := range rs {
+			if al.Ints[k] == i+1 {
+				if rs[k] < min {
+					min = rs[k]
 				}
 			}
-			shape[i] = min
 		}
+		shape[i] = min
 	}
-	fmt.Println("dup", dup)
 
-	// Iterate over the result indexes and map backwards.
+	// The index list of the result is for item i is: 1+(⍴R)⊥((shape)⊤i)[L]
 	flat := make([]int, apl.ArraySize(apl.GeneralArray{Dims: shape}))
-	fidx := make([]int, len(shape))
-	ic, ridx := apl.NewIdxConverter(rs)
+	ics, sidx := apl.NewIdxConverter(shape)
+	icr, ridx := apl.NewIdxConverter(rs)
 	for i := range flat {
-		for k, f := range fidx {
-			for _, g := range dup[k] {
-				ridx[g] = f
-			}
+		ics.Indexes(i, sidx) // sidx ← (shape)⊤i
+		for k, n := range al.Ints {
+			ridx[k] = sidx[n-1] // ridx ← ((shape)⊤i)[L]
 		}
-		flat[i] = ic.Index(ridx)
-		apl.IncArrayIndex(fidx, shape)
+		flat[i] = icr.Index(ridx) // 1+(⍴R)⊥((shape)⊤i)[L]
 	}
-	fmt.Println("flat", flat)
-	fmt.Println("shape", shape)
 	return flat, shape, nil
-
-	// TODO: the result needs to be transposed
-	// by: ((L⍳L)=⍳⍴L)/L
-
 }
