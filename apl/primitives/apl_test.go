@@ -232,6 +232,27 @@ var testCases = []struct {
 	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", nil},    // scan first
 	{`-\1 2 3`, "1 ¯1 2", nil},           // scan
 
+	{"⍝ Replicate, compress", "", nil},
+	{"1 1 0 0 1/'STRAY'", "S T Y", nil},
+	{"1 0 1 0/3 4⍴⍳12", "1 3\n5 7\n9 11", nil},
+	{"1 0 1/1 2 3", "1 3", nil},
+	{"1/1 2 3", "1 2 3", nil},
+	{"3 2 1/1 2 3", "1 1 1 2 2 3", nil},
+	{"1 0 1/2", "2 2", nil},
+	{"⍴1/1", "1", nil},
+	{"⍴⍴(,1)/2", "1", nil},
+	{"3 4/1 2", "1 1 1 2 2 2 2", nil},
+	{"1 0 1 0 1/⍳5", "1 3 5", nil},
+	{"1 ¯2 3 ¯4 5/⍳5", "1 0 0 3 3 3 0 0 0 0 5 5 5 5 5", nil},
+	{"2 0 1/2 3⍴⍳6", "1 1 3\n4 4 6", nil},
+	{"0 1⌿2 3⍴⍳6", "4 5 6", nil},
+	{"0 1⌿⍴⍳6", "6", nil},
+	{"1 0 1/4", "4 4", nil},
+	{"1 0 1/,3", "3 3", nil},
+	{"1 0 1/1 1⍴5", "5 5", nil},
+	{"⍝ TODO replicate, compress with axis", "", nil},
+	{"⍝ TODO compress with selective specification", "", nil},
+
 	{"⍝ Pi times, circular, trigonometric", "", nil},
 	{"○0 1 2", "0 3.1416 6.2832", format5g},         // pi times
 	{"*○0J1", "¯1.00J0.00", format2J},               // Euler identity
@@ -304,7 +325,6 @@ var testCases = []struct {
 	{"1 2 2⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A F K\n1 6 11", nil},      // transpose
 	{"1 2 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A E I\n2 6 10", nil},      // transpose
 	{"⍴⍴(⍳0)⍉5", "0", nil},                                        // transpose
-
 	{"⍝ TODO selective specification", "", nil},
 
 	{"⍝ Variable assignments.", "", nil},

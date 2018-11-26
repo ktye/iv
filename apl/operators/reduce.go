@@ -32,22 +32,18 @@ func init() {
 		doc:     "scan first axis",
 		derived: scanFirst,
 	})
-	/* TODO APL2 p 220
 	register(operator{
 		symbol:  "/",
-		Domain:  Left(Array(nil)), // scalar or vector, integer
-		doc:     "replicate",
-		derived: replicate,
+		Domain:  MonadicOp(ToIndexArray(nil)),
+		doc:     "replicate, compress",
+		derived: replicateLast,
 	})
-	*/
-	/* TODO APL2 p 85
 	register(operator{
-		symbol:  "/",
-		Domain:  Left(Array(nil)), // scalar or vector, bool
-		doc:     "compress",
-		derived: compress,
+		symbol:  "⌿",
+		Domain:  MonadicOp(ToIndexArray(nil)),
+		doc:     "replicate, compress first axis",
+		derived: replicateFirst,
 	})
-	*/
 }
 
 func reduceLast(a *apl.Apl, f, _ apl.Value) apl.Function {
@@ -64,6 +60,14 @@ func scanLast(a *apl.Apl, f, _ apl.Value) apl.Function {
 
 func scanFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return scanArray(a, f, 0)
+}
+
+func replicateLast(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return replicate(a, f, -1)
+}
+
+func replicateFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return replicate(a, f, 0)
 }
 
 // Reduction returns the derived function f/ .
@@ -270,6 +274,204 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 		return res, nil
 	}
 	return function(derived)
+}
+
+// replicate, compress
+// L is an index array. Only vectors are allowed.
+func replicate(a *apl.Apl, L apl.Value, axis int) apl.Function {
+	derived := func(a *apl.Apl, dummyL, R apl.Value) (apl.Value, error) {
+		// Replicate should not be an operator, but a dyadic function instead.
+		// We use LO as the left argument instead.
+		if dummyL != nil {
+			return nil, fmt.Errorf("replicate: derived function cannot be called dyadically")
+		}
+
+		ai := L.(apl.IndexArray)
+		if len(ai.Dims) != 1 {
+			return nil, fmt.Errorf("replicate: LO must be a vector")
+		}
+
+		// If R is scalar or a single-element array, convert it to (⍴L)⍴B
+		// If R is a scalar, convert it to a single element array.
+		ar, ok := R.(apl.Array)
+		if ok == false {
+			r := apl.GeneralArray{
+				Dims:   []int{1},
+				Values: []apl.Value{R},
+			}
+			ar = r
+		}
+		rs := ar.Shape()
+
+		if axis < 0 {
+			axis = len(rs) + axis
+		}
+		if axis < 0 {
+			return nil, fmt.Errorf("replicate: axis is negative")
+		}
+
+		// If R has size 1 along the selected axis and L is larger, extend R.
+		if rs[axis] == 1 && len(ai.Ints) > 1 {
+			shape := apl.CopyShape(ar)
+			shape[axis] = len(ai.Ints)
+			r := apl.GeneralArray{
+				Dims: shape,
+			}
+			r.Values = make([]apl.Value, apl.ArraySize(r))
+			ic, idx := apl.NewIdxConverter(rs)
+			dst := make([]int, len(shape))
+			for i := range r.Values {
+				copy(idx, dst)
+				idx[axis] = 0
+				v, err := ar.At(ic.Index(idx))
+				if err != nil {
+					return nil, err
+				}
+				r.Values[i] = v // TODO copy
+				apl.IncArrayIndex(dst, shape)
+			}
+			ar = r
+			rs = ar.Shape()
+		}
+
+		if axis < 0 || axis >= len(rs) {
+			return nil, fmt.Errorf("replicate: axis out of range: %d", axis)
+		}
+
+		// If L is a 1-element vector (or was a scalar), extend it to match the axis of R.
+		if ai.Dims[0] == 1 && rs[axis] > 1 {
+			n := ai.Ints[0]
+			ai = apl.IndexArray{
+				Dims: []int{rs[axis]},
+			}
+			ai.Ints = make([]int, apl.ArraySize(ai))
+			for i := range ai.Ints {
+				ai.Ints[i] = n
+			}
+		}
+		if ai.Dims[0] != rs[axis] {
+			return nil, fmt.Errorf("replicate: length of L must conform to length of R[axis]")
+		}
+
+		iscompress := true
+		for i := range ai.Ints {
+			if ai.Ints[i] < 0 || ai.Ints[i] > 1 {
+				iscompress = false
+				break
+			}
+		}
+		if iscompress {
+			return compress(a, ai, ar, axis)
+		}
+
+		// Replicate along axis.
+		shape := apl.CopyShape(ar)
+		count := 0
+		var axismap []int
+		for k, n := range ai.Ints {
+			if n > 0 {
+				count += n
+				for i := 0; i < n; i++ {
+					axismap = append(axismap, k)
+				}
+			} else if n < 0 {
+				count += -n
+				for i := 0; i < -n; i++ {
+					axismap = append(axismap, -1)
+				}
+			}
+		}
+		shape[axis] = count
+		res := apl.GeneralArray{Dims: shape}
+		res.Values = make([]apl.Value, apl.ArraySize(res))
+		ic, idx := apl.NewIdxConverter(rs)
+		dst := make([]int, len(shape))
+		for i := range res.Values {
+			k := dst[axis]
+			if n := axismap[k]; n == -1 {
+				res.Values[i] = apl.Index(0) // TODO: When is a Fill value different from 0?
+			} else {
+				copy(idx, dst)
+				idx[axis] = n
+				v, err := ar.At(ic.Index(idx))
+				if err != nil {
+					return nil, err
+				}
+				res.Values[i] = v // TODO copy
+			}
+			apl.IncArrayIndex(dst, shape)
+		}
+		return res, nil
+	}
+	return function(derived)
+
+	/* TODO APL2 p 85, APL2 p 220
+	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		if L != nil {
+			return nil, fmt.Errorf("scan: derived function is not defined for dyadic context")
+		}
+
+		ar, ok := R.(apl.Array)
+		if ok == false {
+			// If R is scalar, return unchanged.
+			return R, nil
+		}
+
+		d := f.(apl.Function)
+
+		// The result has the same shape as R.
+		dims := apl.CopyShape(ar)
+		res := apl.GeneralArray{
+			Values: make([]apl.Value, apl.ArraySize(ar)),
+			Dims:   dims,
+		}
+
+		if len(dims) == 0 {
+			return apl.EmptyArray{}, nil
+		}
+
+		if axis < 0 {
+			axis = len(dims) + axis
+		}
+		if axis < 0 || axis >= len(dims) {
+			return nil, fmt.Errorf("scan: axis rank is %d but axis %d", len(dims), axis)
+		}
+	*/
+}
+
+// L is an index vector with boolean values.
+// R is an array.
+func compress(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
+	ai := L.(apl.IndexArray)
+	ar := R.(apl.Array)
+	rs := ar.Shape()
+
+	shape := apl.CopyShape(ar)
+	count := 0
+	for _, b := range ai.Ints {
+		count += b
+	}
+	shape[axis] = count
+
+	res := apl.GeneralArray{
+		Dims: shape,
+	}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
+
+	ridx := make([]int, len(rs))
+	n := 0
+	for i := 0; i < apl.ArraySize(ar); i++ {
+		if b := ridx[axis]; ai.Ints[b] == 1 {
+			v, err := ar.At(i)
+			if err != nil {
+				return nil, err
+			}
+			res.Values[n] = v
+			n++
+		}
+		apl.IncArrayIndex(ridx, rs)
+	}
+	return res, nil
 }
 
 func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {
