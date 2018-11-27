@@ -22,6 +22,12 @@ If an item recurs: the value is the index of the first occurence`,
 		Domain: Dyadic(Split(ToVector(nil), ToArray(nil))),
 		fn:     indexof,
 	})
+	register(primitive{
+		symbol: "∊",
+		doc:    `membership`,
+		Domain: Dyadic(nil),
+		fn:     membership,
+	})
 }
 
 // interval: R: integer. index generator.
@@ -77,6 +83,61 @@ func indexof(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		ai.Ints[i] = index(v)
 	}
 	return ai, nil
+}
+
+// membership. L and R may be arrays.
+func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		ar = apl.GeneralArray{
+			Dims:   []int{1},
+			Values: []apl.Value{R},
+		}
+	}
+	n := apl.ArraySize(ar)
+
+	al, ok := L.(apl.Array)
+	if !ok {
+		// Scalar L: return a scalar boolean.
+		for i := 0; i < n; i++ {
+			v, err := ar.At(i)
+			if err != nil {
+				return nil, err
+			}
+			if isEqual(a, v, L) == true {
+				return apl.Bool(true), nil
+			}
+		}
+		return apl.Bool(false), nil
+	}
+
+	res := apl.IndexArray{
+		Dims: apl.CopyShape(al),
+		Ints: make([]int, apl.ArraySize(al)),
+	}
+	for k := range res.Ints {
+		l, err := al.At(k)
+		if err != nil {
+			return nil, err
+		}
+
+		ok = false
+		for i := 0; i < n; i++ {
+			r, err := ar.At(i)
+			if err != nil {
+				return nil, err
+			}
+			if isEqual(a, l, r) == true {
+				ok = true
+				break
+			}
+		}
+		if ok {
+			res.Ints[k] = 1
+		}
+	}
+	return res, nil
 }
 
 // IsEqual compares if the values are equal.
