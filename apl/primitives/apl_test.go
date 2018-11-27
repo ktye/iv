@@ -2,6 +2,7 @@ package primitives
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"regexp"
 	"strings"
@@ -121,6 +122,20 @@ var testCases = []struct {
 	{"⍴0 2⍴⍳0", "0 2", nil},        // reshape empty array
 	{"⍴3 0⍴⍳0", "3 0", nil},        // reshape empty array
 	{"⍴3 0⍴3", "3 0", nil},         // reshape empty array
+
+	{"⍝ Enlist, membership", "", nil},
+	{"∊⍴⍳0", "0", nil},
+	{"⍴∊⍴⍳0", "1", nil},
+	{"∊2 3⍴⍳6", "1 2 3 4 5 6", nil},
+	{"'BANANA'∊'AN'", "0 1 1 1 1 1", nil},
+	{"5 1 2∊6 5 4 1 9", "1 1 0", nil},
+	{"(2 3⍴8 3 5 8 4 8)∊1 8 9 3", "1 1 0\n1 0 1", nil},
+	{"8 9 7 3∊⍳0", "0 0 0 0", nil},
+	{"3.1 5.1 7.1∊2 2⍴1.1 3.1 5.1 4.1", "1 1 0", nil},
+	{"19∊'CLUB'", "0", nil},
+	{"'BE'∊'BOF'", "1 0", nil},
+	{"'NADA'∊⍳0", "0 0 0 0", nil},
+	{"(⌈/⍳0)∊⌊/⍳0", "0", nil},
 
 	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "", nil},
 	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", nil},                  // magnitude
@@ -355,6 +370,37 @@ var testCases = []struct {
 	{"+/1 2 3", "6", nil},                            // plus reduce
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
 	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
+
+	{"⍝ Identify item for reduction over empty array", "", nil},
+	{"+/⍳0", "0", nil},
+	{"-/⍳0", "0", nil},
+	{"×/⍳0", "1", nil},
+	{"÷/⍳0", "1", nil},
+	{"|/⍳0", "0", nil},
+	{"⌊/⍳0", fmt.Sprintf("¯%v", float64(math.MaxFloat64)), nil},
+	{"⌈/⍳0", fmt.Sprintf("%v", float64(math.MaxFloat64)), nil},
+	{"*/⍳0", "1", nil},
+	{"!/⍳0", "1", nil},
+	{"^/⍳0", "1", nil},
+	{"∧/⍳0", "1", nil},
+	{"∨/⍳0", "0", nil},
+	{"</⍳0", "0", nil},
+	{"≤/⍳0", "1", nil},
+	{"=/⍳0", "1", nil},
+	{"≥/⍳0", "1", nil},
+	{">/⍳0", "0", nil},
+	{"≠/⍳0", "0", nil},
+	{"⊤/⍳0", "0", nil},
+	{"⌽/⍳0", "0", nil},
+	{"⊖/⍳0", "0", nil},
+	{"∨/0 3⍴ 1", "", nil},
+	{"∨/3 3⍴ ⍳0", "0 0 0", nil},
+	// {"∪/⍳0", "0", nil}, // TODO
+	// These are implemented as operators and do not parse.
+	// {"//⍳0", "0", nil},
+	// {"⌿/⍳0", "0", nil},
+	// {`\/⍳0`, "0", nil},
+	// {`⍀/⍳0`, "0", nil},
 
 	{"⍝ Format as a string, Execute", "", nil},
 	{"⍕10", "10", nil},   // format as string

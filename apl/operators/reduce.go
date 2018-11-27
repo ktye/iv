@@ -113,7 +113,11 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 
 		shape := ar.Shape()
 		if len(shape) == 0 {
-			return ar, nil // Not sure if this is ok.
+			if id := identityItem(f); id == nil {
+				return nil, fmt.Errorf("no identity item for reduce over empty array")
+			} else {
+				return id, nil
+			}
 		}
 
 		if axis < 0 {
