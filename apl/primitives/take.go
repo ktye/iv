@@ -14,9 +14,23 @@ func init() {
 		Domain: Dyadic(Split(ToIndexArray(nil), nil)),
 		fn:     take,
 	})
+	register(primitive{
+		symbol: "↓",
+		doc:    "drop",
+		Domain: Dyadic(Split(ToIndexArray(nil), nil)),
+		fn:     drop,
+	})
 }
 
 func take(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	return takedrop(a, L, R, true)
+}
+func drop(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	return takedrop(a, L, R, false)
+}
+
+// takedrop does the preprocessing, that is common to both take and drop.
+func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 	// Special case, L is the empty array, return R.
 	if _, ok := L.(apl.EmptyArray); ok {
 		return R, nil
@@ -41,7 +55,7 @@ func take(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	ar, ok := R.(apl.Array)
 
 	if len(ai.Dims) > 1 {
-		return nil, fmt.Errorf("take: L must be a vector")
+		return nil, fmt.Errorf("take/drop: L must be a vector")
 	}
 
 	// If R is a scalar, set it's shape to (⍴,L)⍴1.
@@ -53,12 +67,30 @@ func take(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 		ar = r
 	}
-	rs := ar.Shape()
+
+	if take == false {
+		// Missing items in L default to 0.
+		if n := len(ar.Shape()) - ai.Dims[0]; n > 0 {
+			zeros := make([]int, n)
+			ai.Ints = append(ai.Ints, zeros...)
+			ai.Dims[0] = len(ai.Ints)
+		}
+	}
 
 	// ⍴L must match the rank of ar.
-	if ai.Dims[0] != len(rs) {
-		return nil, fmt.Errorf("take: ⍴,L must match ⍴⍴R")
+	if ai.Dims[0] != len(ar.Shape()) {
+		return nil, fmt.Errorf("take/drop: ⍴,L must match ⍴⍴R")
 	}
+
+	if take {
+		return dotake(a, ai, ar)
+	} else {
+		return dodrop(a, ai, ar)
+	}
+}
+
+func dotake(a *apl.Apl, ai apl.IndexArray, ar apl.Array) (apl.Value, error) {
+	rs := ar.Shape()
 
 	// The shape of the result is ,|L
 	shape := make([]int, len(ai.Ints))
@@ -102,4 +134,33 @@ func take(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		apl.IncArrayIndex(idx, shape)
 	}
 	return res, nil
+}
+
+func dodrop(a *apl.Apl, L apl.IndexArray, R apl.Array) (apl.Value, error) {
+	// (((L<0)×0⌈L+⍴R)+(L≥0)×x0⌊L-⍴R) ↑R
+	b := apl.IndexArray{
+		Dims: apl.CopyShape(L),
+		Ints: make([]int, len(L.Ints)),
+	}
+	rs := R.Shape()
+	for i := range b.Ints {
+		l := L.Ints[i]
+		r := rs[i]
+		t := l - r // L-⍴R
+		if t > 0 {
+			t = 0 // 0⌊L-⍴R
+		}
+		if l < 0 {
+			t = 0 // (L≥0)×x0⌊L-⍴R
+		}
+		s := l + r // L+⍴R
+		if s < 0 {
+			s = 0 // 0⌈L+⍴R
+		}
+		if l >= 0 {
+			s = 0 // ((L<0)×0⌈L+⍴R)
+		}
+		b.Ints[i] = s + t // (((L<0)×0⌈L+⍴R)+(L≥0)×x0⌊L-⍴R)
+	}
+	return dotake(a, b, R)
 }
