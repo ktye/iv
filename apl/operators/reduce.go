@@ -44,12 +44,23 @@ func init() {
 		doc:     "replicate, compress first axis",
 		derived: replicateFirst,
 	})
+	register(operator{
+		symbol:  `\`,
+		Domain:  MonadicOp(ToIndexArray(nil)),
+		doc:     "expand",
+		derived: expandLast,
+	})
+	register(operator{
+		symbol:  `⍀`,
+		Domain:  MonadicOp(ToIndexArray(nil)),
+		doc:     "expand first axis",
+		derived: expandFirst,
+	})
 }
 
 func reduceLast(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return reduction(a, f, -1)
 }
-
 func reduceFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return reduction(a, f, 0)
 }
@@ -57,7 +68,6 @@ func reduceFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
 func scanLast(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return scanArray(a, f, -1)
 }
-
 func scanFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return scanArray(a, f, 0)
 }
@@ -65,9 +75,15 @@ func scanFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
 func replicateLast(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return replicate(a, f, -1)
 }
-
 func replicateFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
 	return replicate(a, f, 0)
+}
+
+func expandLast(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return expand(a, f, -1)
+}
+func expandFirst(a *apl.Apl, f, _ apl.Value) apl.Function {
+	return expand(a, f, 0)
 }
 
 // Reduction returns the derived function f/ .
@@ -279,164 +295,257 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 // replicate, compress
 // L is an index array. Only vectors are allowed.
 func replicate(a *apl.Apl, L apl.Value, axis int) apl.Function {
-	derived := func(a *apl.Apl, dummyL, R apl.Value) (apl.Value, error) {
+	return function(func(a *apl.Apl, dummyL, R apl.Value) (apl.Value, error) {
 		// Replicate should not be an operator, but a dyadic function instead.
 		// We use LO as the left argument instead.
 		if dummyL != nil {
 			return nil, fmt.Errorf("replicate: derived function cannot be called dyadically")
 		}
+		return doreplicate(a, L, R, axis)
+	})
+}
 
-		ai := L.(apl.IndexArray)
-		if len(ai.Dims) != 1 {
-			return nil, fmt.Errorf("replicate: LO must be a vector")
-		}
+func doreplicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
+	ai, ar, ax, err := commonReplExp(a, L, R, axis)
+	if err != nil {
+		return nil, fmt.Errorf("replicate: %s", err)
+	}
+	axis = ax
 
-		// If R is scalar or a single-element array, convert it to (⍴L)⍴B
-		// If R is a scalar, convert it to a single element array.
-		ar, ok := R.(apl.Array)
-		if ok == false {
-			r := apl.GeneralArray{
-				Dims:   []int{1},
-				Values: []apl.Value{R},
-			}
-			ar = r
-		}
-		rs := ar.Shape()
+	rs := ar.Shape()
 
-		if axis < 0 {
-			axis = len(rs) + axis
+	// If L is a 1-element vector (or was a scalar), extend it to match the axis of R.
+	if ai.Dims[0] == 1 && rs[axis] > 1 {
+		n := ai.Ints[0]
+		ai = apl.IndexArray{
+			Dims: []int{rs[axis]},
 		}
-		if axis < 0 {
-			return nil, fmt.Errorf("replicate: axis is negative")
-		}
-
-		// If R has size 1 along the selected axis and L is larger, extend R.
-		if rs[axis] == 1 && len(ai.Ints) > 1 {
-			shape := apl.CopyShape(ar)
-			shape[axis] = len(ai.Ints)
-			r := apl.GeneralArray{
-				Dims: shape,
-			}
-			r.Values = make([]apl.Value, apl.ArraySize(r))
-			ic, idx := apl.NewIdxConverter(rs)
-			dst := make([]int, len(shape))
-			for i := range r.Values {
-				copy(idx, dst)
-				idx[axis] = 0
-				v, err := ar.At(ic.Index(idx))
-				if err != nil {
-					return nil, err
-				}
-				r.Values[i] = v // TODO copy
-				apl.IncArrayIndex(dst, shape)
-			}
-			ar = r
-			rs = ar.Shape()
-		}
-
-		if axis < 0 || axis >= len(rs) {
-			return nil, fmt.Errorf("replicate: axis out of range: %d", axis)
-		}
-
-		// If L is a 1-element vector (or was a scalar), extend it to match the axis of R.
-		if ai.Dims[0] == 1 && rs[axis] > 1 {
-			n := ai.Ints[0]
-			ai = apl.IndexArray{
-				Dims: []int{rs[axis]},
-			}
-			ai.Ints = make([]int, apl.ArraySize(ai))
-			for i := range ai.Ints {
-				ai.Ints[i] = n
-			}
-		}
-		if ai.Dims[0] != rs[axis] {
-			return nil, fmt.Errorf("replicate: length of L must conform to length of R[axis]")
-		}
-
-		iscompress := true
+		ai.Ints = make([]int, apl.ArraySize(ai))
 		for i := range ai.Ints {
-			if ai.Ints[i] < 0 || ai.Ints[i] > 1 {
-				iscompress = false
-				break
+			ai.Ints[i] = n
+		}
+	}
+	if ai.Dims[0] != rs[axis] {
+		return nil, fmt.Errorf("replicate: length of L must conform to length of R[axis]")
+	}
+
+	iscompress := true
+	for i := range ai.Ints {
+		if ai.Ints[i] < 0 || ai.Ints[i] > 1 {
+			iscompress = false
+			break
+		}
+	}
+	if iscompress {
+		return compress(a, ai, ar, axis)
+	}
+
+	// Replicate along axis.
+	shape := apl.CopyShape(ar)
+	count := 0
+	var axismap []int
+	for k, n := range ai.Ints {
+		if n > 0 {
+			count += n
+			for i := 0; i < n; i++ {
+				axismap = append(axismap, k)
+			}
+		} else if n < 0 {
+			count += -n
+			for i := 0; i < -n; i++ {
+				axismap = append(axismap, -1)
 			}
 		}
-		if iscompress {
-			return compress(a, ai, ar, axis)
+	}
+	shape[axis] = count
+	res := apl.GeneralArray{Dims: shape}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
+	ic, idx := apl.NewIdxConverter(rs)
+	dst := make([]int, len(shape))
+	for i := range res.Values {
+		k := dst[axis]
+		if n := axismap[k]; n == -1 {
+			res.Values[i] = apl.Index(0) // TODO: When is a Fill value different from 0?
+		} else {
+			copy(idx, dst)
+			idx[axis] = n
+			v, err := ar.At(ic.Index(idx))
+			if err != nil {
+				return nil, err
+			}
+			res.Values[i] = v // TODO copy
+		}
+		apl.IncArrayIndex(dst, shape)
+	}
+	return res, nil
+}
+
+// expand.
+// L is an index array. Only vectors are allowed.
+func expand(a *apl.Apl, L apl.Value, axis int) apl.Function {
+	derived := func(a *apl.Apl, dummyL, R apl.Value) (apl.Value, error) {
+		if dummyL != nil {
+			return nil, fmt.Errorf("expand: derived function cannot be called dyadically")
 		}
 
-		// Replicate along axis.
-		shape := apl.CopyShape(ar)
-		count := 0
-		var axismap []int
-		for k, n := range ai.Ints {
-			if n > 0 {
-				count += n
-				for i := 0; i < n; i++ {
-					axismap = append(axismap, k)
+		// Special case: L is empty.
+		if _, ok := L.(apl.EmptyArray); ok {
+			if ar, ok := R.(apl.Array); ok == false {
+				return apl.EmptyArray{}, nil
+			} else {
+				rs := ar.Shape()
+				if ir, ok := ar.(apl.IndexArray); ok {
+					fmt.Println("ar is index array: dims:", ir.Dims)
 				}
-			} else if n < 0 {
-				count += -n
-				for i := 0; i < -n; i++ {
-					axismap = append(axismap, -1)
+
+				ax := axis
+				if ax < 0 {
+					ax = len(rs) + ax
 				}
+				if ax >= 0 && len(rs) >= ax && rs[ax] == 0 {
+					return apl.IndexArray{
+						Dims: apl.CopyShape(ar),
+					}, nil
+				}
+				return nil, fmt.Errorf("expand: L is empty, R must be scalar")
 			}
 		}
-		shape[axis] = count
-		res := apl.GeneralArray{Dims: shape}
-		res.Values = make([]apl.Value, apl.ArraySize(res))
-		ic, idx := apl.NewIdxConverter(rs)
-		dst := make([]int, len(shape))
-		for i := range res.Values {
-			k := dst[axis]
-			if n := axismap[k]; n == -1 {
-				res.Values[i] = apl.Index(0) // TODO: When is a Fill value different from 0?
+
+		ai, ar, ax, err := commonReplExp(a, L, R, axis)
+		if err != nil {
+			return nil, fmt.Errorf("expand: %s", err)
+		}
+		axis = ax
+
+		// Special case: R is empty. L may be 0 and is returned.
+		if _, ok := R.(apl.EmptyArray); ok {
+			if len(ai.Ints) == 1 && ai.Ints[0] == 0 {
+				return ai, nil
 			} else {
-				copy(idx, dst)
-				idx[axis] = n
-				v, err := ar.At(ic.Index(idx))
-				if err != nil {
-					return nil, err
-				}
-				res.Values[i] = v // TODO copy
+				return nil, fmt.Errorf("exand: R is empty, but L is not 0")
 			}
-			apl.IncArrayIndex(dst, shape)
+		}
+
+		// The shape of the result is the shape of R,
+		// with the length of the axis set to +/1⌈|L.
+		shape := ar.Shape()
+		sum := 0
+		for _, k := range ai.Ints {
+			if k < 0 {
+				k = -k
+			}
+			if k > 1 {
+				sum += k
+			} else {
+				sum++
+			}
+		}
+		shape[axis] = sum
+
+		res := apl.GeneralArray{Dims: shape}
+		n := apl.ArraySize(res)
+		res.Values = make([]apl.Value, n)
+
+		short := apl.CopyShape(res)
+		short[axis] = 1
+
+		ic, idx := apl.NewIdxConverter(ar.Shape())
+		dic, dst := apl.NewIdxConverter(shape)
+		for i := 0; i < n/shape[axis]; i++ {
+			copy(idx, dst)
+			d := 0
+			j := 0 // Count positive indexes in L.
+			for _, k := range ai.Ints {
+				if k > 0 {
+					idx[axis] = j
+					j++
+					v, err := ar.At(ic.Index(idx))
+					if err != nil {
+						return nil, err
+					}
+					for m := 0; m < k; m++ {
+						dst[axis] = d
+						d++
+						res.Values[dic.Index(dst)] = v // TODO copy
+					}
+				} else if k == 0 {
+					dst[axis] = d
+					d++
+					res.Values[dic.Index(dst)] = apl.Index(0)
+				} else if k < 0 {
+					for m := 0; m < (-k); m++ {
+						dst[axis] = d
+						d++
+						res.Values[dic.Index(dst)] = apl.Index(0)
+					}
+				}
+			}
+			dst[axis] = 0
+			apl.IncArrayIndex(dst, short)
 		}
 		return res, nil
 	}
 	return function(derived)
+}
 
-	/* TODO APL2 p 85, APL2 p 220
-	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-		if L != nil {
-			return nil, fmt.Errorf("scan: derived function is not defined for dyadic context")
-		}
+// commonReplExp is the common input preprocessing for replicate and expand.
+func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IndexArray, apl.Array, int, error) {
+	ai := L.(apl.IndexArray)
+	if len(ai.Dims) != 1 {
+		return ai, nil, axis, fmt.Errorf("LO must be a vector")
+	}
 
-		ar, ok := R.(apl.Array)
-		if ok == false {
-			// If R is scalar, return unchanged.
-			return R, nil
+	// If R is scalar or a single-element array, convert it to (⍴L)⍴B
+	// If R is a scalar, convert it to a single element array.
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		r := apl.GeneralArray{
+			Dims:   []int{1},
+			Values: []apl.Value{R},
 		}
+		ar = r
+	}
+	rs := ar.Shape()
 
-		d := f.(apl.Function)
+	// Special case for empty R.
+	if len(rs) == 0 {
+		return ai, ar, 0, nil
+	}
+	if axis < 0 {
+		axis = len(rs) + axis
+	}
+	if axis < 0 {
+		return ai, nil, axis, fmt.Errorf("axis is negative")
+	}
 
-		// The result has the same shape as R.
-		dims := apl.CopyShape(ar)
-		res := apl.GeneralArray{
-			Values: make([]apl.Value, apl.ArraySize(ar)),
-			Dims:   dims,
+	// If R has size 1 along the selected axis and L is larger, extend R.
+	if rs[axis] == 1 && len(ai.Ints) > 1 {
+		shape := apl.CopyShape(ar)
+		shape[axis] = len(ai.Ints)
+		r := apl.GeneralArray{
+			Dims: shape,
 		}
+		r.Values = make([]apl.Value, apl.ArraySize(r))
+		ic, idx := apl.NewIdxConverter(rs)
+		dst := make([]int, len(shape))
+		for i := range r.Values {
+			copy(idx, dst)
+			idx[axis] = 0
+			v, err := ar.At(ic.Index(idx))
+			if err != nil {
+				return ai, nil, axis, err
+			}
+			r.Values[i] = v // TODO copy
+			apl.IncArrayIndex(dst, shape)
+		}
+		ar = r
+		rs = ar.Shape()
+	}
 
-		if len(dims) == 0 {
-			return apl.EmptyArray{}, nil
-		}
-
-		if axis < 0 {
-			axis = len(dims) + axis
-		}
-		if axis < 0 || axis >= len(dims) {
-			return nil, fmt.Errorf("scan: axis rank is %d but axis %d", len(dims), axis)
-		}
-	*/
+	if axis < 0 || axis >= len(rs) {
+		return ai, nil, axis, fmt.Errorf("replicate: axis out of range: %d", axis)
+	}
+	return ai, ar, axis, nil
 }
 
 // L is an index vector with boolean values.

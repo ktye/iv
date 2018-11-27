@@ -105,6 +105,10 @@ var testCases = []struct {
 	{"⍴⍳0", "0", nil},              // empty array has zero dimensions
 	{"⍴⍴⍳0", "1", nil},             // rank of empty array is 1
 	{"2 3⍴1", "1 1 1\n1 1 1", nil}, // shape
+	{"3⍴⍳0", "0 0 0", nil},         // reshape empty array
+	{"⍴0 2⍴⍳0", "0 2", nil},        // reshape empty array
+	{"⍴3 0⍴⍳0", "3 0", nil},        // reshape empty array
+	{"⍴3 0⍴3", "3 0", nil},         // reshape empty array
 
 	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "", nil},
 	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", nil},                  // magnitude
@@ -252,6 +256,26 @@ var testCases = []struct {
 	{"1 0 1/1 1⍴5", "5 5", nil},
 	{"⍝ TODO replicate, compress with axis", "", nil},
 	{"⍝ TODO compress with selective specification", "", nil},
+
+	{"⍝ Expand, expand first", "", nil},
+	{`1 0 1 0 0 1\1 2 3`, "1 0 2 0 0 3", nil},
+	{`1 0 0\5`, "5 0 0", nil},
+	{`0 1 0\3 1⍴7 8 9`, "0 7 0\n0 8 0\n0 9 0", nil},
+	{`1 0 0 1 0 1\7 8 9`, "7 0 0 8 0 9", nil},
+	{`⍴(⍳0)\3`, "0", nil},
+	{`⍴(⍳0)\2 0⍴3`, "2 0", nil},
+	{`⍴1 0 1\0 2⍴0`, "0 3", nil},
+	{`0 0 0\2 0⍴0`, "0 0 0\n0 0 0", nil},
+	{`1 0 1⍀2 3⍴⍳6`, "1 2 3\n0 0 0\n4 5 6", nil},
+	{`0\⍳0`, "0", nil},
+	{`1 ¯2 3 ¯4 5\3`, "3 0 0 3 3 3 0 0 0 0 3 3 3 3 3", nil},
+	{`1 0 1\1 3`, "1 0 3", nil},
+	{`1 0 1\2`, "2 0 2", nil},
+	{`1 0 1 1\1 2 3`, "1 0 2 3", nil},
+	{`1 0 1 1⍀3`, "3 0 3 3", nil},
+	{`0 1\3 1⍴3 2 4`, "0 3\n0 2\n0 4", nil},
+	{`0 0\5`, "0 0", nil},
+	{"⍝ TODO expand with selective specification", "", nil},
 
 	{"⍝ Pi times, circular, trigonometric", "", nil},
 	{"○0 1 2", "0 3.1416 6.2832", format5g},         // pi times
