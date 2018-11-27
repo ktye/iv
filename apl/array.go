@@ -254,29 +254,17 @@ func (v GeneralArray) Shape() []int {
 }
 
 func (v GeneralArray) Reshape(shape []int) Value {
-	if len(v.Values) == 0 {
-		return EmptyArray{}
-	}
-	size := 1
-	for _, k := range shape {
-		size *= k
-	}
-	if size == 0 {
-		return EmptyArray{}
-	}
-	rv := GeneralArray{
-		Values: make([]Value, size),
-		Dims:   shape,
-	}
+	res := GeneralArray{Dims: shape}
+	res.Values = make([]Value, ArraySize(res))
 	k := 0
-	for i := range rv.Values {
-		rv.Values[i] = v.Values[k]
+	for i := range res.Values {
+		res.Values[i] = v.Values[k]
 		k++
 		if k == len(v.Values) {
 			k = 0
 		}
 	}
-	return rv
+	return res
 }
 
 type EmptyArray struct{}
@@ -285,7 +273,17 @@ func (e EmptyArray) String(a *Apl) string       { return "" }
 func (e EmptyArray) Eval(a *Apl) (Value, error) { return e, nil }
 func (e EmptyArray) At(i int) (Value, error)    { return nil, fmt.Errorf("index out of range") }
 func (e EmptyArray) Shape() []int               { return nil }
-func (e EmptyArray) Reshape(s []int) Value      { return e }
+func (e EmptyArray) Reshape(s []int) Value {
+	if len(s) == 0 {
+		return e
+	}
+	res := IndexArray{Dims: s}
+	res.Ints = make([]int, ArraySize(res))
+	for i := range res.Ints {
+		res.Ints[i] = 0
+	}
+	return res
+}
 
 type Bool bool
 
@@ -355,9 +353,6 @@ func (ar IndexArray) Reshape(shape []int) Value {
 	size := 1
 	for _, k := range shape {
 		size *= k
-	}
-	if size == 0 {
-		return EmptyArray{}
 	}
 	rv := IndexArray{
 		Ints: make([]int, size),
