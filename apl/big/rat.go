@@ -163,3 +163,18 @@ func (r Rat) Floor() (apl.Value, bool) {
 	f, _ := r.Rat.Float64()
 	return Rat{new(big.Rat).SetFloat64(math.Floor(f))}, true
 }
+
+func (L Rat) Gcd(R apl.Value) (apl.Value, bool) {
+	ab := L.Rat
+	cd := R.(Rat).Rat
+	a := ab.Num()
+	b := ab.Denom()
+	c := cd.Num()
+	d := cd.Denom()
+	ad := big.NewInt(0).Mul(a, d)
+	cb := big.NewInt(0).Mul(c, b)
+	gcd := big.NewInt(0).GCD(nil, nil, ad, cb)
+	bd := big.NewInt(0).Mul(b, d)
+	rat := big.NewRat(1, 1).SetFrac(gcd, bd)
+	return Rat{rat}, true
+}

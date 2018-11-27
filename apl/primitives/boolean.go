@@ -20,9 +20,6 @@ func init() {
 		{"⍱", "logical nor", "nor"},
 	}
 
-	// TODO least common multiply: dyadic ^, if L or R are not bool
-	// TODO greatest common divisor: dyadic ∨, if L or R are not bool
-
 	for _, e := range tab {
 		register(primitive{
 			symbol: e.symbol,
@@ -62,12 +59,14 @@ func logicalNot(a *apl.Apl, R apl.Value) (apl.Value, bool) {
 
 func logical(logical string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bool) {
 	return func(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
-		l, ok := a.Tower.ToBool(L.(apl.Number))
-		if ok == false {
-			return nil, false
-		}
-		r, ok := a.Tower.ToBool(R.(apl.Number))
-		if ok == false {
+		l, lok := a.Tower.ToBool(L.(apl.Number))
+		r, rok := a.Tower.ToBool(R.(apl.Number))
+		if lok == false || rok == false {
+			if logical == "and" {
+				return lcm(a, L, R)
+			} else if logical == "or" {
+				return gcd(a, L, R)
+			}
 			return nil, false
 		}
 		var t apl.Bool

@@ -2,6 +2,7 @@ package numbers
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -181,4 +182,10 @@ func (L Integer) Gamma2(r apl.Value) (apl.Value, bool) {
 		return Integer(0), true
 	}
 	return nil, false
+}
+
+func (L Integer) Gcd(R apl.Value) (apl.Value, bool) {
+	l := big.NewInt(int64(L))
+	r := big.NewInt(int64(R.(Integer)))
+	return Integer(big.NewInt(0).GCD(nil, nil, l, r).Int64()), true
 }

@@ -87,11 +87,23 @@ var testCases = []struct {
 	{"~0", "1", nil},                      // scalar not
 	{"~1.0", "0", nil},                    // scalar not
 	{"~0 1", "1 0", nil},                  // array not
-	{"⍝ TODO: dyadic: least common multiple, greatest common divisor", "", nil},
-	// {"15 1 2 7 ^ 35 1 4 0", "105 1 4 0", nil}, // least common multiple
-	// {"2 3 4 ∧ 0j1 1j2 2j3", "0J2 3J6 8J12", nil},// least common multiple
-	// {"2j2 2j4 ∧ 5j5 4j4", "10J10 ¯4J12", nil},// least common multiple
-	// {"15 1 2 7 ∨ 35 1 4 0", "5 1 2 7", nil}, // greatest common divisor
+
+	{"⍝ Least common multiple, greatest common divisor", "", nil},
+	{"30^36", "180", nil},                     // lcm
+	{"0^3", "0", nil},                         // lcm with 0
+	{"3^0", "0", nil},                         // lcm with 0
+	{"15 1 2 7 ^ 35 1 4 0", "105 1 4 0", nil}, // least common multiple
+	{"30∨36", "6", nil},                       // gcm
+	{"15 1 2 7 ∨ 35 1 4 0", "5 1 2 7", nil},   // greatest common divisor
+	{"0∨3", "3", nil},                         // gcm with 0
+	{"3∨0", "3", nil},                         // gcm with 0
+	{"3^3.6", "18", format5g},                 // lcm
+	//{"¯29J53^¯1J107", "¯853J¯329", nil},          // lcm
+	//{"2 3 4 ∧ 0j1 1j2 2j3", "0J2 3J6 8J12", nil}, // least common multiple
+	//{"2j2 2j4 ∧ 5j5 4j4", "10J10 ¯4J12", nil},    // least common multiple
+	{"3∨3.6", "0.6", nil}, // gcm
+	//{"¯29J53∨¯1J107", "7J1", nil},                // gcm
+	{"⍝ TODO: lcm and gcm of float and complex", "", nil},
 
 	{"⍝ Multiple expressions.", "", nil},
 	{"1⋄2⋄3", "1", nil},

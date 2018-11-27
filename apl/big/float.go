@@ -160,3 +160,5 @@ func (f Float) Floor() (apl.Value, bool) {
 }
 
 // TODO Trig
+
+// TODO Gcd

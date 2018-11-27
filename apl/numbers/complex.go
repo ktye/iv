@@ -309,3 +309,5 @@ func (L Complex) Trig(R apl.Value) (apl.Value, bool) {
 	}
 	return Complex(y), true
 }
+
+// TODO (L Complex) Gcd(R apl.Value) (apl.Value, bool)

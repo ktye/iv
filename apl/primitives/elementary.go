@@ -433,3 +433,56 @@ func circular(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	}
 	return nil, false
 }
+
+// ^ ∧ ∨ lcm, gcd least common multiply, greatest common divisor
+type gcder interface {
+	Gcd(R apl.Value) (apl.Value, bool)
+}
+
+func lcm(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
+	// lcm(R, L) = abs(L times R) / gcd(L, R)
+
+	// If any of L or R is 0, return 0
+	zero, _, err := a.Tower.SameType(a.Tower.FromIndex(0), L.(apl.Number))
+	if err != nil {
+		return nil, false
+	}
+	if is0, ok := equals(L.(apl.Number), zero); ok && bool(is0) {
+		return zero, true
+	}
+	if is0, ok := equals(R.(apl.Number), zero); ok && bool(is0) {
+		return zero, true
+	}
+
+	p, ok := mul2(a, L, R)
+	if ok == false {
+		return nil, false
+	}
+	ab, ok := abs(a, p)
+	if ok == false {
+		return nil, false
+	}
+	g, ok := gcd(a, L, R)
+	if ok == false {
+		return nil, false
+	}
+	return div2(a, ab, g)
+}
+func gcd(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
+	// If any of L or R is 0, return the other.
+	zero, _, err := a.Tower.SameType(a.Tower.FromIndex(0), L.(apl.Number))
+	if err != nil {
+		return nil, false
+	}
+	if is0, ok := equals(L.(apl.Number), zero); ok && bool(is0) {
+		return R, true
+	}
+	if is0, ok := equals(R.(apl.Number), zero); ok && bool(is0) {
+		return L, true
+	}
+
+	if g, ok := L.(gcder); ok {
+		return g.Gcd(R)
+	}
+	return nil, false
+}

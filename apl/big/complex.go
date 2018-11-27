@@ -245,3 +245,5 @@ func (c Complex) abs() *big.Float {
 // TODO Floor, Ceil.
 
 // TODO port sin.go asin.go from ivy.
+
+// TODO Gcd

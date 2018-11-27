@@ -176,3 +176,7 @@ func (i Int) Gamma() (apl.Value, bool) {
 	}
 	return Int{n}, true
 }
+
+func (L Int) Gcd(R apl.Value) (apl.Value, bool) {
+	return Int{big.NewInt(0).GCD(nil, nil, L.Int, R.(Int).Int)}, true
+}

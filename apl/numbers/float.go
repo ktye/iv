@@ -3,6 +3,7 @@ package numbers
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -225,4 +226,26 @@ func (L Float) Trig(R apl.Value) (apl.Value, bool) {
 		return nil, false
 	}
 	return Float(y), true
+}
+
+func (L Float) Gcd(R apl.Value) (apl.Value, bool) {
+	l := math.Abs(float64(L))
+	r := math.Abs(float64(R.(Float)))
+
+	ab, lok := big.NewRat(1, 1).SetString(fmt.Sprintf("%v", l))
+	cd, rok := big.NewRat(1, 1).SetString(fmt.Sprintf("%v", r))
+	if lok == false || rok == false {
+		return nil, false
+	}
+	a := ab.Num()
+	b := ab.Denom()
+	c := cd.Num()
+	d := cd.Denom()
+	ad := big.NewInt(0).Mul(a, d)
+	cb := big.NewInt(0).Mul(c, b)
+	gcd := big.NewInt(0).GCD(nil, nil, ad, cb)
+	bd := big.NewInt(0).Mul(b, d)
+	rat := big.NewRat(1, 1).SetFrac(gcd, bd)
+	f, _ := rat.Float64()
+	return Float(f), true
 }
