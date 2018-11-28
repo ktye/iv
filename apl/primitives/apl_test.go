@@ -123,10 +123,13 @@ var testCases = []struct {
 	{"⍴3 0⍴⍳0", "3 0", nil},        // reshape empty array
 	{"⍴3 0⍴3", "3 0", nil},         // reshape empty array
 
-	{"⍝ Where", "", nil},
+	{"⍝ Where, interval index", "", nil},
 	{"⍸1 0 1 0 0 0 0 1 0", "1 3 8", nil},
 	{"⍸'e'='Pete'", "2 4", nil},
 	{"⍸1=1", "1", nil},
+	{"10 20 30⍸11 1 31 21", "1 0 3 2", nil},
+	{"'AEIOU'⍸'DYALOG'", "1 5 1 3 4 2", nil},
+	{"0.8 2 3.3⍸1.3 1.9 0.7 4 .6 3.2", "1 1 0 3 0 2", nil},
 
 	{"⍝ Enlist, membership", "", nil},
 	{"∊⍴⍳0", "0", nil},
