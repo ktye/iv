@@ -49,7 +49,7 @@ func init() {
 	})
 	register(primitive{
 		symbol: "~",
-		doc:    "without",
+		doc:    "without, excluding",
 		Domain: Dyadic(Split(ToVector(nil), ToVector(nil))),
 		fn:     without,
 	})

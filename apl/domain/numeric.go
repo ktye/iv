@@ -35,6 +35,12 @@ func (n number) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		}
 		v, _ = ar.At(0)
 	}
+	if b, ok := V.(apl.Bool); ok {
+		return a.Tower.FromBool(b), true
+	}
+	if i, ok := V.(apl.Index); ok {
+		return a.Tower.FromIndex(int(i)), true
+	}
 	if _, ok := a.Tower.Numbers[reflect.TypeOf(v)]; ok {
 		return v, true
 	}

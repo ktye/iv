@@ -140,6 +140,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			if err != nil {
 				return nil, err
 			}
+			fmt.Println("isEqual", l, r, isEqual(a, l, r))
 			if isEqual(a, l, r) == true {
 				ok = true
 				break
@@ -259,12 +260,14 @@ func isEqual(a *apl.Apl, x, y apl.Value) bool {
 	if x == y {
 		return true
 	}
-	xn, isxnum := x.(apl.Number)
-	yn, isynum := y.(apl.Number)
+
+	to := ToNumber(nil)
+	xn, isxnum := to.To(a, x)
+	yn, isynum := to.To(a, y)
 	if isxnum == false || isynum == false {
 		return false
 	}
-	if xn, yn, err := a.Tower.SameType(xn, yn); err == nil && xn == yn {
+	if xn, yn, err := a.Tower.SameType(xn.(apl.Number), yn.(apl.Number)); err == nil && xn == yn {
 		return true
 	}
 	return false
