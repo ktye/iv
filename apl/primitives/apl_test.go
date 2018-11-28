@@ -381,47 +381,6 @@ var testCases = []struct {
 	{"⍝ TODO take/drop with axis", "", nil},
 	{"⍝ TODO selective specification", "", nil},
 
-	{"⍝ Basic operators.", "", nil},
-	{"+/1 2 3", "6", nil},                            // plus reduce
-	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
-	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
-
-	{"⍝ Identify item for reduction over empty array", "", nil},
-	{"+/⍳0", "0", nil},
-	{"-/⍳0", "0", nil},
-	{"×/⍳0", "1", nil},
-	{"÷/⍳0", "1", nil},
-	{"|/⍳0", "0", nil},
-	{"⌊/⍳0", fmt.Sprintf("¯%v", float64(math.MaxFloat64)), nil},
-	{"⌈/⍳0", fmt.Sprintf("%v", float64(math.MaxFloat64)), nil},
-	{"*/⍳0", "1", nil},
-	{"!/⍳0", "1", nil},
-	{"^/⍳0", "1", nil},
-	{"∧/⍳0", "1", nil},
-	{"∨/⍳0", "0", nil},
-	{"</⍳0", "0", nil},
-	{"≤/⍳0", "1", nil},
-	{"=/⍳0", "1", nil},
-	{"≥/⍳0", "1", nil},
-	{">/⍳0", "0", nil},
-	{"≠/⍳0", "0", nil},
-	{"⊤/⍳0", "0", nil},
-	{"⌽/⍳0", "0", nil},
-	{"⊖/⍳0", "0", nil},
-	{"∨/0 3⍴ 1", "", nil},
-	{"∨/3 3⍴ ⍳0", "0 0 0", nil},
-	// {"∪/⍳0", "0", nil}, // TODO
-	// These are implemented as operators and do not parse.
-	// {"//⍳0", "0", nil},
-	// {"⌿/⍳0", "0", nil},
-	// {`\/⍳0`, "0", nil},
-	// {`⍀/⍳0`, "0", nil},
-
-	{"⍝ Outer product", "", nil},
-	{"10 20 30∘.+1 2 3", "11 12 13\n21 22 23\n31 32 33", nil},
-	{"(⍳3)∘.=⍳3", "1 0 0\n0 1 0\n0 0 1", nil},
-	{"1 2 3∘.×4 5 6", "4 5 6\n8 10 12\n12 15 18", nil},
-
 	{"⍝ Format as a string, Execute", "", nil},
 	{"⍕10", "10", nil},   // format as string
 	{`⍎"1+1"`, "2", nil}, // evaluate expression
@@ -467,6 +426,54 @@ var testCases = []struct {
 	{"1 2 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A E I\n2 6 10", nil},      // transpose
 	{"⍴⍴(⍳0)⍉5", "0", nil},                                        // transpose
 	{"⍝ TODO selective specification", "", nil},
+
+	{"⍝ Basic operators.", "", nil},
+	{"+/1 2 3", "6", nil},                            // plus reduce
+	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
+	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
+
+	{"⍝ Identify item for reduction over empty array", "", nil},
+	{"+/⍳0", "0", nil},
+	{"-/⍳0", "0", nil},
+	{"×/⍳0", "1", nil},
+	{"÷/⍳0", "1", nil},
+	{"|/⍳0", "0", nil},
+	{"⌊/⍳0", fmt.Sprintf("¯%v", float64(math.MaxFloat64)), nil},
+	{"⌈/⍳0", fmt.Sprintf("%v", float64(math.MaxFloat64)), nil},
+	{"*/⍳0", "1", nil},
+	{"!/⍳0", "1", nil},
+	{"^/⍳0", "1", nil},
+	{"∧/⍳0", "1", nil},
+	{"∨/⍳0", "0", nil},
+	{"</⍳0", "0", nil},
+	{"≤/⍳0", "1", nil},
+	{"=/⍳0", "1", nil},
+	{"≥/⍳0", "1", nil},
+	{">/⍳0", "0", nil},
+	{"≠/⍳0", "0", nil},
+	{"⊤/⍳0", "0", nil},
+	{"⌽/⍳0", "0", nil},
+	{"⊖/⍳0", "0", nil},
+	{"∨/0 3⍴ 1", "", nil},
+	{"∨/3 3⍴ ⍳0", "0 0 0", nil},
+	// {"∪/⍳0", "0", nil}, // TODO
+	// These are implemented as operators and do not parse.
+	// {"//⍳0", "0", nil},
+	// {"⌿/⍳0", "0", nil},
+	// {`\/⍳0`, "0", nil},
+	// {`⍀/⍳0`, "0", nil},
+
+	{"⍝ Outer product", "", nil},
+	{"10 20 30∘.+1 2 3", "11 12 13\n21 22 23\n31 32 33", nil},
+	{"(⍳3)∘.=⍳3", "1 0 0\n0 1 0\n0 0 1", nil},
+	{"1 2 3∘.×4 5 6", "4 5 6\n8 10 12\n12 15 18", nil},
+
+	{"⍝ Each", "", nil},
+	{"-¨1 2 3", "¯1 ¯2 ¯3", nil},   // monadic each
+	{"1+¨1 2 3", "2 3 4", nil},     // dyadic each
+	{"1 2 3+¨1", "2 3 4", nil},     // dyadic each
+	{"1 2 3+¨4 5 6", "5 7 9", nil}, // dyadic each
+	{"1+¨1", "2", nil},             // dyadic each
 
 	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
