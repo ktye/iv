@@ -65,10 +65,8 @@ func match(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return apl.Bool(false), nil
 	}
 	if isal == false {
-		// Compare scalars
-		// arith2 converts numbers to the same type.
-		feq := arith2("=", compare("="))
-		return feq(a, L, R)
+		// Compare scalars, convert numbers to the same type.
+		return apl.Bool(isEqual(a, L, R)), nil
 	} else {
 		sl := al.Shape()
 		sr := ar.Shape()

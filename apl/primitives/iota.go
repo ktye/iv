@@ -140,7 +140,6 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println("isEqual", l, r, isEqual(a, l, r))
 			if isEqual(a, l, r) == true {
 				ok = true
 				break
