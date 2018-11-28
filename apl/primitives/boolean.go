@@ -5,6 +5,7 @@ import (
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
+	"github.com/ktye/iv/apl/operators"
 )
 
 func init() {
@@ -46,6 +47,12 @@ func init() {
 		Domain: Monadic(IsArray(nil)),
 		fn:     array1("~", logicalNot),
 	})
+	register(primitive{
+		symbol: "~",
+		doc:    "without",
+		Domain: Dyadic(Split(ToVector(nil), ToVector(nil))),
+		fn:     without,
+	})
 }
 
 // logical not, R is a Number.
@@ -84,4 +91,37 @@ func logical(logical string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bo
 		}
 		return t, true
 	}
+}
+
+// without: L and R are vectors.
+// L~R is equivalent to (~L∊R)/L.
+func without(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	if _, ok := R.(apl.EmptyArray); ok {
+		return L, nil
+	}
+	if _, ok := L.(apl.EmptyArray); ok {
+		return apl.EmptyArray{}, nil
+	}
+
+	lr, err := membership(a, L, R)
+	if err != nil {
+		return nil, err
+	}
+
+	not := arith1("~", logicalNot)
+	if _, ok := L.(apl.Array); ok {
+		not = array1("~", logicalNot)
+	}
+	nlr, err := not(a, nil, lr)
+	if err != nil {
+		return nil, err
+	}
+
+	to := ToIndexArray(nil)
+	ia, ok := to.To(a, nlr)
+	if ok == false {
+		return nil, fmt.Errorf("without: cannot convert (~L∊R) to index array")
+	}
+
+	return operators.Replicate(a, ia, L, 0)
 }

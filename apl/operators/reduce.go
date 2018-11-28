@@ -305,11 +305,12 @@ func replicate(a *apl.Apl, L apl.Value, axis int) apl.Function {
 		if dummyL != nil {
 			return nil, fmt.Errorf("replicate: derived function cannot be called dyadically")
 		}
-		return doreplicate(a, L, R, axis)
+		return Replicate(a, L, R, axis)
 	})
 }
 
-func doreplicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
+// Replicate is the function L over R (L/R) where L and R are arrays.
+func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	ai, ar, ax, err := commonReplExp(a, L, R, axis)
 	if err != nil {
 		return nil, fmt.Errorf("replicate: %s", err)

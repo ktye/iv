@@ -145,6 +145,15 @@ var testCases = []struct {
 	{"'NADA'∊⍳0", "0 0 0 0", nil},
 	{"(⌈/⍳0)∊⌊/⍳0", "0", nil},
 
+	{"⍝ Without", "", nil},
+	{"1 2 3 4 5~2 3 4", "1 5", nil},
+	{"'RHYME'~'MYTH'", "R E", nil},
+	{"1 2~⍳0", "1 2", nil},
+	{"1~3", "1", nil},
+	{"3~3", "", nil},
+	{"⍴⍳0~1 2", "0", nil},
+	{"3 1 4 1 5 5~3 1 4 1 5 5~4 2 5 2 6", "4 5 5", nil}, // intersection
+
 	{"⍝ Find", "", nil},
 	{"'AN'⍷'BANANA'", "0 1 0 1 0 0", nil},
 	{"'ANA'⍷'BANANA'", "0 1 0 1 0 0", nil},
