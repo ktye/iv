@@ -165,6 +165,15 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 			} else {
 				return V, false
 			}
+		} else if b, ok := V.(apl.Bool); ok {
+			n := 0
+			if b {
+				n = 1
+			}
+			return propagate(a, apl.IndexArray{
+				Ints: []int{n},
+				Dims: []int{1},
+			}, ia.child)
 		} else {
 			return V, false
 		}

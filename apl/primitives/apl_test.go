@@ -126,6 +126,7 @@ var testCases = []struct {
 	{"⍝ Where", "", nil},
 	{"⍸1 0 1 0 0 0 0 1 0", "1 3 8", nil},
 	{"⍸'e'='Pete'", "2 4", nil},
+	{"⍸1=1", "1", nil},
 
 	{"⍝ Enlist, membership", "", nil},
 	{"∊⍴⍳0", "0", nil},
