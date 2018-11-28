@@ -145,6 +145,13 @@ var testCases = []struct {
 	{"'NADA'∊⍳0", "0 0 0 0", nil},
 	{"(⌈/⍳0)∊⌊/⍳0", "0", nil},
 
+	{"⍝ Find", "", nil},
+	{"'AN'⍷'BANANA'", "0 1 0 1 0 0", nil},
+	{"'ANA'⍷'BANANA'", "0 1 0 1 0 0", nil},
+	{"(2 2⍴1)⍷1 2 3", "0 0 0", nil},
+	{"(2 2⍴5 6 8 9)⍷3 3⍴⍳9", "0 0 0\n0 1 0\n0 0 0", nil},
+	{"4 5 6⍷3 3⍴⍳9", "0 0 0\n1 0 0\n0 0 0", nil},
+
 	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "", nil},
 	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", nil},                  // magnitude
 	{"3 3 ¯3 ¯3|¯5 5 ¯4 4", "1 2 ¯1 ¯2", nil},                  // residue
