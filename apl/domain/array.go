@@ -182,12 +182,20 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	for i := range res.Ints {
-		s, _ := ar.At(i)
+		s, err := ar.At(i)
+		if err != nil {
+			return V, false
+		}
 		if n, ok := s.(apl.Number); ok {
 			if d, ok := n.ToIndex(); ok {
 				res.Ints[i] = d
 			} else {
 				return V, false
+			}
+		} else if b, ok := s.(apl.Bool); ok {
+			res.Ints[i] = 0
+			if b {
+				res.Ints[i] = 1
 			}
 		} else {
 			return V, false

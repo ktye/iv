@@ -28,6 +28,12 @@ If an item recurs: the value is the index of the first occurence`,
 		Domain: Dyadic(nil),
 		fn:     membership,
 	})
+	register(primitive{
+		symbol: "⍸",
+		doc:    "where",
+		Domain: Monadic(ToIndexArray(nil)),
+		fn:     where,
+	})
 }
 
 // interval: R: integer. index generator.
@@ -135,6 +141,40 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 		if ok {
 			res.Ints[k] = 1
+		}
+	}
+	return res, nil
+}
+
+// where R is an IndexArray but only a boolean is allowed.
+// In Dyalog where returns a nested index array for higher dimensional arrays.
+// Here only vectors are supported.
+func where(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	ar := R.(apl.IndexArray)
+	shape := ar.Shape()
+	if apl.ArraySize(ar) == 0 {
+		return apl.EmptyArray{}, nil
+	}
+
+	if len(shape) != 1 {
+		return nil, fmt.Errorf("where: only vectors are supported")
+	}
+
+	count := 0
+	for _, n := range ar.Ints {
+		if n == 1 {
+			count++
+		} else if n != 0 {
+			return nil, fmt.Errorf("where: right argument must be a boolean array")
+		}
+	}
+
+	res := apl.IndexArray{Dims: []int{count}, Ints: make([]int, count)}
+	n := 0
+	for i, v := range ar.Ints {
+		if v == 1 {
+			res.Ints[n] = i + a.Origin
+			n++
 		}
 	}
 	return res, nil
