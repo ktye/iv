@@ -313,14 +313,18 @@ func (p *parser) derived(lo expr, opsym string) (expr, error) {
 	}
 
 	// A dyadic operator needs a function (or an array).
-	// In this implementation, we allow only functions as right operands.
-
 	ro, isfunc, err := p.function(true)
 	if err != nil {
 		return nil, err
 	}
 	if isfunc == false {
-		return nil, fmt.Errorf("dyadic operator expected function as right operand, got %T", p.peek())
+		if ar, ok, err := p.array(); err != nil {
+			return nil, err
+		} else if ok {
+			ro = ar
+		} else {
+			return nil, fmt.Errorf("dyadic operator expected function or array as right operand, got %T", p.peek())
+		}
 	}
 
 	return &derived{

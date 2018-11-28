@@ -502,6 +502,21 @@ var testCases = []struct {
 	{"1 2 3+¨4 5 6", "5 7 9", nil}, // dyadic each
 	{"1+¨1", "2", nil},             // dyadic each
 
+	{"⍝ Commute, duplicate", "", nil},
+	{"∘.≤⍨1 2 3", "1 1 1\n0 1 1\n0 0 1", nil},
+	{"+/∘(÷∘⍴⍨)⍳10", "5.5", nil}, // mean value
+	{"⍴⍨3", "3 3 3", nil},
+	{"3-⍨4", "1", nil},
+	{"+/2*⍨2 2⍴4 7 1 8", "65 65", nil},
+	{"3-⍨4", "1", nil},
+
+	{"⍝ Composition", "", nil},
+	{"+/∘⍳¨2 4 6", "3 10 21", nil}, // Form I
+	{"1∘○ 10 20 30", "¯0.54402 0.91295 ¯0.98803", format5g},
+	{"+∘÷/40⍴1", "1.618", format5g}, // Form IV, golden ratio (continuous-fraction)
+	// TODO: the parser does not accept the parenthesis:
+	// {"(*∘0.5)4 16 25", "2 4 5", nil}, // Form III
+
 	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it
