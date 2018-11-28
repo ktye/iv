@@ -402,6 +402,11 @@ var testCases = []struct {
 	// {`\/⍳0`, "0", nil},
 	// {`⍀/⍳0`, "0", nil},
 
+	{"⍝ Outer product", "", nil},
+	{"10 20 30∘.+1 2 3", "11 12 13\n21 22 23\n31 32 33", nil},
+	{"(⍳3)∘.=⍳3", "1 0 0\n0 1 0\n0 0 1", nil},
+	{"1 2 3∘.×4 5 6", "4 5 6\n8 10 12\n12 15 18", nil},
+
 	{"⍝ Format as a string, Execute", "", nil},
 	{"⍕10", "10", nil},   // format as string
 	{`⍎"1+1"`, "2", nil}, // evaluate expression

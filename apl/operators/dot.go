@@ -21,19 +21,15 @@ func init() {
 		doc:     "scalar product",
 		derived: Scalarproduct,
 	})
-	register(operator{
-		symbol:  ".",
-		Domain:  DyadicOp(Split(primitive("∘"), Function(nil))),
-		doc:     "outer product",
-		derived: outer,
-	})
-
 }
 
 func innerproduct(a *apl.Apl, f, g apl.Value) apl.Function {
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 		f := f.(apl.Function)
 		g := g.(apl.Function)
+		if f == apl.Primitive("∘") {
+			return outer(a, l, r, f, g)
+		}
 		return inner(a, l, r, f, g)
 	}
 	return function(derived)
@@ -180,14 +176,59 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	return result, nil
 }
 
-func outer(a *apl.Apl, LO, RO apl.Value) apl.Function {
-	return function(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-		return nil, fmt.Errorf("TODO: outer product")
-	})
-}
-
 // A scalarProducter implements a ScalarProduct which receives an argument of the same type.
 // This can be implemented by matrix multiplication for special types.
 type scalarProducter interface {
 	ScalarProduct(interface{}) (apl.Value, error)
+}
+
+func outer(a *apl.Apl, L, R apl.Value, f, g apl.Function) (apl.Value, error) {
+	to := ToArray(nil)
+	ll, ok := to.To(a, L)
+	if ok == false {
+		return nil, fmt.Errorf("outer product: left argument cannot be converted to array: %T", L)
+	}
+	al := ll.(apl.Array)
+	ls := al.Shape()
+
+	rr, ok := to.To(a, R)
+	if ok == false {
+		return nil, fmt.Errorf("outer product: right argument cannot be converted to array: %T", L)
+	}
+	ar := rr.(apl.Array)
+	rs := ar.Shape()
+
+	// The shape of the result is (⍴L),⍴R
+	shape := make([]int, 0, len(ls)+len(rs))
+	shape = append(shape, apl.CopyShape(al)...)
+	shape = append(shape, apl.CopyShape(ar)...)
+	res := apl.GeneralArray{Dims: shape}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
+
+	lc, lidx := apl.NewIdxConverter(ls)
+	rc, ridx := apl.NewIdxConverter(rs)
+	dst := make([]int, len(shape))
+	for i := range res.Values {
+		copy(lidx, dst[:len(lidx)])
+		copy(ridx, dst[len(lidx):])
+
+		l, err := al.At(lc.Index(lidx))
+		if err != nil {
+			return nil, err
+		}
+		r, err := ar.At(rc.Index(ridx))
+		if err != nil {
+			return nil, err
+		}
+
+		v, err := g.Call(a, l, r)
+		if err != nil {
+			return nil, err
+		}
+		res.Values[i] = v // TODO copy?
+
+		apl.IncArrayIndex(dst, shape)
+	}
+
+	return res, nil
 }

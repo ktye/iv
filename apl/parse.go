@@ -258,6 +258,11 @@ func (p *parser) function(asRightOperand bool) (expr, bool, error) {
 		t := p.peek()
 		switch t.T {
 		case scan.Symbol:
+			// Special case for outer product.
+			if t.S == "∘" {
+				p.next()
+				f = Primitive(t.S)
+			}
 			if _, ok := p.a.primitives[Primitive(t.S)]; ok {
 				p.next()
 				f = Primitive(t.S)
@@ -501,8 +506,16 @@ func (p *parser) operator() (string, bool) {
 	defer leave("operator")
 
 	if t := p.peek(); t.T == scan.Symbol {
+
 		if _, ok := p.a.operators[t.S]; ok {
 			p.next()
+
+			// Special case, ∘ is both, an operator (compose) and a function in outer product.
+			// If a dot follows, we reject the operator.
+			if t.S == "∘" && p.peek().S == "." {
+				p.pos--
+				return "", false
+			}
 			return t.S, true
 		}
 	}
