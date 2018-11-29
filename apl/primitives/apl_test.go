@@ -531,6 +531,9 @@ var testCases = []struct {
 	{"⍉2 2 2⊤⍤1 0 ⍳5", "0 0 0 1 1\n0 1 1 0 0\n1 0 1 0 1", nil},
 	{"⍳⍤1 +3 1⍴⍳3", "1 0 0\n1 2 0\n1 2 3", nil},
 
+	{"⍝ Stencil", "", nil},
+	{"{⌈/⌈/⍵}⌺(3 3) ⊢3 3⍴⍳25", "5 6 6\n8 9 9\n8 9 9", nil},
+
 	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it
