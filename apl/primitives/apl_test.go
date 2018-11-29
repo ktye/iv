@@ -517,6 +517,11 @@ var testCases = []struct {
 	// TODO: the parser does not accept the parenthesis:
 	// {"(*∘0.5)4 16 25", "2 4 5", nil}, // Form III
 
+	{"⍝ Power operator", "", nil},
+	{"⍟⍣2 +2 3 4", "¯0.36651 0.094048 0.32663", format5g}, // log log
+	{"1+∘÷⍣=1", "1.618", format5g},                        // fixed point golden ratio
+	{"⍝ TODO: function inverse", "", nil},
+
 	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it

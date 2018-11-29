@@ -67,6 +67,12 @@ type index struct {
 }
 
 func (idx index) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
+	if b, ok := V.(apl.Bool); ok {
+		if b == true {
+			return apl.Index(1), true
+		}
+		return apl.Index(0), true
+	}
 	if n, ok := V.(apl.Index); ok {
 		return n, true
 	}
