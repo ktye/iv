@@ -5,6 +5,7 @@ import (
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
+	"github.com/ktye/iv/apl/operators"
 )
 
 func init() {
@@ -83,57 +84,11 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 	}
 
 	if take {
-		return dotake(a, ai, ar)
+		// Take is defined in opearators/rank.go
+		return operators.Take(a, ai, ar)
 	} else {
 		return dodrop(a, ai, ar)
 	}
-}
-
-func dotake(a *apl.Apl, ai apl.IndexArray, ar apl.Array) (apl.Value, error) {
-	rs := ar.Shape()
-
-	// The shape of the result is ,|L
-	shape := make([]int, len(ai.Ints))
-	for i, n := range ai.Ints {
-		if n < 0 {
-			shape[i] = -n
-		} else {
-			shape[i] = n
-		}
-	}
-	res := apl.GeneralArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
-
-	ic, J := apl.NewIdxConverter(rs)
-	idx := make([]int, len(shape))
-	for i := range res.Values {
-		for k := range J {
-			J[k] = idx[k]
-			if n := ai.Ints[k]; n < 0 {
-				J[k] += n + rs[k]
-			}
-		}
-		iszero := false
-		for k := range J {
-			if J[k] < 0 || J[k] >= rs[k] {
-				iszero = true
-				break
-			}
-		}
-		if iszero {
-			res.Values[i] = apl.Index(0) // TODO: typical element of R?
-		} else {
-			n := ic.Index(J)
-			v, err := ar.At(n)
-			if err != nil {
-				return nil, err
-			}
-			res.Values[i] = v // TODO: copy?
-		}
-
-		apl.IncArrayIndex(idx, shape)
-	}
-	return res, nil
 }
 
 func dodrop(a *apl.Apl, L apl.IndexArray, R apl.Array) (apl.Value, error) {
@@ -162,5 +117,5 @@ func dodrop(a *apl.Apl, L apl.IndexArray, R apl.Array) (apl.Value, error) {
 		}
 		b.Ints[i] = s + t // (((L<0)×0⌈L+⍴R)+(L≥0)×x0⌊L-⍴R)
 	}
-	return dotake(a, b, R)
+	return operators.Take(a, b, R)
 }

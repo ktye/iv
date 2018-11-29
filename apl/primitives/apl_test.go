@@ -347,17 +347,17 @@ var testCases = []struct {
 	{"⍝ TODO expand with selective specification", "", nil},
 
 	{"⍝ Pi times, circular, trigonometric", "", nil},
-	{"○0 1 2", "0 3.1416 6.2832", format5g},         // pi times
-	{"*○0J1", "¯1.00J0.00", format2J},               // Euler identity
-	{"0 ¯1 ○ 1", "0 1.5708", format5g},              //
-	{"1○(○1)÷2 3 4", "1 0.86603 0.70711", format5g}, //
-	{"2○(○1)÷3", "0.5", format5g},                   //
-	{"9 11○3.5J¯1.2", "3.5 ¯1.2", nil},              //
-	// {"9 11∘.○3.5J¯1.2 2J3 3J4", "3.5 2 3\n¯1.2 3 4", nil}, // TODO outer product
-	{"¯4○¯1", "0", nil},            //
-	{"3○2", "¯2.185", format5g},    //
-	{"2○1", "0.5403", format5g},    //
-	{"÷3○2", "¯0.45766", format5g}, //
+	{"○0 1 2", "0 3.1416 6.2832", format5g},               // pi times
+	{"*○0J1", "¯1.00J0.00", format2J},                     // Euler identity
+	{"0 ¯1 ○ 1", "0 1.5708", format5g},                    //
+	{"1○(○1)÷2 3 4", "1 0.86603 0.70711", format5g},       //
+	{"2○(○1)÷3", "0.5", format5g},                         //
+	{"9 11○3.5J¯1.2", "3.5 ¯1.2", nil},                    //
+	{"9 11∘.○3.5J¯1.2 2J3 3J4", "3.5 2 3\n¯1.2 3 4", nil}, // TODO outer product
+	{"¯4○¯1", "0", nil},                                   //
+	{"3○2", "¯2.185", format5g},                           //
+	{"2○1", "0.5403", format5g},                           //
+	{"÷3○2", "¯0.45766", format5g},                        //
 	{"1○○30÷180", "0.5", format5g},
 	{"2○○45÷180", "0.70711", format5g},
 	{"¯1○1", "1.5708", format5g},
@@ -423,7 +423,7 @@ var testCases = []struct {
 	{"⍋'alpha'", "1 5 4 2 3", nil},                                    // strings grade up
 	{"'ABCDE'⍒'BEAD'", "2 4 1 3", nil},                                // grade down with collating sequence
 	{"⍝ TODO dyadic grade up/down is only implemented for vector L", "", nil},
-	// {"A←423 11 13 31 12⋄A[⍋A]","11 12 13 23 31",nil}, // sort
+	//{"A←423 11 13 31 12⋄A[⍋A]", "11 12 13 23 31", nil}, // sort
 
 	{"⍝ Reverse, rotate", "", nil},
 	{"⌽1 2 3 4 5", "5 4 3 2 1", nil},                                                  // reverse vector
@@ -519,8 +519,17 @@ var testCases = []struct {
 
 	{"⍝ Power operator", "", nil},
 	{"⍟⍣2 +2 3 4", "¯0.36651 0.094048 0.32663", format5g}, // log log
-	{"1+∘÷⍣=1", "1.618", format5g},                        // fixed point golden ratio
+	{"1+∘÷⍣=1", "1.618", format5g},                        // fixed point iteration golden ratio
 	{"⍝ TODO: function inverse", "", nil},
+
+	{"⍝ Rank operator", "", nil},
+	{`+\⍤0 +2 3⍴1`, "1 1 1\n1 1 1", nil},
+	{`+\⍤1 +2 3⍴1`, "1 2 3\n1 2 3", nil},
+	{"⍴⍤1 +2 3⍴1", "3\n3", nil},
+	{"⍴⍤2 +2 3 5⍴1", "3 5\n3 5", nil},
+	{"4 5+⍤1 0 2 +2 2⍴7 8 9 10", "11 12\n13 14\n\n12 13\n14 15", nil},
+	{"⍉2 2 2⊤⍤1 0 ⍳5", "0 0 0 1 1\n0 1 1 0 0\n1 0 1 0 1", nil},
+	{"⍳⍤1 +3 1⍴⍳3", "1 0 0\n1 2 0\n1 2 3", nil},
 
 	{"⍝ Variable assignments.", "", nil},
 	{"X←3", "", nil},          // assign a number
