@@ -454,6 +454,15 @@ var testCases = []struct {
 	{"⍴⍴(⍳0)⍉5", "0", nil},                                        // transpose
 	{"⍝ TODO selective specification", "", nil},
 
+	{"⍝ Domino, solve linear system", "", nil},
+	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", format5g},
+	{"(1 ¯2 0)⌹3 3⍴3 2 ¯1 2 ¯2 4 ¯1 .5 ¯1", "1\n¯2\n¯2", format5g},
+	// A←2a30
+	// B←1a10
+	// RHS←A+B**(¯1+⍳6)×○1÷3
+	// S←⍉2 6⍴(6⍴1),*0J1×(¯1+⍳6)×○1÷3
+	// ⍉RHS⌹S
+
 	{"⍝ Basic operators.", "", nil},
 	{"+/1 2 3", "6", nil},                            // plus reduce
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
