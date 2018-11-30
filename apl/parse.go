@@ -12,7 +12,9 @@ type parser struct {
 	pos    int
 }
 
-func (p *parser) parse(tokens []scan.Token) (Program, error) {
+// TODO: this should be replaced with the new parser.
+// parseLeft parses the list of tokens from the left recursively.
+func (p *parser) parseLeft(tokens []scan.Token) (Program, error) {
 	p.tokens = tokens
 	p.pos = 0
 	exprs, err := p.expressionList()
@@ -78,7 +80,7 @@ func (p *parser) expr() (expr, bool, error) {
 	defer leave("expr")
 
 	switch t := p.peek(); t.T {
-	case scan.RightBrack, scan.Colon, scan.Semicolon:
+	case scan.RightParen, scan.RightBrack, scan.Colon, scan.Semicolon:
 		return nil, false, nil
 	}
 
@@ -145,6 +147,7 @@ func (p *parser) expr() (expr, bool, error) {
 }
 
 // operand
+//	( operand )
 //	function expr (monadic context)
 //	variable
 //	number
@@ -156,7 +159,32 @@ func (p *parser) operand() (expr, bool, error) {
 	enter("operand", p.peek())
 	defer leave("operand")
 
+	if t := p.peek(); t.T == scan.RightParen {
+		return nil, false, nil
+	}
+
 	save := p.pos
+
+	/* parse ( operand )
+	if t := p.peek(); t.T == scan.LeftParen {
+		p.next()
+		if e, ok, err := p.operand(); err != nil {
+			return nil, false, err
+		} else if ok == false {
+			p.pos = save
+			return nil, false, nil
+		} else {
+			if t := p.peek(); t.T == scan.RightParen {
+				p.next()
+				return e, true, nil
+			} else {
+				p.pos = save
+				return nil, false, nil
+			}
+		}
+	}
+	*/
+
 	if f, ok, err := p.function(false); err != nil {
 		return nil, false, err
 	} else if ok {
@@ -195,6 +223,7 @@ func (p *parser) operand() (expr, bool, error) {
 }
 
 // function
+//	( function )
 //	primitive
 //	lambda
 //	variable (lowercase)
@@ -208,9 +237,30 @@ func (p *parser) function(asRightOperand bool) (expr, bool, error) {
 	defer leave("function")
 
 	switch t := p.peek(); t.T {
-	case scan.Colon, scan.RightBrack, scan.Semicolon:
+	case scan.RightParen, scan.Colon, scan.RightBrack, scan.Semicolon:
 		return nil, false, nil
 	}
+
+	/* parse ( function )
+	save := p.pos
+	if t := p.peek(); t.T == scan.LeftParen {
+		p.next()
+		if e, ok, err := p.function(asRightOperand); err != nil {
+			return nil, false, err
+		} else if ok == false {
+			p.pos = save
+			return nil, false, nil
+		} else {
+			if t := p.peek(); t.T == scan.RightParen {
+				p.next()
+				return e, true, nil
+			} else {
+				p.pos = save
+				return nil, false, nil
+			}
+		}
+	}
+	*/
 
 	// While an operator follows, it is a derived function.
 	collectOperators := func(f expr) (expr, error) {
