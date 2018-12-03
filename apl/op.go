@@ -2,13 +2,6 @@ package apl
 
 import "fmt"
 
-/* todo loop op (dyadic op)
-(l)5⟳{2+2}r // loop 5 times over the lambda
-(l)({2+2}⟳5)r // inverse args, same
-(1 2 3)⟳{...}r // index args: use idx as alpha to lambda
-l(x>0)⟳{...}r // if cond exec once
-*/
-
 // Operators take functions or arrays as operands and produce derived functions.
 // An operator can be monadic or dyadic but is never ambivalent.
 // Their derived functions are.

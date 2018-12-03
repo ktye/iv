@@ -39,6 +39,10 @@ var testCases = []struct {
 	formats map[reflect.Type]string
 }{
 
+	{"⍴⍴(,1)/2", "1", nil},
+	{"(⌈/⍳0)∊⌊/⍳0", "0", nil},
+	//{"(*∘0.5)4 16 25", "2 4 5", nil}, // Form III
+
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -462,6 +466,10 @@ var testCases = []struct {
 	// RHS←A+B**(¯1+⍳6)×○1÷3
 	// S←⍉2 6⍴(6⍴1),*0J1×(¯1+⍳6)×○1÷3
 	// ⍉RHS⌹S
+	// With rational numbers:
+	// A←3 3⍴9?100
+	// B←3 3⍴9?100
+	// 0=⌈/⌈/|B-A+.×B⌹A
 
 	{"⍝ Basic operators.", "", nil},
 	{"+/1 2 3", "6", nil},                            // plus reduce

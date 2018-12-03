@@ -1,6 +1,7 @@
 package apl
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strconv"
@@ -12,10 +13,11 @@ func TestParse(t *testing.T) {
 
 	// For testing the parser we register just a couple of dummy primitives and two operators.
 	reg := func(a *Apl) {
-		for _, r := range "+-*!←>" {
+		for _, r := range "+-*!>" {
 			a.RegisterPrimitive(Primitive(r), dummy)
 		}
-		a.RegisterOperator("/", reduce{})
+		a.RegisterOperator("/", mop{})
+		a.RegisterOperator("←", mop{})
 		a.RegisterOperator(".", dot{})
 		if err := a.SetTower(newTower()); err != nil {
 			panic(err)
@@ -25,6 +27,8 @@ func TestParse(t *testing.T) {
 	testCases := []struct {
 		in, exp string
 	}{
+		{"++1+1", "x"},
+		{"+1", "(+ 1)"},
 		{"1", "1"},
 		{"1 2", "(1 2)"},
 		{`1 "alpha" 2`, `(1 "alpha" 2)`},
@@ -32,10 +36,12 @@ func TestParse(t *testing.T) {
 		{"¯2+3", "(¯2 + 3)"},
 		{"1 2 3+4 5 6", "((1 2 3) + (4 5 6))"},
 		{"+", "+"},
+		{"3+1/4", "(3 + ((1 /) 4))"},
+		{"3+X←4", "(3 + ((X ←) 4))"},
 		{"+/1 2 3", "((+ /) (1 2 3))"},
 		{"+.*/1 2 3", "(((+ . *) /) (1 2 3))"},
-		{"f ← +", "(f ← +)"},
-		{"f ← +.*", "(f ← (+ . *))"},
+		{"f ← +", "((f ←), +)"},
+		{"f ← +.*", "((f ←), (+ . *))"},
 		{"1 2/3 4 5", "(((1 2) /) (3 4 5))"},
 		{"X ← +/ 3 4 5 + 1 2 3", "(X ← ((+ /) ((3 4 5) + (1 2 3))))"},
 		{"A[1]", "([1] ⌷ A)"},
@@ -58,6 +64,9 @@ func TestParse(t *testing.T) {
 	for i, tc := range testCases {
 		a := New(os.Stdout)
 		reg(a)
+
+		fmt.Println("⍟ test:", tc.in)
+
 		p, err := a.Parse(tc.in)
 		if err != nil {
 			t.Fatalf("[%d] %s: %s", i+1, tc.in, err)
@@ -105,13 +114,13 @@ type dummyFunction struct{}
 func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Index(1), nil }
 
 // Monadic operators.
-type reduce struct{}
+type mop struct{}
 
-func (r reduce) To(a *Apl, LO, RO Value) (Value, Value, bool) { return LO, RO, true }
-func (r reduce) String(a *Apl) string                         { return "any" }
-func (r reduce) DyadicOp() bool                               { return false }
-func (r reduce) Derived(a *Apl, lo, ro Value) Function        { return dummyfunc }
-func (r reduce) Doc() string                                  { return "reduce" }
+func (r mop) To(a *Apl, LO, RO Value) (Value, Value, bool) { return LO, RO, true }
+func (r mop) String(a *Apl) string                         { return "any" }
+func (r mop) DyadicOp() bool                               { return false }
+func (r mop) Derived(a *Apl, lo, ro Value) Function        { return dummyfunc }
+func (r mop) Doc() string                                  { return "reduce" }
 
 // Dyadic operators.
 type dot struct {

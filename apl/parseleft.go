@@ -6,12 +6,6 @@ import (
 	"github.com/ktye/iv/apl/scan"
 )
 
-type parser struct {
-	a      *Apl
-	tokens []scan.Token
-	pos    int
-}
-
 // TODO: this should be replaced with the new parser.
 // parseLeft parses the list of tokens from the left recursively.
 func (p *parser) parseLeft(tokens []scan.Token) (Program, error) {

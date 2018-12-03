@@ -10,8 +10,9 @@ import (
 )
 
 type Token struct {
-	T Type
-	S string
+	T   Type
+	S   string
+	Pos int
 }
 
 type Type int
@@ -57,11 +58,13 @@ func (s *Scanner) Scan(line string) ([]Token, error) {
 	s.width = 0
 	s.tokens = nil
 	for {
+		pos := s.pos
 		if t, err := s.nextToken(); err != nil {
 			return nil, err
 		} else if t.T == Endl {
 			break
 		} else {
+			t.Pos = pos
 			s.tokens = append(s.tokens, t)
 		}
 	}
