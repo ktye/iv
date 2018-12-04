@@ -71,6 +71,28 @@ func (s *Scanner) Scan(line string) ([]Token, error) {
 	return s.tokens, nil
 }
 
+func (t Type) String() string {
+	var s string
+	switch t {
+	case LeftParen:
+		s = "("
+	case RightParen:
+		s = ")"
+	case LeftBrack:
+		s = "["
+	case RightBrack:
+		s = "]"
+	case LeftBrace:
+		s = "{"
+	case RightBrace:
+		s = "}"
+	default:
+		// The other type are not printed.
+		s = "?"
+	}
+	return s
+}
+
 func (t Token) String() string {
 	var s string
 	switch t.T {

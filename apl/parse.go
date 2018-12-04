@@ -15,10 +15,10 @@ type parser struct {
 }
 
 const (
-	noun        class = 1 + iota // array expression    (A)
-	verb                         // function expression (f)
-	adverb                       // monadic operator    (/)
-	conjunction                  // dyadic operator     (.)
+	noun        class = 1 << iota // array expression    (A)
+	verb                          // function expression (f)
+	adverb                        // monadic operator    (/)
+	conjunction                   // dyadic operator     (.)
 )
 
 // Item is an element of the parse stack.
@@ -30,9 +30,11 @@ type item struct {
 type class int
 
 func (c class) String() string {
-	if c > 0 && c <= 4 {
-		s := "_Af/."
-		return string(s[int(c)])
+	s := "Af/."
+	for i := range s {
+		if c&class(1<<uint(i)) != 0 {
+			return string(s[i])
+		}
 	}
 	return "?"
 }
@@ -131,8 +133,9 @@ func (p *parser) parseStatement() (item, error) {
 			if err := p.reduce(true); err != nil {
 				return item{}, err
 			}
+			return p.stack[0], nil
 
-		// A symbol is a primitive function, a dyadic or a monadic operator.
+		// A symbol may be a primitive function, a dyadic or a monadic operator.
 		case scan.Symbol:
 
 			if _, ok := p.a.primitives[Primitive(t.S)]; ok {
@@ -174,9 +177,9 @@ func (p *parser) parseStatement() (item, error) {
 			return item{}, fmt.Errorf(":%d: unexpected opening %s", t.Pos, t.S)
 
 		case scan.RightParen:
-			i, err := p.subStatement(t, scan.RightParen)
+			i, err := p.subStatement(scan.LeftParen, scan.RightParen)
 			if err != nil {
-				return item{}, err
+				return item{}, fmt.Errorf(":%d: %s", t.Pos, err)
 			}
 			push(i, false)
 
@@ -212,7 +215,7 @@ func (p *parser) pull() scan.Token {
 
 // subStatement parses a parenthesized substatement.
 // Parens may be (), [] or {}.
-func (p *parser) subStatement(left scan.Token, rightT scan.Type) (item, error) {
+func (p *parser) subStatement(left scan.Type, right scan.Type) (item, error) {
 	// Pull until matching left paren. The right paren is not present anymore.
 	var tokens []scan.Token
 	l := 1
@@ -221,22 +224,23 @@ func (p *parser) subStatement(left scan.Token, rightT scan.Type) (item, error) {
 		tokens = append(tokens, t)
 		switch t.T {
 		case scan.Endl:
-			return item{}, fmt.Errorf(":%d: unmatched %s", left.Pos, left.S)
-		case rightT:
+			return item{}, fmt.Errorf("unmatched %s", left.String())
+		case right:
 			l++
-		case left.T:
+		case left:
 			l--
 			if l == 0 {
 				tokens = tokens[:len(tokens)-1]
 			}
-			break
+			goto rev
 		}
 	}
+rev:
 
 	// Reverse tokens.
 	for i := 0; i < len(tokens)/2; i++ {
-		n := len(tokens) - i - 1
-		tokens[i], tokens[n] = tokens[n], tokens[i]
+		k := len(tokens) - i - 1
+		tokens[i], tokens[k] = tokens[k], tokens[i]
 	}
 
 	// Create a new parser for the substatement and return it's result.
@@ -288,6 +292,15 @@ func (p *parser) collectArray(right scan.Token) (expr, error) {
 			}
 			ar = append(ar, numVar{t.S})
 
+			/* TODO: 1 2 (+/1 2 3) 4 5
+			case scan.RightParen:
+				i, err := p.subStatement(scan.LeftParen, scan.RightParen)
+				if err != nil {
+					return item{}, fmt.Errorf(":%d: %s", t.Pos, err)
+				}
+				push(i, false)
+			*/
+
 		default:
 			goto leave
 		}
@@ -317,8 +330,8 @@ func (p *parser) reduce(last bool) error {
 	in := p.shortStack()
 	defer func() { fmt.Printf("reduce: %s → %s\n", in, p.shortStack()) }()
 
-	p.resolveOps(last)
-	p.resolveArray(last)
+	p.resolveOperators(last)
+	p.resolveArrays(last)
 	p.resolveFunctions(last)
 
 	if last && len(p.stack) > 1 {
@@ -327,13 +340,13 @@ func (p *parser) reduce(last bool) error {
 	return nil
 }
 
-// ResolveOps tries to convert operators into derived functions.
+// ResolveOperators tries to convert operators into derived functions.
 //
 // Operator reduction is done from the left side of the stack.
 // If last==true, test if the second token is an operator:
 //	:/+	mop(0) reduction
 //	:.?+	dop(0) reduction
-// Otherwise test if the third token is an operator.
+// In any case, test if the third token is an operator.
 //	::/+	mop(1) reduction
 //	::.?+	dop(1) reduction
 // ?  an item of any class
@@ -346,27 +359,36 @@ func (p *parser) reduce(last bool) error {
 // Operators have long scope on the left and short scope on the right:
 // 	+.+.+.+.*  ←→ ((((+.+).+).+).*)  ←≠→  (+.(+.(+.(+.*))))
 // See DyaProg p 21.
-func (p *parser) resolveOps(last bool) {
-	pos := 0
-	if last == false {
-		pos = 1
-	}
+func (p *parser) resolveOperators(last bool) {
 	for {
-		mok := p.mopReduce(pos)
-		dok := p.dopReduce(pos)
-		if mok == false && dok == false {
-			return
+		ok1, ok2, ok3, ok4 := false, false, false, false
+		if last {
+			ok1 = p.mopReduce(0)
 		}
+		ok2 = p.mopReduce(1)
+		if last {
+			ok3 = p.dopReduce(0)
+		}
+		ok4 = p.dopReduce(1)
+		if ok1 || ok2 || ok3 || ok4 {
+			continue
+		}
+		return
 	}
 }
 
 // mopReduction reduces a monadic operator on position i+1 from the left,
 // i must be 0 or 1.
-// It returns if there was a reduction.
+// It returns true, if there was a reduction.
 func (p *parser) mopReduce(i int) bool {
 	//  :/+		mop(0) reduction
 	//  ::/+	mop(1) reduction
-	if len(p.stack) < 2+i || p.leftItem(i+1).class != verb {
+	op := adverb | conjunction
+	if len(p.stack) < 2+i || p.leftItem(i+1).class != adverb {
+		return false
+	}
+	c0, c1 := p.leftItem(0).class, p.leftItem(1).class
+	if (c0&op != 0) || ((i == 1) && (c1&op != 0)) {
 		return false
 	}
 	d := p.leftItem(i + 1).e.(*derived)
@@ -378,11 +400,16 @@ func (p *parser) mopReduce(i int) bool {
 
 // dopReduction reduces a dyadic operator on position i+1 from the left,
 // i must be 0 or 1.
-// It returns if there was a reduction.
+// It returns true, if there was a reduction.
 func (p *parser) dopReduce(i int) bool {
 	//  :.?+	dop(0) reduction
 	//  ::.?+	dop(1) reduction
+	op := adverb | conjunction
 	if len(p.stack) < 3+i || p.leftItem(i+1).class != conjunction {
+		return false
+	}
+	c0, c1 := p.leftItem(0).class, p.leftItem(1).class
+	if (c0&op != 0) || ((i == 1) && (c1&op != 0)) {
 		return false
 	}
 	d := p.leftItem(i + 1).e.(*derived)
@@ -401,15 +428,16 @@ func (p *parser) dopReduce(i int) bool {
 // If last==true:	reduction on the tail (result is always A)
 //	fA		fA
 //	AfA    		AfA
-// Otherwise:
+// In any case:
 //	+ffA		fA
 //	+/fA		fA
+//	+fAfA		AfA
 //	+!AAfA		AfA
 // +: zero or more items of any type
 // !: item of type A, f or / (everything but a DOP).
 //
 // The reduction is repeated until no pattern is found.
-func (p *parser) resolveArray(last bool) {
+func (p *parser) resolveArrays(last bool) {
 	for {
 		fok := p.reducefA(last)
 		aok := p.reduceAfA(last)
@@ -418,87 +446,6 @@ func (p *parser) resolveArray(last bool) {
 		}
 	}
 }
-
-/*
-	for {
-		if last && len(p.stack) == 1 {
-			return nil
-		}
-
-		r := p.rightItem(0)
-		if r.class != noun {
-			return nil
-		}
-		if last && len(p.stack) == 2 {
-			l := p.leftItem(0)
-			switch l.class {
-			case noun: // AA
-				return fmt.Errorf("two consecutive arrays are not allowed")
-			case verb:
-				// fA
-				f := &function{
-					Function: l.e.(Function),
-					right:    r.e,
-				}
-				p.stack = []item{item{e: f, class: noun}}
-				return nil
-			default:
-				return fmt.Errorf("sole operator on left side") // This should be triggered already.
-			}
-		} else if last == true && len(p.stack) == 3 {
-			// AfA
-			i0 := p.leftItem(0)
-			i1 := p.leftItem(1)
-			if i0.class == noun && i1.class == verb {
-				f := &function{
-					Function: i1.e.(Function),
-					left:     i0.e,
-					right:    p.rightItem(0).e,
-				}
-				p.stack = []item{item{e: f, class: noun}}
-				return nil
-			}
-			return fmt.Errorf("unexpected tail: %T %T %T", p.stack[2].e, p.stack[1].e, p.stack[0].e)
-		} else if len(p.stack) > 2 && p.rightItem(2).class != conjunction {
-			// error for: +fAA | +AAA | +/AA
-			if r1 := p.rightItem(1); r1.class == noun {
-				return fmt.Errorf("two consecutive arrays are not allowed")
-			} else if r1.class == verb {
-				// apply monad for: +ffA | +/fA not for: +AfA
-				if p.rightItem(2).class != noun {
-					f := &function{
-						Function: r1.e.(Function),
-						right:    p.rightItem(0).e,
-					}
-					p.setRight(1, item{e: f, class: noun})
-					p.removeRight(0) // Remove last A
-					continue
-				}
-			} else { // f/A
-				return nil
-			}
-		} else if len(p.stack) > 3 && p.rightItem(3).class != conjunction {
-			// dyadic application for: +fAfA, +AAfA, +/AfA
-			r0 := p.rightItem(0)
-			r1 := p.rightItem(1)
-			r2 := p.rightItem(2)
-			if r0.class == noun && r1.class == verb && r2.class == noun {
-				f := &function{
-					Function: r1.e.(Function),
-					left:     r2.e,
-					right:    r0.e,
-				}
-				p.setRight(2, item{e: f, class: noun})
-				p.removeRight(0) // Remove fA
-				p.removeRight(0)
-				continue
-			}
-		}
-		return nil
-	}
-	return nil
-}
-*/
 
 func (p *parser) reducefA(last bool) bool {
 	// fA
@@ -509,19 +456,20 @@ func (p *parser) reducefA(last bool) bool {
 	}
 	r := p.rightItem(0)
 	f := p.rightItem(1)
-	x := item{class: conjunction}
+	x := conjunction
 	if len(p.stack) > 2 {
 		x = p.rightItem(2).class
 	}
 	if last && len(p.stack) == 2 {
-		x.class = verb
+		x = verb
 	}
-	if r.class == noun && f.class == verb && (x.class == verb || x.class == adverb) {
+	op := verb | adverb
+	if r.class == noun && f.class == verb && (x&op != 0) {
 		fn := &function{
 			Function: f.e.(Function),
 			right:    r.e,
 		}
-		p.setRight(1, item{e: f, class: noun})
+		p.setRight(1, item{e: fn, class: noun})
 		p.removeRight(0)
 		return true
 	}
@@ -530,6 +478,7 @@ func (p *parser) reducefA(last bool) bool {
 
 func (p *parser) reduceAfA(last bool) bool {
 	// AfA
+	// +fAfA
 	// +!AAfA
 	if len(p.stack) < 3 {
 		return false
@@ -538,23 +487,34 @@ func (p *parser) reduceAfA(last bool) bool {
 	f := p.rightItem(1)
 	r := p.rightItem(0)
 
-	a := noun
 	x := conjunction
+	y := noun
 	if len(p.stack) > 4 {
-		x = p.righItem(4).class
-		a = p.righItem(3).class
+		x = p.rightItem(4).class
+		y = p.rightItem(3).class
 	} else if last == false {
 		return false
 	}
-	if l.class == noun && f.class == verb && r.class == noun && a == noun && x != conjunction {
+	reduce := func() {
 		fn := &function{
 			Function: f.e.(Function),
 			left:     l.e,
 			right:    r.e,
 		}
-		p.setRight(2, item{e: f, class: noun})
+		p.setRight(2, item{e: fn, class: noun})
 		p.removeRight(0)
 		p.removeRight(0)
+	}
+
+	if !(l.class == noun && f.class == verb && r.class == noun) {
+		return false
+	}
+	if last == true && len(p.stack) > 2 {
+		reduce()
+		return true
+	}
+	if y == verb || (y == noun && x != conjunction) {
+		reduce()
 		return true
 	}
 	return false
@@ -568,43 +528,37 @@ func (p *parser) reduceAfA(last bool) bool {
 // 	+!ff
 // The reduction is called train reduction.
 // It is repeated until the pattern is not found again.
-func (p *parser) resolveFunction(last bool) error {
-	if len(p.stack) == 0 {
-		return fmt.Errorf("parse stack is empty")
-	}
+func (p *parser) resolveFunctions(last bool) {
 	for {
-		if len(p.stack) == 1 {
-			return nil
+		if p.reduceff(last) == false {
+			return
 		}
-
-		r0 := p.rightItem(0)
-		if r0.class != verb {
-			return nil
-		}
-
-		if last || (len(p.stack) > 2 && p.rightItem(2).class != conjunction) {
-			r1 := p.rightItem(1)
-			if r1.class == noun {
-				// No preceeding array allowed: +AAF, +fAf, +/Af
-				return fmt.Errorf("function expression is preceeded by array")
-			}
-			if r1.class == verb {
-				// Combine functions: +Aff, +fff, +/ff.
-				if t, ok := r0.e.(train); ok {
-					t = append(train{r1.e}, t...)
-					p.setRight(1, item{e: t, class: verb})
-				} else {
-					t = train{r1.e, r0.e}
-					p.setRight(1, item{e: t, class: verb})
-				}
-				p.removeRight(0)
-				continue
-			}
-			return nil
-		}
-		return nil
 	}
-	return nil
+}
+
+func (p *parser) reduceff(last bool) bool {
+	if len(p.stack) < 2 {
+		return false
+	}
+	// +!ff
+	r0 := p.rightItem(0)
+	r1 := p.rightItem(1)
+	c := conjunction
+	if len(p.stack) > 2 {
+		c = p.rightItem(2).class
+	}
+	if (r0.class == verb && r1.class == verb) && ((len(p.stack) == 2 && last) || c != conjunction) {
+		if t, ok := r0.e.(train); ok {
+			t = append(train{r1.e}, t...)
+			p.setRight(1, item{e: t, class: verb})
+		} else {
+			t = train{r1.e, r0.e}
+			p.setRight(1, item{e: t, class: verb})
+		}
+		p.removeRight(0)
+		return true
+	}
+	return false
 }
 
 // RemoveLeft removes item i from the left side of the stack.
