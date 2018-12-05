@@ -38,11 +38,6 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
-
-	{"⍴⍴(,1)/2", "1", nil},
-	{"(⌈/⍳0)∊⌊/⍳0", "0", nil},
-	//{"(*∘0.5)4 16 25", "2 4 5", nil}, // Form III
-
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -61,13 +56,13 @@ var testCases = []struct {
 
 	{"⍝ Braces.", "", nil},
 	{"1 2+3 4", "4 6", nil},
-	{"1 (2+3) 4", "1 5 4", nil},
-	{"1 2 (+/1 2 3) 4 5", "1 2 6 4 5", nil},
 	{"(1 2)+3 4", "4 6", nil},
 	{"1×2+3×4", "14", nil},
 	{"1×(2+3)×4", "20", nil},
 	{"(3×2)+3×4", "18", nil},
 	{"3×2+3×4", "42", nil},
+	// {"1 (2+3) 4", "1 5 4", nil}, not supported
+	// {"1 2 (+/1 2 3) 4 5", "1 2 6 4 5", nil},
 
 	{"⍝ Comparison", "", nil},
 	{"1 2 3 4 5 > 2", "0 0 1 1 1", nil},     // greater than

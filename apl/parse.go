@@ -236,6 +236,9 @@ func (p *parser) subStatement(left scan.Type, right scan.Type) (item, error) {
 		}
 	}
 rev:
+	if len(tokens) == 0 {
+		return item{}, fmt.Errorf("empty: %s%s", left.String(), right.String())
+	}
 
 	// Reverse tokens.
 	for i := 0; i < len(tokens)/2; i++ {
@@ -277,14 +280,19 @@ func (p *parser) collectArray(right scan.Token) (expr, error) {
 
 		case scan.Chars:
 			runes := []rune(t.S)
-			chars := make(array, len(runes))
-			for i := len(chars) - 1; i >= 0; i-- {
-				chars[i] = String(string(runes[i]))
+			if len(runes) > 0 {
+				chars := make(array, len(runes))
+				for i := range chars {
+					k := len(chars) - 1 - i
+					chars[i] = String(string(runes[k]))
+				}
+				if ar != nil && len(chars) > 1 {
+					return nil, fmt.Errorf(":%d: only scalars can be added to an array", t.Pos)
+				}
+				ar = append(ar, chars...)
+			} else {
+				//ar = append(ar, String(""))
 			}
-			if ar != nil && len(chars) > 1 {
-				return nil, fmt.Errorf(":%d: only scalars can be added to an array", t.Pos)
-			}
-			ar = append(ar, chars...)
 
 		case scan.Identifier:
 			if ok, fok := isVarname(t.S); ok == false || fok == true {
@@ -292,23 +300,15 @@ func (p *parser) collectArray(right scan.Token) (expr, error) {
 			}
 			ar = append(ar, numVar{t.S})
 
-			/* TODO: 1 2 (+/1 2 3) 4 5
-			case scan.RightParen:
-				i, err := p.subStatement(scan.LeftParen, scan.RightParen)
-				if err != nil {
-					return item{}, fmt.Errorf(":%d: %s", t.Pos, err)
-				}
-				push(i, false)
-			*/
-
 		default:
 			goto leave
 		}
 		p.pull() // Remove the token that has just been processed.
 	}
+
 leave:
 	if ar == nil {
-		return nil, fmt.Errorf(":%d: cannot collect array", right.Pos) // This should not happen.
+		return EmptyArray{}, nil
 	}
 
 	// Reverse the array to the normal left to right order.
