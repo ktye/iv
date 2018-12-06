@@ -3,6 +3,7 @@ package apl
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/ktye/iv/apl/scan"
 )
@@ -231,8 +232,8 @@ func (p *parser) subStatement(left scan.Type, right scan.Type) (item, error) {
 			l--
 			if l == 0 {
 				tokens = tokens[:len(tokens)-1]
+				goto rev
 			}
-			goto rev
 		}
 	}
 rev:
@@ -247,7 +248,8 @@ rev:
 	}
 
 	// Create a new parser for the substatement and return it's result.
-	q := parser{a: p.a, tokens: tokens}
+	q := &parser{a: p.a, tokens: tokens}
+
 	return q.parseStatement()
 }
 
@@ -326,9 +328,8 @@ leave:
 
 // Reduce tries to reduce the partial right tail of the stack.
 func (p *parser) reduce(last bool) error {
-	//p.printStack()
-	in := p.shortStack()
-	defer func() { fmt.Printf("reduce: %s → %s\n", in, p.shortStack()) }()
+	//in := p.shortStack()
+	//defer func() { fmt.Printf("reduce: %s → %s\n", in, p.shortStack()) }()
 
 	p.resolveOperators(last)
 	p.resolveArrays(last)
@@ -611,4 +612,12 @@ func (p *parser) shortStack() string {
 		k++
 	}
 	return string(v)
+}
+
+func (p *parser) tokenString() string {
+	s := make([]string, len(p.tokens))
+	for i, t := range p.tokens {
+		s[i] = t.S
+	}
+	return strings.Join(s, " ")
 }

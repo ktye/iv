@@ -1,7 +1,6 @@
 package apl
 
 import (
-	"fmt"
 	"os"
 	"reflect"
 	"strconv"
@@ -31,11 +30,13 @@ func TestParse(t *testing.T) {
 		{"1", "1"},
 		{"1 2", "(1 2)"},
 		{`1 "alpha" 2`, `(1 "alpha" 2)`},
-		{"+'e'-'Pete'", ""},
+		{"+'e'-'Pete'", `(+ (e - ("P" "e" "t" "e")))`},
 		// {"1 (2+3) 4", ""}, not supported
 		{"-1", "(- 1)"},
 		{"¯2+3", "(¯2 + 3)"},
 		{"1 2 3+4 5 6", "((1 2 3) + (4 5 6))"},
+		{"(1+(1))", "(1 + 1)"},
+		{"((1+1)+1)+1", "(((1 + 1) + 1) + 1)"},
 		{"+", "+"},
 		{"++1+1", "(+ (+ (1 + 1)))"},
 		{"3+1/4", "(3 + ((1 /) 4))"},
@@ -70,7 +71,7 @@ func TestParse(t *testing.T) {
 		a := New(os.Stdout)
 		reg(a)
 
-		fmt.Println("⍟ test:", tc.in)
+		// fmt.Println("⍟ test:", tc.in)
 
 		p, err := a.Parse(tc.in)
 		if err != nil {
