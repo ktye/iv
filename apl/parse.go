@@ -146,6 +146,9 @@ func (p *parser) parseStatement() (item, error) {
 				if ops[0].DyadicOp() == true {
 					i.class = conjunction
 				}
+				if t.S == "∘" {
+					i = p.specialJot(i)
+				}
 				push(i, false)
 			} else {
 				return item{}, fmt.Errorf(":%d: unknown symbol: %s", t.Pos, t.S)
@@ -419,6 +422,7 @@ func (p *parser) dopReduce(i int) bool {
 	p.setLeft(i, item{e: d, class: verb})
 	p.removeLeft(i + 1)
 	p.removeLeft(i + 1)
+
 	return true
 }
 
@@ -560,6 +564,22 @@ func (p *parser) reduceff(last bool) bool {
 		return true
 	}
 	return false
+}
+
+// SpecialJot converts the item from a dyadic operator to a primitive function,
+// if it followed a dot.
+// This special case is applied for ∘ only, which is registered as a DOP,
+// but used in: ∘.×
+func (p *parser) specialJot(i item) item {
+	if len(p.stack) < 1 {
+		return i
+	}
+	dot := p.stack[len(p.stack)-1].e
+	if d, ok := dot.(*derived); ok && d.op == "." {
+		i = item{e: Primitive("∘"), class: verb}
+	}
+
+	return i
 }
 
 // RemoveLeft removes item i from the left side of the stack.

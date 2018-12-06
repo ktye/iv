@@ -353,7 +353,7 @@ var testCases = []struct {
 	{"1○(○1)÷2 3 4", "1 0.86603 0.70711", format5g},       //
 	{"2○(○1)÷3", "0.5", format5g},                         //
 	{"9 11○3.5J¯1.2", "3.5 ¯1.2", nil},                    //
-	{"9 11∘.○3.5J¯1.2 2J3 3J4", "3.5 2 3\n¯1.2 3 4", nil}, // TODO outer product
+	{"9 11∘.○3.5J¯1.2 2J3 3J4", "3.5 2 3\n¯1.2 3 4", nil}, //
 	{"¯4○¯1", "0", nil},                                   //
 	{"3○2", "¯2.185", format5g},                           //
 	{"2○1", "0.5403", format5g},                           //
@@ -640,6 +640,7 @@ func TestApl(t *testing.T) {
 		lines := strings.Split(tc.in, "\n")
 		for k, s := range lines {
 			t.Logf("\t%s", s)
+
 			if err := a.ParseAndEval(s); err != nil {
 				t.Fatalf("tc%d:%d: %s: %s\n", i+1, k+1, tc.in, err)
 			}
