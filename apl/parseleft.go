@@ -476,7 +476,7 @@ func (p *parser) guardList() (guardList, bool, error) {
 
 	var l guardList
 	for {
-		if e, ok, err := p.guardExpr(); err != nil {
+		if e, ok, err := p.guardExpression(); err != nil {
 			return nil, false, err
 		} else if ok == false {
 			break
@@ -522,7 +522,7 @@ func (p *parser) guardList() (guardList, bool, error) {
 // guardExpr
 //	expr
 //	expr:expr
-func (p *parser) guardExpr() (*guardExpr, bool, error) {
+func (p *parser) guardExpression() (*guardExpr, bool, error) {
 	enter("guardExpr", p.peek())
 	defer leave("guardExpr")
 

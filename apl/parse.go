@@ -191,7 +191,11 @@ func (p *parser) parseStatement() (item, error) {
 			return item{}, fmt.Errorf("TODO: parse []")
 
 		case scan.RightBrace:
-			return item{}, fmt.Errorf("TODO: parse {}")
+			i, err := p.subStatement(scan.LeftBrace, scan.RightBrace)
+			if err != nil {
+				return item{}, fmt.Errorf(":%d: %s", t.Pos, err)
+			}
+			push(i, false)
 
 		case scan.Colon:
 			return item{}, fmt.Errorf(":%d: unexpected : outside {}", t.Pos)
@@ -241,6 +245,9 @@ func (p *parser) subStatement(left scan.Type, right scan.Type) (item, error) {
 	}
 rev:
 	if len(tokens) == 0 {
+		if left == scan.LeftBrace {
+			return item{e: &lambda{}, class: verb}, nil
+		}
 		return item{}, fmt.Errorf("empty: %s%s", left.String(), right.String())
 	}
 
@@ -253,7 +260,63 @@ rev:
 	// Create a new parser for the substatement and return it's result.
 	q := &parser{a: p.a, tokens: tokens}
 
-	return q.parseStatement()
+	if left == scan.LeftBrace {
+		return q.parseLambda()
+	} else {
+		return q.parseStatement()
+	}
+}
+
+// ParseLambda parses the lambda expression given in the parser's token list.
+// A lambda expression contains a list of guarded expressions:
+//	{ guardList }
+// The outer braces are not present anymore in the parsers's tokens.
+// Lambdas are calles dfns in dyalog: DyaProg p. 131
+func (p *parser) parseLambda() (item, error) {
+	// Entries of the guardList are separated by diamonds.
+	l := p.splitTokens(scan.Diamond)
+	body := make(guardList, len(l))
+	for i := range l {
+		q := &parser{a: p.a, tokens: l[i]}
+		ge, ternary, err := q.guardExpr()
+		if err != nil {
+			return item{}, err
+		}
+		body[i] = ge
+		if ternary != nil && i != len(l)-1 {
+			return item{}, fmt.Errorf("lambda: ternary is only allowed as the last item")
+		} else if ternary != nil {
+			body = append(body, &guardExpr{e: ternary})
+		}
+	}
+	return item{e: &lambda{body}, class: verb}, nil
+}
+
+// GuardExpr parses a guarded expression, which is part of a lambda expression.
+//	cond:expr
+//	cond:expr:expr2 (short ternary form, only for the last in the list).
+func (p *parser) guardExpr() (*guardExpr, expr, error) {
+	l := p.splitTokens(scan.Colon)
+	if len(l) > 3 {
+		return nil, nil, fmt.Errorf("lambda has too many colons")
+	}
+	ge := &guardExpr{}
+	for i := range l {
+		q := &parser{a: p.a, tokens: l[i]}
+		item, err := q.parseStatement()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if i == 0 && len(l) > 1 {
+			ge.cond = item.e
+		} else if i == 0 || i == 1 {
+			ge.e = item.e
+		} else if i == 2 {
+			return ge, item.e, nil
+		}
+	}
+	return ge, nil, nil
 }
 
 // collectArray pulls tokens from the parser that form an array starting with the given right end token.
@@ -615,6 +678,22 @@ func (p *parser) removeRight(i int) {
 // SetRight overwrites the item at position r from right with the new item.
 func (p *parser) setRight(r int, i item) {
 	p.stack[r] = i
+}
+
+// Split Tokens splits the parses's tokens at the given separator.
+func (p *parser) splitTokens(at scan.Type) [][]scan.Token {
+	var l [][]scan.Token
+	n := 0
+	for i, t := range p.tokens {
+		if t.T == at {
+			l = append(l, p.tokens[n:i])
+			n = i + 1
+		}
+	}
+	if n < len(p.tokens) {
+		l = append(l, p.tokens[n:len(p.tokens)])
+	}
+	return l
 }
 
 func (p *parser) printStack() {
