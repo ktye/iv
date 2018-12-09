@@ -14,7 +14,7 @@ func (t train) Eval(a *Apl) (Value, error) {
 	// TODO: should a train evaluate as a train of trains,
 	// if it has more than 3 arguments?
 	// Or should that be done at Call?
-	return t, nil
+	return t, fmt.Errorf("TODO: evaluate train")
 }
 
 func (t train) String(a *Apl) string {

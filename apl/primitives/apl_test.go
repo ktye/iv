@@ -496,7 +496,7 @@ var testCases = []struct {
 	{"⊖/⍳0", "0", nil},
 	{"∨/0 3⍴ 1", "", nil},
 	{"∨/3 3⍴ ⍳0", "0 0 0", nil},
-	// {"∪/⍳0", "0", nil}, // TODO
+	{"∪/⍳0", "0", nil},
 	// These are implemented as operators and do not parse.
 	// {"//⍳0", "0", nil},
 	// {"⌿/⍳0", "0", nil},
@@ -526,9 +526,8 @@ var testCases = []struct {
 	{"⍝ Composition", "", nil},
 	{"+/∘⍳¨2 4 6", "3 10 21", nil}, // Form I
 	{"1∘○ 10 20 30", "¯0.54402 0.91295 ¯0.98803", format5g},
-	{"+∘÷/40⍴1", "1.618", format5g}, // Form IV, golden ratio (continuous-fraction)
-	// TODO: the parser does not accept the parenthesis:
-	// {"(*∘0.5)4 16 25", "2 4 5", nil}, // Form III
+	{"+∘÷/40⍴1", "1.618", format5g},  // Form IV, golden ratio (continuous-fraction)
+	{"(*∘0.5)4 16 25", "2 4 5", nil}, // Form III
 
 	{"⍝ Power operator", "", nil},
 	{"⍟⍣2 +2 3 4", "¯0.36651 0.094048 0.32663", format5g}, // log log

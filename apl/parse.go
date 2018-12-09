@@ -134,6 +134,7 @@ func (p *parser) parseStatement() (item, error) {
 			if err := p.reduce(true); err != nil {
 				return item{}, err
 			}
+			p.linkFuncAssign()
 			return p.stack[0], nil
 
 		// A symbol may be a primitive function, a dyadic or a monadic operator.
@@ -358,13 +359,11 @@ func (p *parser) collectArray(right scan.Token) (expr, error) {
 					return nil, fmt.Errorf(":%d: only scalars can be added to an array", t.Pos)
 				}
 				ar = append(ar, chars...)
-			} else {
-				//ar = append(ar, String(""))
 			}
 
 		case scan.Identifier:
 			if ok, fok := isVarname(t.S); ok == false || fok == true {
-				break
+				goto leave
 			}
 			ar = append(ar, numVar{t.S})
 
@@ -394,8 +393,8 @@ leave:
 
 // Reduce tries to reduce the partial right tail of the stack.
 func (p *parser) reduce(last bool) error {
-	//in := p.shortStack()
-	//defer func() { fmt.Printf("reduce: %s → %s\n", in, p.shortStack()) }()
+	// in := p.shortStack()
+	// defer func() { fmt.Printf("reduce: %s → %s\n", in, p.shortStack()) }()
 
 	p.resolveOperators(last)
 	p.resolveArrays(last)
@@ -694,6 +693,32 @@ func (p *parser) splitTokens(at scan.Type) [][]scan.Token {
 		l = append(l, p.tokens[n:len(p.tokens)])
 	}
 	return l
+}
+
+// LinkFuncAssign corrects a function assignment, that was parsed as a train.
+//	f ← +
+func (p *parser) linkFuncAssign() {
+	if len(p.stack) != 1 {
+		return
+	}
+	// The expression was parsed as a train of two functions:
+	// 1. a derived assignment
+	// 2: the function expression
+	// It is converted to a monadic function, of the derived assignment
+	// with the second verb as the right argument.
+	if t, ok := p.stack[0].e.(train); ok && len(t) == 2 {
+		if d, ok := t[0].(*derived); ok && d.op == "←" {
+			p.stack = []item{
+				item{
+					e: &function{
+						Function: d,
+						right:    t[1],
+					},
+					class: verb,
+				},
+			}
+		}
+	}
 }
 
 func (p *parser) printStack() {

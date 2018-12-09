@@ -17,28 +17,12 @@ type function struct {
 
 // Eval calls the function with it's surrounding arugments.
 func (f *function) Eval(a *Apl) (Value, error) {
-	// Assignment is special, it does not evaluate the left argument.
-	assignment := false
-	if p, ok := f.Function.(Primitive); ok && p == "←" {
-		assignment = true
-	}
-
 	var err error
 	var l, r Value
 	if f.left != nil {
-		if assignment {
-			if v, ok := f.left.(numVar); ok {
-				l = Identifier(v.name)
-			} else if v, ok := f.left.(fnVar); ok {
-				l = Identifier(v)
-			} else {
-				return nil, fmt.Errorf("assignment to a non-variable: %T %s", f.left, f.left.String(a))
-			}
-		} else {
-			l, err = f.left.Eval(a)
-			if err != nil {
-				return nil, err
-			}
+		l, err = f.left.Eval(a)
+		if err != nil {
+			return nil, err
 		}
 	}
 	r, err = f.right.Eval(a)

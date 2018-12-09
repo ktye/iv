@@ -63,10 +63,9 @@ type expr interface {
 }
 
 func isAssignment(e expr) bool {
-	// This works as long as the symbol is not overloaded
-	// with something else.
+	// Assignment is implemented as an operator.
 	if fn, ok := e.(*function); ok && fn != nil {
-		if p, ok := fn.Function.(Primitive); ok && p == "←" {
+		if d, ok := fn.Function.(*derived); ok && d.op == "←" {
 			return true
 		}
 	}
