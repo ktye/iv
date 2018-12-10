@@ -30,3 +30,13 @@ func assign(a *apl.Apl, f, g apl.Value) apl.Function {
 	}
 	return function(derived)
 }
+
+// Index returns the indexes of the index specification applied to the array.
+// The indexes in the IndexArray have origin 0.
+func Index(a *apl.Apl, spec apl.IdxSpec, A apl.Array) (apl.IndexArray, error) {
+	shape := A.Shape()
+	if len(shape) != len(spec) {
+		return apl.IndexArray{}, fmt.Errorf("indexing: Array and index specification have different rank")
+	}
+	return apl.IndexArray{}, fmt.Errorf("TODO operators.Index")
+}

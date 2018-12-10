@@ -555,13 +555,18 @@ var testCases = []struct {
 	{"f←+⋄⎕←3 f 3", "6", nil}, // assign a function and apply
 	{"X←4⋄⎕←÷X", "0.25", nil}, // assign and use it in another expr
 
-	{"⍝ Bracket indexing.", "", nil},
-	{"⍝ TODO: A←⍳6 ⋄ ⎕←A[1]", "", nil}, //{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
+	{"⍝ TODO Bracket indexing.", "", nil},
+	//{"⍝ TODO: A←⍳6 ⋄ ⎕←A[1]", "", nil},
+	//{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
 
 	{"⍝ IBM APL Language, 3rd edition, June 1976.", "", nil},
 	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", nil},
 	// the original prints as: "1790.85 1413.02 1819.4 1822.03"
 	{"Area ← 3×4\nX←2+⎕←3×Y←4\nX\nY", "12\n14\n4", nil},
+
+	// TODO DyaRef page 21.
+	// Every primitive and some mixed functions may have indexes.
+	{"⍝ TODO axis specification", "", nil},
 
 	{"⍝ Lambda expressions.", "", nil},
 	{"{2×⍵}3", "6", nil},           // lambda in monadic context
