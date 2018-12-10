@@ -258,11 +258,36 @@ rev:
 	// Create a new parser for the substatement and return it's result.
 	q := &parser{a: p.a, tokens: tokens}
 
-	if left == scan.LeftBrace {
-		return q.parseLambda()
-	} else {
+	switch left {
+	case scan.LeftParen:
 		return q.parseStatement()
+	case scan.LeftBrack:
+		return q.parseBrackets()
+	case scan.LeftBrace:
+		return q.parseLambda()
+	default:
+		return item{}, fmt.Errorf("unknown paranthesis type %T", left) // This should not happen.
 	}
+}
+
+// ParseBrackets parses the expression within brackets [...].
+// This may be an index or axis specification.
+func (p *parser) parseBrackets() (item, error) {
+	l := p.splitTokens(scan.Semicolon)
+	spec := make(idxSpec, len(l))
+	for i := range l {
+		q := &parser{a: p.a, tokens: l[i]}
+		it, err := q.parseStatement()
+		if err != nil {
+			return item{}, err
+		}
+		spec[i] = it.e
+		if spec[i] == nil {
+			spec[i] = EmptyArray{}
+		}
+	}
+	// A bracket parses as an adverb, that will be corrected in p.reduce.
+	return item{e: spec, class: adverb}, nil
 }
 
 // ParseLambda parses the lambda expression given in the parser's token list.
@@ -393,12 +418,42 @@ func (p *parser) reduce(last bool) error {
 	// in := p.shortStack()
 	// defer func() { fmt.Printf("reduce: %s → %s\n", in, p.shortStack()) }()
 
+	if err := p.resolveBrackets(); err != nil {
+		return err
+	}
 	p.resolveOperators(last)
 	p.resolveArrays(last)
 	p.resolveFunctions(last)
 
 	if last && len(p.stack) > 1 {
 		return fmt.Errorf("cannot reduce expression")
+	}
+	return nil
+}
+
+// ResolveBrackets changes the order of bracket expresssions.
+// Brackets are parsed as idxSpec following an Identifier or an operator as an axis specification.
+// IdxSpec is converted to dyadic indexing function.
+// Axis specification is converted to a dyadic operator.
+func (p *parser) resolveBrackets() error {
+	if len(p.stack) < 2 {
+		return nil
+	}
+	if spec, ok := p.leftItem(1).e.(idxSpec); ok {
+		l := p.leftItem(0)
+		if id, ok := l.e.(numVar); ok && l.class == noun {
+			fn := &function{
+				Function: Primitive("⌷"),
+				left:     spec,
+				right:    id,
+			}
+			p.setLeft(1, item{e: fn, class: noun})
+			p.removeLeft(0)
+			return nil
+		} else {
+			// TODO parse axis
+			return fmt.Errorf("bracket expr following an %T\n", l.e)
+		}
 	}
 	return nil
 }
@@ -686,9 +741,9 @@ func (p *parser) splitTokens(at scan.Type) [][]scan.Token {
 			n = i + 1
 		}
 	}
-	if n < len(p.tokens) {
-		l = append(l, p.tokens[n:len(p.tokens)])
-	}
+	//if n < len(p.tokens) {
+	l = append(l, p.tokens[n:len(p.tokens)])
+	//}
 	return l
 }
 
