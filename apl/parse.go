@@ -181,18 +181,8 @@ func (p *parser) parseStatement() (item, error) {
 		case scan.LeftParen, scan.LeftBrack, scan.LeftBrace:
 			return item{}, fmt.Errorf(":%d: unexpected opening %s", t.Pos, t.S)
 
-		case scan.RightParen:
-			i, err := p.subStatement(scan.LeftParen, scan.RightParen)
-			if err != nil {
-				return item{}, fmt.Errorf(":%d: %s", t.Pos, err)
-			}
-			push(i, false)
-
-		case scan.RightBrack:
-			return item{}, fmt.Errorf("TODO: parse []")
-
-		case scan.RightBrace:
-			i, err := p.subStatement(scan.LeftBrace, scan.RightBrace)
+		case scan.RightParen, scan.RightBrack, scan.RightBrace:
+			i, err := p.subStatement(t.T)
 			if err != nil {
 				return item{}, fmt.Errorf(":%d: %s", t.Pos, err)
 			}
@@ -224,7 +214,14 @@ func (p *parser) pull() scan.Token {
 
 // subStatement parses a parenthesized substatement.
 // Parens may be (), [] or {}.
-func (p *parser) subStatement(left scan.Type, right scan.Type) (item, error) {
+func (p *parser) subStatement(right scan.Type) (item, error) {
+
+	left := map[scan.Type]scan.Type{
+		scan.RightBrace: scan.LeftBrace,
+		scan.RightParen: scan.LeftParen,
+		scan.RightBrack: scan.LeftBrack,
+	}[right]
+
 	// Pull until matching left paren. The right paren is not present anymore.
 	var tokens []scan.Token
 	l := 1
