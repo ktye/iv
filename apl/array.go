@@ -217,7 +217,12 @@ func ArrayString(a *Apl, v Array) string {
 		}
 	}
 	tw.Flush()
-	return buf.String()
+	s := buf.String()
+	if len(s) > 0 && s[len(s)-1] == '\n' {
+		// Don't print the final newline.
+		return s[:len(s)-1]
+	}
+	return s
 }
 
 // GeneralArray is an n-dimensional array that can hold any Value.
