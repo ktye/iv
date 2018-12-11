@@ -35,9 +35,18 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	spec := L.(apl.IdxSpec)
 	ar := R.(apl.Array)
 
-	idx, err := operators.Index(a, spec, ar)
+	idx, err := operators.Index(a, spec, ar.Shape())
 	if err != nil {
 		return nil, err
+	}
+
+	// Special case, if the result is a scalar.
+	if len(idx.Ints) == 1 && len(idx.Dims) == 0 {
+		if v, err := ar.At(idx.Ints[0]); err != nil {
+			return nil, err
+		} else {
+			return v, err
+		}
 	}
 
 	res := apl.GeneralArray{

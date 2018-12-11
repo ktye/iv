@@ -10,6 +10,7 @@ import (
 // and the value is an apl.Float.
 // For an index specification this is an array and each value
 // is either an EmptyArray or an IndexArray.
+// IdxSpec is origin dependend.
 type IdxSpec []Value
 
 func (x IdxSpec) String(a *Apl) string {

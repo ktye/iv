@@ -107,7 +107,19 @@ var testCases = []struct {
 	{"⍝ TODO: lcm and gcm of float and complex", "", nil},
 
 	{"⍝ Multiple expressions.", "", nil},
-	{"1⋄2⋄3", "1", nil},
+	{"1⋄2⋄3", "1\n2\n3", nil},
+	{"1⋄2", "1\n2", nil},
+	{"1 2⋄3 4", "1 2\n3 4", nil},
+	{"X←3 ⋄ Y←4", "", nil},
+
+	{"⍝ Bracket indexing.", "", nil},
+	{"A←⍳6 ⋄ A[1]", "1", nil},
+	{"A←2 3⍴⍳6 ⋄ A[1;] ⋄ ⍴A[1;]", "1 2 3\n3", nil},
+	{"A←2 3⍴⍳6 ⋄ A[2;3]", "6", nil},
+	{"A←2 3⍴⍳6 ⋄ A[2;2 3]", "5 6", nil},
+	{"A←2 3⍴⍳6 ⋄ ⍴⍴A[2;3]", "0", nil},
+	{"⍝ TODO: test index origin 0", "", nil},
+	//{"IO←0 ⋄ A←2 3⍴⍳6 ⋄ A[1;2]", "6", nil},
 
 	{"⍝ Iota and reshape.", "", nil},
 	{"⍳5", "1 2 3 4 5", nil},       // index generation
@@ -554,10 +566,6 @@ var testCases = []struct {
 	{"f←+", "", nil},          // assign a function
 	{"f←+⋄⎕←3 f 3", "6", nil}, // assign a function and apply
 	{"X←4⋄⎕←÷X", "0.25", nil}, // assign and use it in another expr
-
-	{"⍝ TODO Bracket indexing.", "", nil},
-	//{"⍝ TODO: A←⍳6 ⋄ ⎕←A[1]", "", nil},
-	//{"A←⍳6 ⋄ ⎕←A[1]", "x", nil}, // simple indexing
 
 	{"⍝ IBM APL Language, 3rd edition, June 1976.", "", nil},
 	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", nil},
