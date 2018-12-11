@@ -155,15 +155,17 @@ func (ui *Apl) execute(line string) image.Image {
 		return nil
 	}
 	if len(vals) > 0 {
-		v := vals[0]
 		/* TODO
+		v := vals[0]
 		if img, ok := v.(aplimg.Value); ok {
 			im = img.Image
 		} else {
 		*/
 		// We cannot handle tab's correctly.
-		s := strings.Replace(v.String(ui.Apl), "\t", "        ", -1)
-		fmt.Fprintln(ui, s)
+		for _, v := range vals {
+			s := strings.Replace(v.String(ui.Apl), "\t", "        ", -1)
+			fmt.Fprintln(ui, s)
+		}
 		//}
 	}
 	return im
