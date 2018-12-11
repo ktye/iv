@@ -2,6 +2,7 @@
 package duit
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"strings"
@@ -149,31 +150,25 @@ func (ui *Apl) execute(line string) image.Image {
 		fmt.Fprintf(ui, "%s\n", err)
 		return nil
 	}
-	vals, err := ui.Apl.EvalProgram(prog)
-	if err != nil {
+	if err := ui.Apl.Eval(prog); err != nil {
 		fmt.Fprintf(ui, "%s\n", err)
 		return nil
 	}
+	/* TODO: display images
 	if len(vals) > 0 {
-		/* TODO
-		v := vals[0]
-		if img, ok := v.(aplimg.Value); ok {
+		if img, ok := vals[0].(aplimg.Value); ok {
 			im = img.Image
-		} else {
-		*/
-		// We cannot handle tab's correctly.
-		for _, v := range vals {
-			s := strings.Replace(v.String(ui.Apl), "\t", "        ", -1)
-			fmt.Fprintln(ui, s)
 		}
-		//}
 	}
+	*/
 	return im
 }
 
 const prompt = "        "
 
 func (ui *Apl) Write(p []byte) (n int, err error) {
+	// We cannot handle tab's correctly.
+	p = bytes.Replace(p, []byte{'\t'}, []byte("        "), -1)
 	ui.Edit.Append(p)
 	return len(p), nil
 }

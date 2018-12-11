@@ -90,6 +90,7 @@ func main() {
 	end := int64(len(content))
 	ui.SetCursor(duit.Cursor{end, end})
 	ui.Apl = a
+	ui.Apl.SetOutput(ui)
 
 	//dui.Top.UI = &duit.Box{Kids: duit.NewKids(print, edit)}
 	dui.Top.UI = ui
