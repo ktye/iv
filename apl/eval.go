@@ -19,18 +19,17 @@ func (a *Apl) Eval(p Program) error {
 		fmt.Fprintln(a.stdout, strings.Join(v, " ⋄ "))
 	}
 
-	for i, expr := range p {
+	for _, expr := range p {
 		v, err := expr.Eval(a)
 		if err != nil {
 			return err
 		}
-		if i == 0 {
-			if a.debug {
-				fmt.Fprintf(a.stdout, "%T\n", v)
-			}
-			if isAssignment(expr) == false {
-				fmt.Fprintln(a.stdout, v.String(a))
-			}
+
+		if a.debug {
+			fmt.Fprintf(a.stdout, "%T\n", v)
+		}
+		if isAssignment(expr) == false {
+			fmt.Fprintln(a.stdout, v.String(a))
 		}
 	}
 	return nil
