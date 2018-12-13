@@ -80,14 +80,9 @@ func (d *derived) Call(a *Apl, l, r Value) (Value, error) {
 
 	// Assignment is special: It does not evaluate the Identifier.
 	if d.op == "←" {
-		if v, ok := d.lo.(numVar); ok {
-			lo = Identifier(v.name)
-		} else if v, ok := d.lo.(fnVar); ok {
-			lo = Identifier(v)
-		} else {
-			// TODO: partial evaluation for selective specification,
-			// indexed assigments, multiple assignments, ...
-			return nil, fmt.Errorf("TODO: indirect assignments: %T", d.lo)
+		lo, err = d.evalAssign()
+		if err != nil {
+			return nil, err
 		}
 	} else {
 		lo, err = d.lo.Eval(a)

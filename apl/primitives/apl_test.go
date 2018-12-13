@@ -38,6 +38,37 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
+
+	{"⍝ Indexed assignment", "", nil},
+	{"A←2 3⍴⍳6 ⋄ +A[1;1]←3 ⋄ A", "", nil},
+	{"A←⍳5 ⋄ A[2 3]←10 ⋄ A", "1 10 10 4 5", nil},
+	//{"A←B←C←D←1 ⋄ A B C D", "1 1 1 1", nil},
+	{"A←2 3⍴⍳6 ⋄ A[;2 3]←2 2⍴⍳4 ⋄ A", "1 1 2\n4 3 4", nil},
+	{"⍝ TODO: multiple assignment is not supported", "", nil},
+	{"⍝ TODO: choose/reach indexed assignment", "", nil},
+	{"⍝ TODO: combined indexed selective assignment", "", nil},
+
+	{"⍝ Multiple assignment", "", nil},
+	{"A←B←C←D←1 ⋄ A B C D", "1 1 1 1", nil},
+	{"⍝ Vector assignment", "", nil},
+	{"(A B C)←2 3 4 ⋄ A ⋄ B ⋄ C ", "2\n3\n4", nil},
+
+	// Selective specification APL2 p.41
+	{"⍝ Selective assignment", "", nil},
+	{"A←10 20 30 40 ⋄ (2↑A)←100 200 ⋄ A", "100 200 30 40", nil},
+	{"A←'ABCD' ⋄ (↑A)←1 2 3 ⋄ A", "1 2 3 D", nil},
+	{"A←2 3⍴⍳6 ⋄ (,A)←2×⍳6 ⋄ A", "2 4 6\n8 10 12", nil},
+	{"A←3 4⍴⍳12 ⋄ (4↑,⍉A)←10 20 30 40 ⋄ ,A ", "10 40 3 4 20 6 7 8 30 10 11 12", nil},
+	{"A←2 3⍴'ABCDEF' ⋄ A[1;1 3]←8 9 ⋄ A", "8 B 9\nD E F", nil},
+	{"A←2 3 4 ⋄ A[]←9 ⋄ A", "9 9 9", nil},
+	{"A←3 2⍴⍳6 ⋄ (1 0/A)←'ABC' ⋄ A ", "A 2\nB 4\nC 6", nil},
+	{"A←3 2⍴⍳6 ⋄ B←2 2⍴'ABCD' ⋄ (1 0 1/[1]A)←B ⋄ A", "A B\n3 4\nC D", nil},
+	{"A←5 6 7 8 9 ⋄ (2↓A)←⍳3 ⋄ A", "5 6 1 2 3", nil},
+	{"A←3 4⍴'ABCDEFGHIJKL' ⋄ (1 ¯1↓A)←2 3⍴⍳6 ⋄ A", "A B C D\n1 2 3 H\n4 5 6 L", nil},
+	{"", "", nil},
+	{"", "", nil},
+	{"", "", nil},
+
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
