@@ -10,23 +10,23 @@ Instead of using a single argument for the program, like awk
 cat data | awk 'BEGIN{...} /pattern/{rule1} /pattern2/{rule2} END{...}/'
 ```
 each iv rule is given as a single argument, with the special `-bBEGIN` block.
-The language is APL and a rule is composed of a `conditional` and and `expression`
+The language is APL and a rule is composed of a `conditional` and an `expression`
 ```
 cat data | iv -b 'X←0' 'N>10:X+←1' 'E=1:_'
 ```
 
 ## n-dimensional input data
-The input data is assumed to be a stream of scalars which forms an n-dimensional object.
-If contains separators, if the stream reached the border of a dimension.
+The input data is assumed to be a stream of scalars which form an n-dimensional object.
+It contains separators, if the stream reached the border of a dimension.
 
-Consider this stream of 12 scalar values `X`, which a `|` for a separator 
+Consider the stream of 12 scalar values `X`, with a `|` for a separator 
 ```
 X|X|X||X|X|X||X|X|X||X|X|X
 ```
 It is a 2-dimensional object and with APL vocabulary, it has shape `4 3`.
 Normally the first axis is very large, or endless.
 
-It can also have higer dimension, which multiple axes that are endless.
+It can also have a higher dimension, with multiple axes that are endless, such as `* * 2 3`.
 
 Iv acts on this data, using the **execution rank** given as the `-r` option.
 The default is `-r1`, which means iv collects all data, until a line is full,
@@ -39,10 +39,10 @@ To operate on each matrix (or table), we can use
 cat data | iv -r2 +/_
 ```
 
-This input data can have more dimensions as the execution rank.
+The input data can have more dimensions as the execution rank.
 In this case, we might be interested if with the current object, a higher dimension was closed.
 This information is send to APL as **termination level** in the variable `E`.
-`E` is `1`, if one level above the execution rank was finished.
+`E` is `1`, if one level above the execution rank just finished.
 E.g. if iv operates in line mode (rank 1), `E` is `1`, at the end of each table,
 that is if two subsequent newlines are in the stream instead of a single one.
 
@@ -52,6 +52,7 @@ They can be used in the rules or their conditionals:
 - N: current record number
 - E: termination level
 - EOF: bool, true for last value
+
 If the APL program wants to skip subsequent rules, it can assign to the variable `NEXT`
 ```
 NEXT←1
@@ -67,7 +68,7 @@ NEXT←1
 iv/apl and ivy are built in.
 
 J, K and Klong are started in the background as an external process.
-Their executables must be on the path, which are: `jconsole`, `k` and `kg`
+Their executables must be on the path, which are: `jconsole`, `k` and `kg`, respectively.
 
 As the languages are not compatible, also the iv programs differ.
 See the source for details, in `extern/`.
