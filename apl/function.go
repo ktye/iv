@@ -1,6 +1,8 @@
 package apl
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Function is any type that can be called, given it's left and right arguments.
 // The left argument may be nil, in which case the function is called monadically.
@@ -13,6 +15,7 @@ type Function interface {
 type function struct {
 	Function
 	left, right expr
+	selection   bool
 }
 
 // Eval calls the function with it's surrounding arugments.
@@ -20,14 +23,30 @@ func (f *function) Eval(a *Apl) (Value, error) {
 	var err error
 	var l, r Value
 	if f.left != nil {
-		l, err = f.left.Eval(a)
-		if err != nil {
-			return nil, err
+
+		// Special case for modified assignments.
+		// Defer evaluation of the left argument.
+		if d, ok := f.right.(*derived); ok && d.op == "←" {
+			l = assignment{f.left}
+		} else {
+			l, err = f.left.Eval(a)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	r, err = f.right.Eval(a)
 	if err != nil {
 		return nil, err
+	}
+
+	// Special case: the last function in a selective assignment uses Select instead of Call.
+	if _, ok := f.right.(numVar); ok && f.selection {
+		if p, ok := f.Function.(Primitive); ok == false {
+			return nil, fmt.Errorf("cannot use %T in selective assignment", f.Function)
+		} else {
+			return p.Select(a, l, r)
+		}
 	}
 	return f.Function.Call(a, l, r)
 }
@@ -98,9 +117,32 @@ func (p Primitive) Call(a *Apl, L, R Value) (Value, error) {
 	return nil, fmt.Errorf("primitive is not implemented: %T %s %T ", L, p, R)
 }
 
+// Select is similar to Call.
+// It is used as a selection function in selective assignment.
+// While the Call on these primitives would return selected values, Select returns the indexes of the values.
+func (p Primitive) Select(a *Apl, L, R Value) (IndexArray, error) {
+	if handles := a.primitives[p]; handles == nil {
+		return IndexArray{}, fmt.Errorf("primitive function %s does not exist", p)
+	} else {
+		for _, h := range handles {
+			if l, r, ok := h.To(a, L, R); ok {
+				if h.Select == nil {
+					return IndexArray{}, fmt.Errorf("primitive %s cannot be used in selective assignment", p)
+				}
+				return h.Select(a, l, r)
+			}
+		}
+	}
+	if L == nil {
+		return IndexArray{}, fmt.Errorf("primitive is not implemented: %s %T ", p, R)
+	}
+	return IndexArray{}, fmt.Errorf("primitive is not implemented: %T %s %T ", L, p, R)
+}
+
 // PrimitiveHandler is the interface that implementations of primitive functions satisfy.
 type PrimitiveHandler interface {
 	Domain
 	Call(*Apl, Value, Value) (Value, error)
+	Select(*Apl, Value, Value) (IndexArray, error)
 	Doc() string
 }

@@ -681,7 +681,7 @@ func (p *parser) reduceff(last bool) bool {
 }
 
 // SpecialJot converts the item from a dyadic operator to a primitive function,
-// if it followed a dot.
+// if it follows a dot.
 // This special case is applied for ∘ only, which is registered as a DOP,
 // but used in: ∘.×
 func (p *parser) specialJot(i item) item {
@@ -741,9 +741,7 @@ func (p *parser) splitTokens(at scan.Type) [][]scan.Token {
 			n = i + 1
 		}
 	}
-	//if n < len(p.tokens) {
 	l = append(l, p.tokens[n:len(p.tokens)])
-	//}
 	return l
 }
 

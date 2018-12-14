@@ -80,9 +80,19 @@ func (d *derived) Call(a *Apl, l, r Value) (Value, error) {
 
 	// Assignment is special: It does not evaluate the Identifier.
 	if d.op == "←" {
-		lo, err = d.evalAssign()
-		if err != nil {
-			return nil, err
+		// Modified assignment contains the expr with the identifier in the left argument,
+		// otherwise it is the LO.
+		if l == nil {
+			lo, err = evalAssign(a, d.lo, nil)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			lo, err = evalAssign(a, d.lo, l)
+			if err != nil {
+				return nil, err
+			}
+			l = nil
 		}
 	} else {
 		lo, err = d.lo.Eval(a)

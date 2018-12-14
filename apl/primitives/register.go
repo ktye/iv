@@ -21,7 +21,9 @@ type primitive struct {
 	symbol string
 	doc    string
 	fn     func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)
+	sel    func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error)
 }
 
-func (p primitive) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) { return p.fn(a, L, R) }
-func (p primitive) Doc() string                                        { return p.doc }
+func (p primitive) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error)        { return p.fn(a, L, R) }
+func (p primitive) Select(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) { return p.sel(a, L, R) }
+func (p primitive) Doc() string                                               { return p.doc }

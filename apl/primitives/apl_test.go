@@ -38,10 +38,13 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
+	{"A←2 3 ⋄ A", "2 3", nil},
+	{"A←2 3 4 ⋄ A[1]←1 ⋄ A", "1 3 4", nil},
 
 	{"⍝ Indexed assignment", "", nil},
-	{"A←2 3⍴⍳6 ⋄ +A[1;1]←3 ⋄ A", "", nil},
+	{"A←2 2⍴⍳4 ⋄ +A[1;1]←3 ⋄ A", "3\n3 2\n3 4", nil},
 	{"A←⍳5 ⋄ A[2 3]←10 ⋄ A", "1 10 10 4 5", nil},
+
 	//{"A←B←C←D←1 ⋄ A B C D", "1 1 1 1", nil},
 	{"A←2 3⍴⍳6 ⋄ A[;2 3]←2 2⍴⍳4 ⋄ A", "1 1 2\n4 3 4", nil},
 	{"⍝ TODO: choose/reach indexed assignment", "", nil},
@@ -68,7 +71,7 @@ var testCases = []struct {
 	{`A←'ABC' ⋄ (1 0 1 0 1\A)←⍳5 ⋄ A`, "1 3 5", nil},
 	{`A←2 3⍴⍳6 ⋄ (1 0 1 1\A)←10×2 4⍴⍳8 ⋄ A`, "10 30 40\n50 70 80", nil},
 	{`A←3 2⍴⍳6 ⋄ (1 1 0 0 1\[1]A)←5 2⍴-⍳10 ⋄ A`, "¯1 ¯2\n¯3 ¯4\n¯9 ¯10", nil},
-	{"A←2 3⍴⍳6 ⋄ (,A)←10×⍳6 ⋄ A", "10 20 30\n40 50 60", "", nil},
+	{"A←2 3⍴⍳6 ⋄ (,A)←10×⍳6 ⋄ A", "10 20 30\n40 50 60", nil},
 	{"A←2 3 4⍴⍳24 ⋄ (,[2 3]A)←2 12⍴-⍳24⋄⍴A⋄A[2;3;]", "2 3 4\n¯21 ¯22 ¯23 ¯24", nil},
 	{"A←'GROWTH' ⋄ (2 3⍴A)←2 3⍴-⍳6 ⋄ (4⍴A)←⍳4 ⋄ A", "1 2 3 4 ¯5 ¯6", nil},
 	{"A←3 4⍴⍳12 ⋄ (⌽A)←3 4⍴'STOPSPINODER' ⋄ A", "P O T S\nN I P S\nR E D O", nil},

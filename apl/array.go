@@ -347,6 +347,23 @@ func (ar IndexArray) At(i int) (Value, error) {
 	return Index(ar.Ints[i]), nil
 }
 
+func (ar IndexArray) Set(i int, v Value) error {
+	if i < 0 || i >= len(ar.Ints) {
+		return fmt.Errorf("index out of range")
+	}
+	n, ok := v.(Index)
+	if ok {
+		ar.Ints[i] = int(n)
+		return nil
+	} else if num, ok := v.(Number); ok {
+		if n, ok := num.ToIndex(); ok {
+			ar.Ints[i] = n
+			return nil
+		}
+	}
+	return fmt.Errorf("cannot set %T to IndexArray", v)
+}
+
 func (ar IndexArray) Shape() []int {
 	return ar.Dims
 }

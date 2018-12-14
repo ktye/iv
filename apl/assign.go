@@ -2,64 +2,80 @@ package apl
 
 import "fmt"
 
-// Assignment is the evaluates left operand of the derived function from an assignment.
-// It contains the Identifier, possible Indexes and a modification function.
+// Assignment contains the unevaluated left argument of an assignment.
+// It may be an identifier or an expression containing an identifier.
+// The identifier may be followed by a modifying function.
+type assignment struct {
+	e expr
+}
+
+func (as assignment) String(a *Apl) string {
+	return "specification " + as.e.String(a)
+}
+
+func (as assignment) Eval(a *Apl) (Value, error) {
+	return as, nil
+}
+
+// Assignment is the evaluated left part of an assignment.
+// It contains the Identifier, it's indexes and a modification function.
 type Assignment struct {
-	Var Identifier
-	Idx IndexArray
-	Mod Function
+	Identifier string
+	Indexes    Value // Should be convertible to an Index vector
+	Modifier   Value
 }
 
-func (as Assignment) String(a *Apl) string {
-	modified := ""
-	indexed := ""
-	if as.Mod != nil {
-		modified = "modified "
+func (as *Assignment) String(a *Apl) string {
+	s := ""
+	if as.Indexes != nil {
+		s = "indexed/selective "
 	}
-	if len(as.Idx.Ints) > 0 {
-		indexed = "indexed "
+	if as.Modifier != nil {
+		s += "modified "
 	}
-	return modified + indexed + "assignment to " + string(as.Var)
+	return "assignment to " + string(as.Identifier)
 }
 
-// EvalAssign evaluates a derived expression as a special case, if the operator is an assigment.
-// It does not evaluate the identifier.
-// It returns the value of the left operand.
-// There are several cases:
-//	A ← 3		simple assignment
-//	A[1;1] ← 3	indexed assigment
-//	X f← 3		modified assignment
-//	X[3] f← 3	indexed modified assignment
-//	A←B←C←D←1	multiple assignment
-// Not implemented is:
-//	(A B) ← 1 2	multiple assignment / vector specification
-//	A[⊂1 1]←101	choose/reach indexed assignment
-//	(f A) ← 3	selective assignment
-//	(EXP X)[I]←Y	combined indexed and selective assignment
-//	(EXP X)f←Y	selective modified assignment
-//
-// Expressions such as (f A) ← B are evaluated to an indexAssign
-func (d *derived) evalAssign() (Value, error) {
-	if v, ok := d.lo.(numVar); ok {
-		// Simple assignmant: A ← 3
-		return Assignment{Var: Identifier(v.name)}, nil
-	} else if v, ok := d.lo.(fnVar); ok {
-		// Simple function assignmant: f ← 3
-		return Assignment{Var: Identifier(v)}, nil
+// EvalAssign evalutes the left part of an assignment and
+// returns it as an Assignment value.
+// It handles indexed, selective and modified assignment.
+func evalAssign(a *Apl, e expr, modifier Value) (Value, error) {
+	as := Assignment{
+		Modifier: modifier,
 	}
-	return nil, fmt.Errorf("cannot assign to: %T", d.lo)
 
-	/*
-		// Indexed assignment is converted to a function application:
-		//	A[idx] ← Y ←→ (idx ⌷ A) ← Y
-		// It's converted to ??
-		if f, ok := d.lo.(*function); ok {
-			if p, ok := f.Function.(Primitive); ok && p == "⌷" {
-			return nil, fmt.Errorf("TODO: assign to function %T", f.Function)
+	// A function assignment can have no selections or modifications.
+	if f, ok := e.(fnVar); ok {
+		as.Identifier = string(f)
+		return &as, nil
+	}
+
+	// The identifier is the right-most argument in the expression.
+	// The selection function (if present) is the function left to the Identifier.
+	selection := false
+	r := e
+search:
+	for {
+		switch v := r.(type) {
+		case numVar:
+			as.Identifier = v.name
+			break search
+		case *function:
+			r = v.right
+			v.selection = true
+			selection = true
+		default:
+			return nil, fmt.Errorf("unknown type in assignment expression: %T", r)
 		}
+	}
 
-		// TODO: partial evaluation for selective specification,
-		// indexed assigments, multiple assignments, ...
-		return nil, fmt.Errorf("cannot assign to: %T", d.lo)
-	*/
+	if selection {
+		if idx, err := e.Eval(a); err != nil {
+			return nil, err
+		} else {
+			as.Indexes = idx
+		}
+	}
+
+	return &as, nil
 }
