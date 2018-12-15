@@ -245,6 +245,9 @@ rev:
 	if len(tokens) == 0 {
 		if left == scan.LeftBrace {
 			return item{e: &lambda{}, class: verb}, nil
+		} else if left == scan.LeftBrack {
+			// Empty brackets are allowed in: A[]←9
+			return item{e: idxSpec(nil), class: adverb}, nil
 		}
 		return item{}, fmt.Errorf("empty: %s%s", left.String(), right.String())
 	}

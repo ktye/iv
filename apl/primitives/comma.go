@@ -13,6 +13,7 @@ func init() {
 		doc:    "ravel, create row vector",
 		Domain: Monadic(ToArray(nil)),
 		fn:     ravel,
+		sel:    ravelSelection,
 	})
 	register(primitive{
 		symbol: "∊",
@@ -48,6 +49,19 @@ func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		res.Values[i] = v
 	}
 	return res, nil
+}
+
+func ravelSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		return apl.IndexArray{}, fmt.Errorf("ravel: cannot select from non-array: %T", R)
+	}
+	ai := apl.IndexArray{Dims: []int{apl.ArraySize(ar)}}
+	ai.Ints = make([]int, ai.Dims[0])
+	for i := range ai.Ints {
+		ai.Ints[i] = i
+	}
+	return ai, nil
 }
 
 // L and R are conformable if

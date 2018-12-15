@@ -37,6 +37,11 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	spec := L.(apl.IdxSpec)
 	ar := R.(apl.Array)
 
+	// Special case for empty brackets.
+	if len(spec) == 0 {
+		return R, nil
+	}
+
 	idx, err := indexArray(a, spec, ar.Shape())
 	if err != nil {
 		return nil, err
@@ -68,6 +73,15 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 func indexSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 	spec := L.(apl.IdxSpec)
 	ar := R.(apl.Array)
+
+	// Special case for empty brackets.
+	if len(spec) == 0 {
+		ai := apl.IndexArray{Dims: apl.CopyShape(ar), Ints: make([]int, apl.ArraySize(ar))}
+		for i := range ai.Ints {
+			ai.Ints[i] = i
+		}
+		return ai, nil
+	}
 
 	return indexArray(a, spec, ar.Shape())
 }

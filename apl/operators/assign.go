@@ -114,7 +114,12 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 
 	idx, ok := indexes.(apl.IndexArray)
 	if ok == false {
-		return fmt.Errorf("indexed assignment expected IndexArray: %T", indexes)
+		to := ToIndexArray(nil)
+		if v, ok := to.To(a, indexes); ok == false {
+			return fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
+		} else {
+			idx = v.(apl.IndexArray)
+		}
 	}
 
 	ar, ok := w.(apl.ArraySetter)
@@ -122,9 +127,31 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		return fmt.Errorf("variable %s is no settable array: %T", name, w)
 	}
 
+	// Try to keep the original array type, upgrade only if needed.
+	upgrade := func() {
+		ga := apl.GeneralArray{Dims: apl.CopyShape(ar)}
+		ga.Values = make([]apl.Value, apl.ArraySize(ga))
+		for i := range ga.Values {
+			v, err := ar.At(i)
+			if err != nil {
+				return
+			}
+			ga.Values[i] = v
+		}
+		ar = ga
+	}
+
 	// modAssign assigns ar at index i with v possibly modified by f.
 	modAssign := func(i int, v apl.Value) error {
+		if i == -1 {
+			// Index -1 is used by some indexed assignments to mark skipps.
+			// E.g. replicate and compress / and \
+			return nil
+		}
 		if f == nil {
+			if err := ar.Set(i, v); err != nil {
+				upgrade()
+			}
 			return ar.Set(i, v)
 		}
 		u, err := ar.At(i)
@@ -134,6 +161,9 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		v, err = f.Call(a, u, v)
 		if err != nil {
 			return err
+		}
+		if err := ar.Set(i, v); err != nil {
+			upgrade()
 		}
 		return ar.Set(i, v)
 	}
@@ -156,15 +186,36 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 			}
 		}
 	} else {
-		// Shapes must conform.
-		ds := idx.Shape()
-		ss := src.Shape()
+
+		// Shapes must conform. Single element axis are collapsed.
+		collapse := func(s []int) []int {
+			n := 0
+			for _, i := range s {
+				if i == 1 {
+					n++
+				}
+			}
+			if n == 0 {
+				return s
+			}
+			r := make([]int, len(s)-n)
+			k := 0
+			for _, i := range s {
+				if i != 1 {
+					r[k] = i
+					k++
+				}
+			}
+			return r
+		}
+		ds := collapse(idx.Shape())
+		ss := collapse(src.Shape())
 		if len(ds) != len(ss) {
-			return fmt.Errorf("indexed assignment: arrays have different rank")
+			return fmt.Errorf("indexed assignment: arrays have different rank: %d != %d", len(ds), len(ss))
 		}
 		for i := range ds {
 			if ss[i] != ds[i] {
-				return fmt.Errorf("indexed assignment: arrays are not conforming")
+				return fmt.Errorf("indexed assignment: arrays are not conforming: %v != %v", ss, ds)
 			}
 		}
 		for i, d := range idx.Ints {
@@ -177,8 +228,5 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 			}
 		}
 	}
-	// TODO: Do we have to assign back? probably not,
-	// as long as the array implementation stores values in a slice.
-	// a.Assign(name, R)
-	return nil
+	return a.Assign(name, ar)
 }

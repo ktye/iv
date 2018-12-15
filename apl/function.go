@@ -42,7 +42,9 @@ func (f *function) Eval(a *Apl) (Value, error) {
 
 	// Special case: the last function in a selective assignment uses Select instead of Call.
 	if _, ok := f.right.(numVar); ok && f.selection {
-		if p, ok := f.Function.(Primitive); ok == false {
+		if d, ok := f.Function.(*derived); ok == true {
+			return d.Select(a, l, r)
+		} else if p, ok := f.Function.(Primitive); ok == false {
 			return nil, fmt.Errorf("cannot use %T in selective assignment", f.Function)
 		} else {
 			return p.Select(a, l, r)

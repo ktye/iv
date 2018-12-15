@@ -13,6 +13,7 @@ func init() {
 		doc:    "cant, transpose, reverse axes",
 		Domain: Monadic(IsArray(nil)),
 		fn:     transpose,
+		sel:    selection(transpose),
 	})
 	register(primitive{
 		symbol: "⍉",

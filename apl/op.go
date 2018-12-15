@@ -24,6 +24,7 @@ type Operator interface {
 	Domain
 	DyadicOp() bool
 	Derived(*Apl, Value, Value) Function
+	Select(*Apl, Value, Value) (IndexArray, error)
 	Doc() string
 }
 
@@ -32,8 +33,9 @@ type Operator interface {
 type derived struct {
 	op string
 	// operands of the derived expression
-	lo expr // left operand
-	ro expr // right operand
+	lo  expr                                         // left operand
+	ro  expr                                         // right operand
+	sel func(*Apl, Value, Value) (IndexArray, error) // selection function for reduce and scan
 }
 
 func (d *derived) Eval(a *Apl) (Value, error) {
@@ -111,4 +113,29 @@ func (d *derived) Call(a *Apl, l, r Value) (Value, error) {
 		}
 	}
 	return nil, fmt.Errorf("cannot handle operator %T %s %T", lo, d.op, ro)
+}
+
+func (d *derived) Select(a *Apl, l, r Value) (Value, error) {
+	ops, ok := a.operators[d.op]
+	if ok == false || len(ops) == 0 || ops[0] == nil {
+		return nil, fmt.Errorf("operator %s does not exist", d.op)
+	}
+
+	if ops[0].DyadicOp() {
+		// Scan and reduce are monadic.
+		return nil, fmt.Errorf("dyadic operators cannot be used in selective assignments")
+	}
+
+	lo, err := d.lo.Eval(a)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, op := range ops {
+		if LO, _, ok := op.To(a, lo, nil); ok {
+			// Select takes the left operand and the right argument.
+			return op.Select(a, LO, r)
+		}
+	}
+	return nil, fmt.Errorf("cannot select with operator %T %s", lo, d.op)
 }

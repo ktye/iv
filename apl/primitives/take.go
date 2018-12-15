@@ -14,12 +14,14 @@ func init() {
 		doc:    "take",
 		Domain: Dyadic(Split(ToIndexArray(nil), nil)),
 		fn:     take,
+		sel:    takeSelection,
 	})
 	register(primitive{
 		symbol: "↓",
 		doc:    "drop",
 		Domain: Dyadic(Split(ToIndexArray(nil), nil)),
 		fn:     drop,
+		sel:    dropSelection,
 	})
 }
 
@@ -28,6 +30,14 @@ func take(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 }
 func drop(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return takedrop(a, L, R, false)
+}
+
+func takeSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+	v, err := takeDropSelection(a, L, R, true)
+	return v, err
+}
+func dropSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+	return takeDropSelection(a, L, R, false)
 }
 
 // takedrop does the preprocessing, that is common to both take and drop.
@@ -118,4 +128,43 @@ func dodrop(a *apl.Apl, L apl.IndexArray, R apl.Array) (apl.Value, error) {
 		b.Ints[i] = s + t // (((L<0)×0⌈L+⍴R)+(L≥0)×x0⌊L-⍴R)
 	}
 	return operators.Take(a, b, R)
+}
+
+func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IndexArray, error) {
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		return apl.IndexArray{}, fmt.Errorf("cannot select from non-array: %T", R)
+	}
+
+	// Take/drop from an index array instead of R of the same shape.
+	// Take/drop fills with zeros, so count with origin 1 temporarily.
+	r := apl.IndexArray{Dims: apl.CopyShape(ar)}
+	r.Ints = make([]int, apl.ArraySize(r))
+	for i := range r.Ints {
+		r.Ints[i] = i + 1
+	}
+
+	var ai apl.IndexArray
+	res, err := takedrop(a, L, r, take)
+	if err != nil {
+		return ai, err
+	}
+
+	to := ToIndexArray(nil)
+	if v, ok := to.To(a, res); ok == false {
+		return ai, fmt.Errorf("could not convert selection to index array: %T", res)
+	} else {
+		ai = v.(apl.IndexArray)
+	}
+
+	for i := range ai.Ints {
+		ai.Ints[i]--
+
+		// TODO: Elements < 0 are the result of overtake.
+		// These elements should be removed.
+		if ai.Ints[i] < 0 {
+			return ai, fmt.Errorf("TODO: overtake/drop with selection")
+		}
+	}
+	return ai, nil
 }

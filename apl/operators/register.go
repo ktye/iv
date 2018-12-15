@@ -1,6 +1,8 @@
 package operators
 
 import (
+	"fmt"
+
 	"github.com/ktye/iv/apl"
 )
 
@@ -13,14 +15,22 @@ func Register(a *apl.Apl) {
 
 type operator struct {
 	apl.Domain
-	symbol  string
-	doc     string
-	derived func(*apl.Apl, apl.Value, apl.Value) apl.Function
+	symbol    string
+	doc       string
+	derived   func(*apl.Apl, apl.Value, apl.Value) apl.Function
+	selection func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error)
 }
 
 func (op operator) Doc() string { return op.doc }
 func (op operator) Derived(a *apl.Apl, LO, RO apl.Value) apl.Function {
 	return op.derived(a, LO, RO)
+}
+func (op operator) Select(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+	if op.selection == nil {
+		return apl.IndexArray{}, fmt.Errorf("operator %s cannot be used in selective assignment", op.symbol)
+	} else {
+		return op.selection(a, L, R)
+	}
 }
 func (op operator) DyadicOp() bool {
 	if ar, ok := op.Domain.(arity); ok {

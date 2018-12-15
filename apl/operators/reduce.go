@@ -37,6 +37,9 @@ func init() {
 		Domain:  MonadicOp(ToIndexArray(nil)),
 		doc:     "replicate, compress",
 		derived: replicateLast,
+		selection: Selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+			return Replicate(a, L, R, -1)
+		}),
 	})
 	register(operator{
 		symbol:  "⌿",
@@ -49,6 +52,9 @@ func init() {
 		Domain:  MonadicOp(ToIndexArray(nil)),
 		doc:     "expand",
 		derived: expandLast,
+		selection: Selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+			return Expand(a, L, R, -1)
+		}),
 	})
 	register(operator{
 		symbol:  `⍀`,
@@ -388,109 +394,114 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 // expand.
 // L is an index array. Only vectors are allowed.
 func expand(a *apl.Apl, L apl.Value, axis int) apl.Function {
-	derived := func(a *apl.Apl, dummyL, R apl.Value) (apl.Value, error) {
+	return function(func(a *apl.Apl, dummyL, R apl.Value) (apl.Value, error) {
+		// Expand should not be an operator, but a dyadic function instead.
+		// We use LO as the left argument instead.
 		if dummyL != nil {
 			return nil, fmt.Errorf("expand: derived function cannot be called dyadically")
 		}
+		return Expand(a, L, R, axis)
+	})
+}
 
-		// Special case: L is empty.
-		if _, ok := L.(apl.EmptyArray); ok {
-			if ar, ok := R.(apl.Array); ok == false {
-				return apl.EmptyArray{}, nil
-			} else {
-				rs := ar.Shape()
-				if ir, ok := ar.(apl.IndexArray); ok {
-					fmt.Println("ar is index array: dims:", ir.Dims)
-				}
-
-				ax := axis
-				if ax < 0 {
-					ax = len(rs) + ax
-				}
-				if ax >= 0 && len(rs) >= ax && rs[ax] == 0 {
-					return apl.IndexArray{
-						Dims: apl.CopyShape(ar),
-					}, nil
-				}
-				return nil, fmt.Errorf("expand: L is empty, R must be scalar")
+// Expand is the function L\R where L and R are arrays.
+func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
+	// Special case: L is empty.
+	if _, ok := L.(apl.EmptyArray); ok {
+		if ar, ok := R.(apl.Array); ok == false {
+			return apl.EmptyArray{}, nil
+		} else {
+			rs := ar.Shape()
+			if ir, ok := ar.(apl.IndexArray); ok {
+				fmt.Println("ar is index array: dims:", ir.Dims)
 			}
-		}
 
-		ai, ar, ax, err := commonReplExp(a, L, R, axis)
-		if err != nil {
-			return nil, fmt.Errorf("expand: %s", err)
-		}
-		axis = ax
-
-		// Special case: R is empty. L may be 0 and is returned.
-		if _, ok := R.(apl.EmptyArray); ok {
-			if len(ai.Ints) == 1 && ai.Ints[0] == 0 {
-				return ai, nil
-			} else {
-				return nil, fmt.Errorf("exand: R is empty, but L is not 0")
+			ax := axis
+			if ax < 0 {
+				ax = len(rs) + ax
 			}
+			if ax >= 0 && len(rs) >= ax && rs[ax] == 0 {
+				return apl.IndexArray{
+					Dims: apl.CopyShape(ar),
+				}, nil
+			}
+			return nil, fmt.Errorf("expand: L is empty, R must be scalar")
 		}
+	}
 
-		// The shape of the result is the shape of R,
-		// with the length of the axis set to +/1⌈|L.
-		shape := ar.Shape()
-		sum := 0
+	ai, ar, ax, err := commonReplExp(a, L, R, axis)
+	if err != nil {
+		return nil, fmt.Errorf("expand: %s", err)
+	}
+	axis = ax
+
+	// Special case: R is empty. L may be 0 and is returned.
+	if _, ok := R.(apl.EmptyArray); ok {
+		if len(ai.Ints) == 1 && ai.Ints[0] == 0 {
+			return ai, nil
+		} else {
+			return nil, fmt.Errorf("exand: R is empty, but L is not 0")
+		}
+	}
+
+	// The shape of the result is the shape of R,
+	// with the length of the axis set to +/1⌈|L.
+	shape := ar.Shape()
+	sum := 0
+	for _, k := range ai.Ints {
+		if k < 0 {
+			k = -k
+		}
+		if k > 1 {
+			sum += k
+		} else {
+			sum++
+		}
+	}
+	shape[axis] = sum
+
+	res := apl.GeneralArray{Dims: shape}
+	n := apl.ArraySize(res)
+	res.Values = make([]apl.Value, n)
+
+	short := apl.CopyShape(res)
+	short[axis] = 1
+
+	ic, idx := apl.NewIdxConverter(ar.Shape())
+	dic, dst := apl.NewIdxConverter(shape)
+	for i := 0; i < n/shape[axis]; i++ {
+		copy(idx, dst)
+		d := 0
+		j := 0 // Count positive indexes in L.
 		for _, k := range ai.Ints {
-			if k < 0 {
-				k = -k
-			}
-			if k > 1 {
-				sum += k
-			} else {
-				sum++
-			}
-		}
-		shape[axis] = sum
-
-		res := apl.GeneralArray{Dims: shape}
-		n := apl.ArraySize(res)
-		res.Values = make([]apl.Value, n)
-
-		short := apl.CopyShape(res)
-		short[axis] = 1
-
-		ic, idx := apl.NewIdxConverter(ar.Shape())
-		dic, dst := apl.NewIdxConverter(shape)
-		for i := 0; i < n/shape[axis]; i++ {
-			copy(idx, dst)
-			d := 0
-			j := 0 // Count positive indexes in L.
-			for _, k := range ai.Ints {
-				if k > 0 {
-					idx[axis] = j
-					j++
-					v, err := ar.At(ic.Index(idx))
-					if err != nil {
-						return nil, err
-					}
-					for m := 0; m < k; m++ {
-						dst[axis] = d
-						d++
-						res.Values[dic.Index(dst)] = v // TODO copy
-					}
-				} else if k == 0 {
+			if k > 0 {
+				idx[axis] = j
+				j++
+				v, err := ar.At(ic.Index(idx))
+				if err != nil {
+					return nil, err
+				}
+				for m := 0; m < k; m++ {
+					dst[axis] = d
+					d++
+					res.Values[dic.Index(dst)] = v // TODO copy
+				}
+			} else if k == 0 {
+				dst[axis] = d
+				d++
+				res.Values[dic.Index(dst)] = apl.Index(0)
+			} else if k < 0 {
+				for m := 0; m < (-k); m++ {
 					dst[axis] = d
 					d++
 					res.Values[dic.Index(dst)] = apl.Index(0)
-				} else if k < 0 {
-					for m := 0; m < (-k); m++ {
-						dst[axis] = d
-						d++
-						res.Values[dic.Index(dst)] = apl.Index(0)
-					}
 				}
 			}
-			dst[axis] = 0
-			apl.IncArrayIndex(dst, short)
 		}
-		return res, nil
+		dst[axis] = 0
+		apl.IncArrayIndex(dst, short)
 	}
-	return function(derived)
+	return res, nil
 }
 
 // commonReplExp is the common input preprocessing for replicate and expand.
@@ -684,4 +695,41 @@ func (first reduceTack) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 	return ret, nil
+}
+
+// selection returns a general selection function for selective assignment.
+// It creates an index array of the same shape of R and applies f to it.
+func Selection(f func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)) func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error) {
+	return func(a *apl.Apl, L apl.Value, R apl.Value) (apl.IndexArray, error) {
+
+		// Create an index array with the shape of R.
+		var ai apl.IndexArray
+		ar, ok := R.(apl.Array)
+		if ok == false {
+			return ai, fmt.Errorf("cannot select from %T", R)
+		}
+		ai.Dims = apl.CopyShape(ar)
+		ai.Ints = make([]int, apl.ArraySize(ai))
+		for i := range ai.Ints {
+			ai.Ints[i] = i + 1
+		}
+
+		// Apply the selection function to it.
+		v, err := f(a, L, ai)
+		if err != nil {
+			return ai, err
+		}
+
+		to := ToIndexArray(nil)
+		if av, ok := to.To(a, v); ok == false {
+			return ai, fmt.Errorf("could not convert selection to index array: %T", v)
+		} else {
+			// Fill elements will be reported as ¯1, which the assignment should ignore.
+			ai = av.(apl.IndexArray)
+			for i := range ai.Ints {
+				ai.Ints[i]--
+			}
+			return ai, nil
+		}
+	}
 }
