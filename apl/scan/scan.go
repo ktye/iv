@@ -291,10 +291,6 @@ func (s *Scanner) scanIdentifier() (Token, error) {
 	for {
 		r := s.nextRune()
 		if AllowedInVarname(r, first) {
-			if IsSpecial(r) {
-				// Special can only be the first one.
-				return Token{T: Identifier, S: string(r)}, nil
-			}
 			buf.WriteRune(r)
 		} else {
 			if r != -1 {
@@ -312,24 +308,11 @@ func (s *Scanner) scanIdentifier() (Token, error) {
 
 // AllowedinVarname returns true if the rune is allowed in a variable name.
 func AllowedInVarname(r rune, first bool) bool {
-	if first && IsSpecial(r) {
+	if first && strings.IndexRune("⎕⍺⍵", r) != -1 {
 		return true
 	}
 	if first == false && unicode.IsNumber(r) {
 		return true
 	}
 	return r == '_' || unicode.IsLetter(r)
-}
-
-// IsSpecial checks for special single-rune variables.
-// ⎕ is special because assigning to it, prints the value but does not assign it.
-// ⍺ and ⍵ are special, because they are assigned by lambda functions.
-// _ could be used as the last value for an interactive interpreter and is used by iv.
-func IsSpecial(r rune) bool {
-	for _, s := range "⎕⍺⍵_" {
-		if r == s {
-			return true
-		}
-	}
-	return false
 }

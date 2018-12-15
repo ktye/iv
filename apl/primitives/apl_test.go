@@ -19,7 +19,6 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
-
 	/*
 		// Selective specification APL2 p.41
 		{"⍝ Selective assignment/specification", "", nil},
@@ -125,14 +124,18 @@ var testCases = []struct {
 	{"1 2⋄3 4", "1 2\n3 4", nil},
 	{"X←3 ⋄ Y←4", "", nil},
 
+	{"⍝ Index origin.", "", nil},
+	{"⎕IO←0 ⋄ ⍳3", "0 1 2", nil},
+	{"⎕IO", "1", nil},
+	{"⎕IO←0 ⋄ ⎕IO", "0", nil},
+
 	{"⍝ Bracket indexing.", "", nil},
 	{"A←⍳6 ⋄ A[1]", "1", nil},
 	{"A←2 3⍴⍳6 ⋄ A[1;] ⋄ ⍴A[1;]", "1 2 3\n3", nil},
 	{"A←2 3⍴⍳6 ⋄ A[2;3]", "6", nil},
 	{"A←2 3⍴⍳6 ⋄ A[2;2 3]", "5 6", nil},
 	{"A←2 3⍴⍳6 ⋄ ⍴⍴A[2;3]", "0", nil},
-	{"⍝ TODO: test index origin 0", "", nil},
-	//{"IO←0 ⋄ A←2 3⍴⍳6 ⋄ A[1;2]", "6", nil},
+	{"⎕IO←0 ⋄ A←2 3⍴⍳6 ⋄ A[1;2]", "5", nil},
 
 	{"⍝ Iota and reshape.", "", nil},
 	{"⍳5", "1 2 3 4 5", nil},       // index generation
@@ -624,10 +627,10 @@ var testCases = []struct {
 
 	// Tool of thought.
 
-	// github.com/DhavalDalal/APL-For-FP-Programmers
+	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", nil},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
-	// primes1←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} // 01-primes
-	// primes2←{(~X∊X∘.×X)⌿X←2↓⍳⍵} // 01-primes
+	{"f←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", nil},        // 01-primes
+	{"⎕IO←0 ⋄ f←{(~X∊X∘.×X)⌿X←2↓⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", nil}, // 01-primes
 	// ⎕IO←0 ⋄ sieve ← {⍸⊃{~⍵[⍺]:⍵ ⋄ 0@(⍺×2↓⍳⌈(≢⍵)÷⍺)⊢⍵}/⌽(⊂0 0,(⍵-2)⍴1),⍳⍵} // 02-sieve
 	// ⎕IO←0 ⋄ triples←{{⍵/⍨(2⌷x)=+⌿2↑x←×⍨⍵}⍉↑,1+⍳⍵ ⍵ ⍵}// 03-pythagoreans
 	// ⎕IO←0 ⋄ '-:'⊣@(' '=⊢)¨(14⍴(4⍴1),0)(17⍴1 1 0)\¨⊂⍉(⎕D,6↑⎕A)[(12⍴16)⊤?10⍴2*48] // 04-MacAddress

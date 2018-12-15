@@ -2,6 +2,7 @@ package apl
 
 import (
 	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/ktye/iv/apl/scan"
@@ -30,6 +31,17 @@ func (a *Apl) Assign(name string, v Value) error {
 	if name == "⎕" {
 		fmt.Fprintf(a.stdout, "%s\n", v.String(a))
 		return nil
+	} else if name == "⎕IO" {
+		if n, ok := v.(Number); ok {
+			if b, ok := a.Tower.ToBool(n); ok {
+				a.Origin = 0
+				if b {
+					a.Origin = 1
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("cannot set index origin: %T", v)
 	}
 
 	if _, ok := v.(Function); ok && isfunc != true {
@@ -119,6 +131,10 @@ func (a *Apl) AssignIndexed(name string, idx Value, v Value) error {
 // Lookup returns the value stored under the given variable name.
 // It returns nil, if the variable does not exist.
 func (a *Apl) Lookup(name string) Value {
+	if name == "⎕IO" {
+		return Index(a.Origin)
+	}
+
 	v, ok := a.vars[name]
 	if ok == false {
 		return nil
@@ -186,10 +202,7 @@ func isVarname(s string) (ok, isfunc bool) {
 		if scan.AllowedInVarname(r, i == 0) == false {
 			return false, false
 		}
-		if i == 0 && scan.IsSpecial(r) {
-			special = true
-		}
-		if i == 0 && unicode.IsUpper(r) {
+		if i == 0 && unicode.IsUpper(r) || strings.IndexRune("⎕⍺⍵", r) != -1 {
 			upper = true
 		}
 	}
