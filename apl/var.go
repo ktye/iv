@@ -42,6 +42,7 @@ func (a *Apl) Assign(name string, v Value) error {
 	return nil
 }
 
+/* TODO remove
 // AssignIndexed assigns a value to an array variable at the given indexes.
 func (a *Apl) AssignIndexed(name string, idx Value, v Value) error {
 	if idx == nil {
@@ -113,6 +114,7 @@ func (a *Apl) AssignIndexed(name string, idx Value, v Value) error {
 	a.vars[name] = ar
 	return nil
 }
+*/
 
 // Lookup returns the value stored under the given variable name.
 // It returns nil, if the variable does not exist.

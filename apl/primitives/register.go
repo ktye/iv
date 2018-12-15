@@ -1,6 +1,8 @@
 package primitives
 
 import (
+	"fmt"
+
 	"github.com/ktye/iv/apl"
 )
 
@@ -24,6 +26,11 @@ type primitive struct {
 	sel    func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error)
 }
 
-func (p primitive) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error)        { return p.fn(a, L, R) }
-func (p primitive) Select(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) { return p.sel(a, L, R) }
-func (p primitive) Doc() string                                               { return p.doc }
+func (p primitive) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) { return p.fn(a, L, R) }
+func (p primitive) Select(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+	if p.sel == nil {
+		return apl.IndexArray{}, fmt.Errorf("primitive %s cannot be used in selective assignment", p.symbol)
+	}
+	return p.sel(a, L, R)
+}
+func (p primitive) Doc() string { return p.doc }

@@ -88,7 +88,11 @@ func (d *derived) Call(a *Apl, l, r Value) (Value, error) {
 				return nil, err
 			}
 		} else {
-			lo, err = evalAssign(a, d.lo, l)
+			as, ok := l.(assignment)
+			if ok == false {
+				return nil, fmt.Errorf("modified assignment: expected assignment target expr on the left: %T", l)
+			}
+			lo, err = evalAssign(a, as, d.lo)
 			if err != nil {
 				return nil, err
 			}

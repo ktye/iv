@@ -15,74 +15,41 @@ import (
 
 //go:generate go run gen.go
 
-type formatmap map[reflect.Type]string
-
-var format5g formatmap = map[reflect.Type]string{
-	reflect.TypeOf(numbers.Float(0)): "%.5g",
-}
-var formatJ formatmap = map[reflect.Type]string{
-	reflect.TypeOf(numbers.Complex(0)): "%vJ%v",
-}
-var format5J formatmap = map[reflect.Type]string{
-	reflect.TypeOf(numbers.Complex(0)): "%.5gJ%.5g",
-}
-var format2J formatmap = map[reflect.Type]string{
-	reflect.TypeOf(numbers.Complex(0)): "%.2fJ%.2f",
-}
-var formatJR5 formatmap = map[reflect.Type]string{
-	reflect.TypeOf(numbers.Float(0)):   "%.5g",
-	reflect.TypeOf(numbers.Complex(0)): "%.5gJ%.5g",
-}
-
 var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
-	{"A←2 3 ⋄ A", "2 3", nil},
-	{"A←2 3 4 ⋄ A[1]←1 ⋄ A", "1 3 4", nil},
 
-	{"⍝ Indexed assignment", "", nil},
-	{"A←2 2⍴⍳4 ⋄ +A[1;1]←3 ⋄ A", "3\n3 2\n3 4", nil},
-	{"A←⍳5 ⋄ A[2 3]←10 ⋄ A", "1 10 10 4 5", nil},
-
-	//{"A←B←C←D←1 ⋄ A B C D", "1 1 1 1", nil},
-	{"A←2 3⍴⍳6 ⋄ A[;2 3]←2 2⍴⍳4 ⋄ A", "1 1 2\n4 3 4", nil},
-	{"⍝ TODO: choose/reach indexed assignment", "", nil},
-	{"⍝ TODO: combined indexed selective assignment", "", nil},
-
-	{"⍝ Multiple assignment", "", nil},
-	{"A←B←C←D←1 ⋄ A B C D", "1 1 1 1", nil},
-	{"⍝ Vector assignment", "", nil},
-	{"(A B C)←2 3 4 ⋄ A ⋄ B ⋄ C ", "2\n3\n4", nil},
-
-	// Selective specification APL2 p.41
-	{"⍝ Selective assignment/specification", "", nil},
-	{"A←10 20 30 40 ⋄ (2↑A)←100 200 ⋄ A", "100 200 30 40", nil},
-	{"A←'ABCD' ⋄ (↑A)←1 2 3 ⋄ A", "1 2 3 D", nil},
-	{"A←2 3⍴⍳6 ⋄ (,A)←2×⍳6 ⋄ A", "2 4 6\n8 10 12", nil},
-	{"A←3 4⍴⍳12 ⋄ (4↑,⍉A)←10 20 30 40 ⋄ ,A ", "10 40 3 4 20 6 7 8 30 10 11 12", nil},
-	{"A←2 3⍴'ABCDEF' ⋄ A[1;1 3]←8 9 ⋄ A", "8 B 9\nD E F", nil},
-	{"A←2 3 4 ⋄ A[]←9 ⋄ A", "9 9 9", nil},
-	{"A←3 2⍴⍳6 ⋄ (1 0/A)←'ABC' ⋄ A ", "A 2\nB 4\nC 6", nil},
-	{"A←3 2⍴⍳6 ⋄ B←2 2⍴'ABCD' ⋄ (1 0 1/[1]A)←B ⋄ A", "A B\n3 4\nC D", nil},
-	{"A←5 6 7 8 9 ⋄ (2↓A)←⍳3 ⋄ A", "5 6 1 2 3", nil},
-	{"A←3 4⍴'ABCDEFGHIJKL' ⋄ (1 ¯1↓A)←2 3⍴⍳6 ⋄ A", "A B C D\n1 2 3 H\n4 5 6 L", nil},
-	{"A←2 3⍴⍳6 ⋄ (1↓[1]A)←9 8 7 ⋄ A", "1 2 3\n9 8 7", nil},
-	{`A←'ABC' ⋄ (1 0 1 0 1\A)←⍳5 ⋄ A`, "1 3 5", nil},
-	{`A←2 3⍴⍳6 ⋄ (1 0 1 1\A)←10×2 4⍴⍳8 ⋄ A`, "10 30 40\n50 70 80", nil},
-	{`A←3 2⍴⍳6 ⋄ (1 1 0 0 1\[1]A)←5 2⍴-⍳10 ⋄ A`, "¯1 ¯2\n¯3 ¯4\n¯9 ¯10", nil},
-	{"A←2 3⍴⍳6 ⋄ (,A)←10×⍳6 ⋄ A", "10 20 30\n40 50 60", nil},
-	{"A←2 3 4⍴⍳24 ⋄ (,[2 3]A)←2 12⍴-⍳24⋄⍴A⋄A[2;3;]", "2 3 4\n¯21 ¯22 ¯23 ¯24", nil},
-	{"A←'GROWTH' ⋄ (2 3⍴A)←2 3⍴-⍳6 ⋄ (4⍴A)←⍳4 ⋄ A", "1 2 3 4 ¯5 ¯6", nil},
-	{"A←3 4⍴⍳12 ⋄ (⌽A)←3 4⍴'STOPSPINODER' ⋄ A", "P O T S\nN I P S\nR E D O", nil},
-	{"A←2 3⍴⍳6 ⋄ (⌽[1]A)←2 3⍴-⍳6 ⋄ A", "¯4 ¯5 ¯6\n¯1 ¯2 ¯3", nil},
-	{"A←⍳6 ⋄ (2⌽A)←10×⍳6 ⋄ A", "50 60 10 20 30 40", nil},
-	{"A←3 4⍴⍳12 ⋄ (1 ¯1 2 ¯2⌽[1]A)←3 4⍴4×⍳12 ⋄ A", "36 24 28 48\n4 40 44 16\n20  8 12 32", nil},
-	{"A←⍳5 ⋄ (2↑A)← 10 20 ⋄ A", "10 20 3 4 5", nil},
-	{"A←2 3⍴⍳6 ⋄ (¯2↑[2]A)←2 2⍴10×⍳4 ⋄ A", "1 10 20\n4 30 40", nil},
-	{"A←3 3⍴⍳9 ⋄ (1 1⍉A)←10 20 30 ⋄ A", "10 2 3\n4 20 6\n7 8 30", nil},
-	{"A←3 3⍴'STYPIEANT' ⋄ (⍉A)←3 3⍴⍳9 ⋄ A", "1 4 7\n2 5 8\n3 6 9", nil},
-	{"⍝ First (↓) and Pick (⊃) is not implemented", "", nil},
+	/*
+		// Selective specification APL2 p.41
+		{"⍝ Selective assignment/specification", "", nil},
+		{"A←10 20 30 40 ⋄ (2↑A)←100 200 ⋄ A", "100 200 30 40", nil},
+		{"A←'ABCD' ⋄ (↑A)←1 2 3 ⋄ A", "1 2 3 D", nil},
+		{"A←2 3⍴⍳6 ⋄ (,A)←2×⍳6 ⋄ A", "2 4 6\n8 10 12", nil},
+		{"A←3 4⍴⍳12 ⋄ (4↑,⍉A)←10 20 30 40 ⋄ ,A ", "10 40 3 4 20 6 7 8 30 10 11 12", nil},
+		{"A←2 3⍴'ABCDEF' ⋄ A[1;1 3]←8 9 ⋄ A", "8 B 9\nD E F", nil},
+		{"A←2 3 4 ⋄ A[]←9 ⋄ A", "9 9 9", nil},
+		{"A←3 2⍴⍳6 ⋄ (1 0/A)←'ABC' ⋄ A ", "A 2\nB 4\nC 6", nil},
+		{"A←3 2⍴⍳6 ⋄ B←2 2⍴'ABCD' ⋄ (1 0 1/[1]A)←B ⋄ A", "A B\n3 4\nC D", nil},
+		{"A←5 6 7 8 9 ⋄ (2↓A)←⍳3 ⋄ A", "5 6 1 2 3", nil},
+		{"A←3 4⍴'ABCDEFGHIJKL' ⋄ (1 ¯1↓A)←2 3⍴⍳6 ⋄ A", "A B C D\n1 2 3 H\n4 5 6 L", nil},
+		{"A←2 3⍴⍳6 ⋄ (1↓[1]A)←9 8 7 ⋄ A", "1 2 3\n9 8 7", nil},
+		{`A←'ABC' ⋄ (1 0 1 0 1\A)←⍳5 ⋄ A`, "1 3 5", nil},
+		{`A←2 3⍴⍳6 ⋄ (1 0 1 1\A)←10×2 4⍴⍳8 ⋄ A`, "10 30 40\n50 70 80", nil},
+		{`A←3 2⍴⍳6 ⋄ (1 1 0 0 1\[1]A)←5 2⍴-⍳10 ⋄ A`, "¯1 ¯2\n¯3 ¯4\n¯9 ¯10", nil},
+		{"A←2 3⍴⍳6 ⋄ (,A)←10×⍳6 ⋄ A", "10 20 30\n40 50 60", nil},
+		{"A←2 3 4⍴⍳24 ⋄ (,[2 3]A)←2 12⍴-⍳24⋄⍴A⋄A[2;3;]", "2 3 4\n¯21 ¯22 ¯23 ¯24", nil},
+		{"A←'GROWTH' ⋄ (2 3⍴A)←2 3⍴-⍳6 ⋄ (4⍴A)←⍳4 ⋄ A", "1 2 3 4 ¯5 ¯6", nil},
+		{"A←3 4⍴⍳12 ⋄ (⌽A)←3 4⍴'STOPSPINODER' ⋄ A", "P O T S\nN I P S\nR E D O", nil},
+		{"A←2 3⍴⍳6 ⋄ (⌽[1]A)←2 3⍴-⍳6 ⋄ A", "¯4 ¯5 ¯6\n¯1 ¯2 ¯3", nil},
+		{"A←⍳6 ⋄ (2⌽A)←10×⍳6 ⋄ A", "50 60 10 20 30 40", nil},
+		{"A←3 4⍴⍳12 ⋄ (1 ¯1 2 ¯2⌽[1]A)←3 4⍴4×⍳12 ⋄ A", "36 24 28 48\n4 40 44 16\n20  8 12 32", nil},
+		{"A←⍳5 ⋄ (2↑A)← 10 20 ⋄ A", "10 20 3 4 5", nil},
+		{"A←2 3⍴⍳6 ⋄ (¯2↑[2]A)←2 2⍴10×⍳4 ⋄ A", "1 10 20\n4 30 40", nil},
+		{"A←3 3⍴⍳9 ⋄ (1 1⍉A)←10 20 30 ⋄ A", "10 2 3\n4 20 6\n7 8 30", nil},
+		{"A←3 3⍴'STYPIEANT' ⋄ (⍉A)←3 3⍴⍳9 ⋄ A", "1 4 7\n2 5 8\n3 6 9", nil},
+		{"⍝ First (↓) and Pick (⊃) is not implemented", "", nil},
+	*/
 
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
@@ -529,6 +496,8 @@ var testCases = []struct {
 	{"+/1 2 3", "6", nil},                            // plus reduce
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
 	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
+	{`-\×\+\1 2 3`, "1 ¯2 16", nil},                  // chained monadic operators
+	{"+/+/+/+/1 2 3", "6", nil},
 
 	{"⍝ Identify item for reduction over empty array", "", nil},
 	{"+/⍳0", "0", nil},
@@ -604,7 +573,7 @@ var testCases = []struct {
 	{"⍝ Stencil", "", nil},
 	{"{⌈/⌈/⍵}⌺(3 3) ⊢3 3⍴⍳25", "5 6 6\n8 9 9\n8 9 9", nil},
 
-	{"⍝ Variable assignments.", "", nil},
+	{"⍝ Assignment, specification", "", nil},
 	{"X←3", "", nil},          // assign a number
 	{"-X←3", "¯3", nil},       // assign a value and use it
 	{"X←3⋄X←4", "", nil},      // assign and overwrite
@@ -612,6 +581,29 @@ var testCases = []struct {
 	{"f←+", "", nil},          // assign a function
 	{"f←+⋄⎕←3 f 3", "6", nil}, // assign a function and apply
 	{"X←4⋄⎕←÷X", "0.25", nil}, // assign and use it in another expr
+	{"A←2 3 ⋄ A", "2 3", nil}, // assign a vector
+
+	{"⍝ Indexed assignment", "", nil},
+	{"A←2 3 4 ⋄ A[1]←1 ⋄ A", "1 3 4", nil},
+	{"A←2 2⍴⍳4 ⋄ +A[1;1]←3 ⋄ A", "3\n3 2\n3 4", nil},
+	{"A←⍳5 ⋄ A[2 3]←10 ⋄ A", "1 10 10 4 5", nil},
+	{"A←2 3⍴⍳6 ⋄ A[;2 3]←2 2⍴⍳4 ⋄ A", "1 1 2\n4 3 4", nil},
+
+	{"⍝ TODO: choose/reach indexed assignment", "", nil},
+
+	{"⍝ Multiple assignment", "", nil},
+	{"A←B←C←D←1 ⋄ A B C D", "1 1 1 1", nil},
+
+	{"⍝ Vector assignment", "", nil},
+	{"(A B C)←2 3 4 ⋄ A ⋄ B ⋄ C ", "2\n3\n4", nil},
+	{"-A B C←1 2 3 ⋄ A B C", "¯1 ¯2 ¯3\n1 2 3", nil},
+
+	{"⍝ Modified assignment", "", nil},
+	{"A←1 ⋄ A+←1 ⋄ A", "2", nil},
+	{"A←1 2⋄ A+←1 ⋄ A", "2 3", nil},
+	{"A←1 2 ⋄ A+←3 4 ⋄ A", "4 6", nil},
+	{"A←1 2 ⋄ A{⍺+⍵}←3 ⋄ A", "4 5", nil},
+	{"A B C←1 2 3 ⋄ A B C +← 4 5 6 ⋄ A B C", "5 7 9", nil},
 
 	{"⍝ IBM APL Language, 3rd edition, June 1976.", "", nil},
 	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", nil},
@@ -715,6 +707,25 @@ func TestApl(t *testing.T) {
 			t.Fatalf("tc%d:\nin>\n%s\ngot>\n%s\nexpected>\n%s", i+1, tc.in, got, tc.exp)
 		}
 	}
+}
+
+type formatmap map[reflect.Type]string
+
+var format5g formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Float(0)): "%.5g",
+}
+var formatJ formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Complex(0)): "%vJ%v",
+}
+var format5J formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Complex(0)): "%.5gJ%.5g",
+}
+var format2J formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Complex(0)): "%.2fJ%.2f",
+}
+var formatJR5 formatmap = map[reflect.Type]string{
+	reflect.TypeOf(numbers.Float(0)):   "%.5g",
+	reflect.TypeOf(numbers.Complex(0)): "%.5gJ%.5g",
 }
 
 var spaces = regexp.MustCompile(`  *`)

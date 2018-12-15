@@ -26,7 +26,7 @@ func (f *function) Eval(a *Apl) (Value, error) {
 
 		// Special case for modified assignments.
 		// Defer evaluation of the left argument.
-		if d, ok := f.right.(*derived); ok && d.op == "←" {
+		if d, ok := f.Function.(*derived); ok && d.op == "←" {
 			l = assignment{f.left}
 		} else {
 			l, err = f.left.Eval(a)

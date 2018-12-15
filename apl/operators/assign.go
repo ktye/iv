@@ -27,14 +27,13 @@ func assign(a *apl.Apl, f, g apl.Value) apl.Function {
 		}
 
 		if as.Identifiers != nil {
+			if as.Indexes != nil {
+				return nil, fmt.Errorf("vector and indexed assignment cannot exist simulaneously")
+			}
 			return assignVector(a, as.Identifiers, R, as.Modifier)
 		}
 
-		if as.Modifier != nil {
-			return nil, fmt.Errorf("TODO: modified assignment")
-		}
-
-		return R, a.AssignIndexed(as.Identifier, as.Indexes, R)
+		return R, assignScalar(a, as.Identifier, as.Indexes, as.Modifier, R)
 	}
 	return function(derived)
 }
@@ -42,10 +41,6 @@ func assign(a *apl.Apl, f, g apl.Value) apl.Function {
 // AssignVector does a vector assignment from R to the given names.
 // A modifier function may be applied.
 func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.Value, error) {
-	if mod != nil {
-		return nil, fmt.Errorf("TODO modified vector assignment")
-	}
-
 	var ar apl.Array
 	if v, ok := R.(apl.Array); ok {
 		ar = v
@@ -77,7 +72,7 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 				return nil, err
 			}
 		}
-		err = assignModified(a, name, v, mod)
+		err = assignScalar(a, name, nil, mod, v)
 		if err != nil {
 			return nil, err
 		}
@@ -86,9 +81,104 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 	return R, nil
 }
 
-func assignModified(a *apl.Apl, name string, R apl.Value, mod apl.Value) error {
-	if mod != nil {
-		return fmt.Errorf("TODO modified vector assignment")
+// AssignScalar assigns to a single numeric variable.
+// If indexes is non-nil, it must be an IndexArray for indexed assignment.
+// Mod may be a dyadic modifying function.
+func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R apl.Value) error {
+	if mod == nil && indexes == nil {
+		return a.Assign(name, R)
 	}
-	return a.Assign(name, R)
+
+	w := a.Lookup(name)
+	if w == nil {
+		return fmt.Errorf("modified/indexed assignment to non-existing variable %s", name)
+	}
+
+	var f apl.Function
+	if mod != nil {
+		if fn, ok := mod.(apl.Function); ok == false {
+			return fmt.Errorf("modified assignment needs a function: %T", mod)
+		} else {
+			f = fn
+		}
+	}
+
+	// Modified assignment without indexing.
+	if indexes == nil {
+		if v, err := f.Call(a, w, R); err != nil {
+			return err
+		} else {
+			return a.Assign(name, v)
+		}
+	}
+
+	idx, ok := indexes.(apl.IndexArray)
+	if ok == false {
+		return fmt.Errorf("indexed assignment expected IndexArray: %T", indexes)
+	}
+
+	ar, ok := w.(apl.ArraySetter)
+	if ok == false {
+		return fmt.Errorf("variable %s is no settable array: %T", name, w)
+	}
+
+	// modAssign assigns ar at index i with v possibly modified by f.
+	modAssign := func(i int, v apl.Value) error {
+		if f == nil {
+			return ar.Set(i, v)
+		}
+		u, err := ar.At(i)
+		if err != nil {
+			return err
+		}
+		v, err = f.Call(a, u, v)
+		if err != nil {
+			return err
+		}
+		return ar.Set(i, v)
+	}
+
+	var src apl.Array
+	var scalar apl.Value
+	if av, ok := R.(apl.Array); ok {
+		src = av
+		if apl.ArraySize(av) == 1 {
+			scalar, _ = av.At(0)
+		}
+	} else {
+		scalar = R
+	}
+	if scalar != nil {
+		// Scalar or 1-element assignment.
+		for _, d := range idx.Ints {
+			if err := modAssign(d, scalar); err != nil {
+				return err
+			}
+		}
+	} else {
+		// Shapes must conform.
+		ds := idx.Shape()
+		ss := src.Shape()
+		if len(ds) != len(ss) {
+			return fmt.Errorf("indexed assignment: arrays have different rank")
+		}
+		for i := range ds {
+			if ss[i] != ds[i] {
+				return fmt.Errorf("indexed assignment: arrays are not conforming")
+			}
+		}
+		for i, d := range idx.Ints {
+			if v, err := src.At(i); err != nil {
+				return err
+			} else {
+				if err := modAssign(d, v); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	// TODO: Do we have to assign back? probably not,
+	// as long as the array implementation stores values in a slice.
+	// a.Assign(name, R)
+	return nil
 }

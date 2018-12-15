@@ -58,6 +58,11 @@ func evalAssign(a *Apl, e expr, modifier Value) (Value, error) {
 		return &as, nil
 	}
 
+	// Modified assignment masks the left argument in an assignment expr.
+	if as, ok := e.(assignment); ok {
+		e = as.e
+	}
+
 	// Vector assignment can only contain a vector of numVars.
 	if ae, ok := e.(array); ok {
 		as.Identifiers = make([]string, len(ae))
