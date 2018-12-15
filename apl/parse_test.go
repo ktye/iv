@@ -1,6 +1,7 @@
 package apl
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strconv"
@@ -50,6 +51,7 @@ func TestParse(t *testing.T) {
 		{"X ← +/ 3 4 5 + 1 2 3", "((X ←) ((+ /) ((3 4 5) + (1 2 3))))"},
 		{"+.*/1", "(((+ . *) /) 1)"},
 		{"+.*.*/1", "((((+ . *) . *) /) 1)"},
+		{"+/+/+/1", "((+ /) ((+ /) ((+ /) 1)))"},
 		{"X←3⋄X←4", "((X ←) 3)⋄((X ←) 4)"},
 		{"A[1;2;3]", "([1;2;3] ⌷ A)"},
 		{"A[1]", "([1] ⌷ A)"},
@@ -108,6 +110,9 @@ type dummyPrimitive struct{}
 
 func (d dummyPrimitive) Call(a *Apl, l, r Value) (Value, error) {
 	return EmptyArray{}, nil
+}
+func (d dummyPrimitive) Select(a *Apl, l, r Value) (IndexArray, error) {
+	return IndexArray{}, fmt.Errorf("not supported")
 }
 func (d dummyPrimitive) To(a *Apl, l, r Value) (Value, Value, bool) {
 	return l, r, true

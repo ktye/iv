@@ -353,6 +353,7 @@ func (p *parser) collectArray(right scan.Token) (expr, error) {
 
 	// The array is collected in reverse order.
 	var ar array
+loop:
 	for {
 		if len(p.tokens) == 0 {
 			break
@@ -385,17 +386,16 @@ func (p *parser) collectArray(right scan.Token) (expr, error) {
 
 		case scan.Identifier:
 			if ok, fok := isVarname(t.S); ok == false || fok == true {
-				goto leave
+				break loop
 			}
 			ar = append(ar, numVar{t.S})
 
 		default:
-			goto leave
+			break loop
 		}
 		p.pull() // Remove the token that has just been processed.
 	}
 
-leave:
 	if ar == nil {
 		return EmptyArray{}, nil
 	}
@@ -462,10 +462,10 @@ func (p *parser) resolveBrackets() error {
 //
 // Operator reduction is done from the left side of the stack.
 // If last==true, test if the second token is an operator:
-//	:/+	mop(0) reduction
+//	:/+	mop(0+) reduction
 //	:.?+	dop(0) reduction
 // In any case, test if the third token is an operator.
-//	::/+	mop(1) reduction
+//	::/+	mop(1+) reduction
 //	::.?+	dop(1) reduction
 // ?  an item of any class
 // +  zero or more items of any class
@@ -495,25 +495,29 @@ func (p *parser) resolveOperators(last bool) {
 	}
 }
 
-// mopReduction reduces a monadic operator on position i+1 from the left,
-// i must be 0 or 1.
-// It returns true, if there was a reduction.
+// mopReduction reduces a monadic operator on position i+1 from the left, i must be 0 or 1.
+// If there was a reduction it continues with i+1.
+// It returns true, if there was at least one reduction.
 func (p *parser) mopReduce(i int) bool {
 	//  :/+		mop(0) reduction
 	//  ::/+	mop(1) reduction
-	op := adverb | conjunction
-	if len(p.stack) < 2+i || p.leftItem(i+1).class != adverb {
-		return false
+	reduced := false
+	for {
+		op := adverb | conjunction
+		if len(p.stack) < 2+i || p.leftItem(i+1).class != adverb {
+			return reduced
+		}
+		c0, c1 := p.leftItem(0).class, p.leftItem(1).class
+		if (c0&op != 0) || ((i == 1) && (c1&op != 0)) {
+			return reduced
+		}
+		d := p.leftItem(i + 1).e.(*derived)
+		d.lo = p.leftItem(i).e
+		p.setLeft(i, item{e: d, class: verb})
+		p.removeLeft(i + 1)
+		reduced = true
+		i++
 	}
-	c0, c1 := p.leftItem(0).class, p.leftItem(1).class
-	if (c0&op != 0) || ((i == 1) && (c1&op != 0)) {
-		return false
-	}
-	d := p.leftItem(i + 1).e.(*derived)
-	d.lo = p.leftItem(i).e
-	p.setLeft(i, item{e: d, class: verb})
-	p.removeLeft(i + 1)
-	return true
 }
 
 // dopReduction reduces a dyadic operator on position i+1 from the left,
