@@ -1,6 +1,9 @@
 package apl
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Assignment contains the unevaluated left argument of an assignment.
 // It may be an identifier or an expression containing an identifier.
@@ -20,9 +23,10 @@ func (as assignment) Eval(a *Apl) (Value, error) {
 // Assignment is the evaluated left part of an assignment.
 // It contains the Identifier, it's indexes and a modification function.
 type Assignment struct {
-	Identifier string
-	Indexes    Value // Should be convertible to an Index vector
-	Modifier   Value
+	Identifier  string
+	Identifiers []string // Multiple identifiers for vector assignment
+	Indexes     Value    // Should be convertible to an Index vector
+	Modifier    Value
 }
 
 func (as *Assignment) String(a *Apl) string {
@@ -33,7 +37,11 @@ func (as *Assignment) String(a *Apl) string {
 	if as.Modifier != nil {
 		s += "modified "
 	}
-	return "assignment to " + string(as.Identifier)
+	id := as.Identifier
+	if as.Identifiers != nil {
+		id = strings.Join(as.Identifiers, " ")
+	}
+	return "assignment to " + id
 }
 
 // EvalAssign evalutes the left part of an assignment and
@@ -47,6 +55,19 @@ func evalAssign(a *Apl, e expr, modifier Value) (Value, error) {
 	// A function assignment can have no selections or modifications.
 	if f, ok := e.(fnVar); ok {
 		as.Identifier = string(f)
+		return &as, nil
+	}
+
+	// Vector assignment can only contain a vector of numVars.
+	if ae, ok := e.(array); ok {
+		as.Identifiers = make([]string, len(ae))
+		for i, v := range ae {
+			if nv, ok := v.(numVar); ok {
+				as.Identifiers[i] = nv.name
+			} else {
+				return nil, fmt.Errorf("vector assignment can contain only numVars: %T")
+			}
+		}
 		return &as, nil
 	}
 

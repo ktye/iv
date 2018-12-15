@@ -126,9 +126,6 @@ func (p Primitive) Select(a *Apl, L, R Value) (IndexArray, error) {
 	} else {
 		for _, h := range handles {
 			if l, r, ok := h.To(a, L, R); ok {
-				if h.Select == nil {
-					return IndexArray{}, fmt.Errorf("primitive %s cannot be used in selective assignment", p)
-				}
 				return h.Select(a, l, r)
 			}
 		}
