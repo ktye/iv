@@ -13,12 +13,14 @@ func init() {
 		doc:    "reverse",
 		Domain: Monadic(nil),
 		fn:     revLast,
+		sel:    selection(revLast),
 	})
 	register(primitive{
 		symbol: "⊖",
 		doc:    "reverse first",
 		Domain: Monadic(nil),
 		fn:     revFirst,
+		sel:    selection(revFirst),
 	})
 	// TODO reverse with axis
 
@@ -27,12 +29,14 @@ func init() {
 		doc:    "rotate",
 		Domain: Dyadic(Split(ToIndexArray(nil), nil)),
 		fn:     rotLast,
+		sel:    selection(rotLast),
 	})
 	register(primitive{
 		symbol: "⊖",
 		doc:    "rotate first",
 		Domain: Dyadic(Split(ToIndexArray(nil), nil)),
 		fn:     rotFirst,
+		sel:    selection(rotFirst),
 	})
 	// TODO rotate with axis
 }

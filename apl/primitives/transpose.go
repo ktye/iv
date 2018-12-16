@@ -20,12 +20,14 @@ func init() {
 		doc:    "cant, transpose, general transpose",
 		Domain: Dyadic(Split(IsArray(nil), IsNumber(nil))), // This matches (⍳0)⍉5
 		fn:     transpose,
+		sel:    selection(transpose),
 	})
 	register(primitive{
 		symbol: "⍉",
 		doc:    "cant, transpose, general transpose",
 		Domain: Dyadic(Split(ToIndexArray(nil), IsArray(nil))),
 		fn:     transpose,
+		sel:    selection(transpose),
 	})
 }
 

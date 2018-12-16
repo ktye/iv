@@ -24,6 +24,7 @@ var reshape = primitive{
 	doc:    "reshape",
 	Domain: Dyadic(Split(ToVector(ToIndexArray(nil)), ToArray(nil))),
 	fn:     rho2,
+	sel:    selection(rho2),
 }
 
 // Rho1 returns the shape of R.
