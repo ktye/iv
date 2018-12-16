@@ -37,7 +37,7 @@ func init() {
 		Domain:  MonadicOp(ToIndexArray(nil)),
 		doc:     "replicate, compress",
 		derived: replicateLast,
-		selection: Selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		selection: selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return Replicate(a, L, R, -1)
 		}),
 	})
@@ -52,7 +52,7 @@ func init() {
 		Domain:  MonadicOp(ToIndexArray(nil)),
 		doc:     "expand",
 		derived: expandLast,
-		selection: Selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		selection: selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return Expand(a, L, R, -1)
 		}),
 	})
@@ -446,7 +446,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 
 	// The shape of the result is the shape of R,
 	// with the length of the axis set to +/1⌈|L.
-	shape := ar.Shape()
+	shape := apl.CopyShape(ar)
 	sum := 0
 	for _, k := range ai.Ints {
 		if k < 0 {
@@ -699,7 +699,7 @@ func (first reduceTack) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 // selection returns a general selection function for selective assignment.
 // It creates an index array of the same shape of R and applies f to it.
-func Selection(f func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)) func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error) {
+func selection(f func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)) func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error) {
 	return func(a *apl.Apl, L apl.Value, R apl.Value) (apl.IndexArray, error) {
 
 		// Create an index array with the shape of R.
