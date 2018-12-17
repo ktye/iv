@@ -37,8 +37,8 @@ func init() {
 		Domain:  MonadicOp(ToIndexArray(nil)),
 		doc:     "replicate, compress",
 		derived: replicateLast,
-		selection: selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-			return Replicate(a, L, R, -1)
+		selection: selectSimple(func(a *apl.Apl, LO, R apl.Value) (apl.Value, error) {
+			return Replicate(a, LO, R, -1)
 		}),
 	})
 	register(operator{
@@ -52,8 +52,8 @@ func init() {
 		Domain:  MonadicOp(ToIndexArray(nil)),
 		doc:     "expand",
 		derived: expandLast,
-		selection: selection(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-			return Expand(a, L, R, -1)
+		selection: selectSimple(func(a *apl.Apl, LO, R apl.Value) (apl.Value, error) {
+			return Expand(a, LO, R, -1)
 		}),
 	})
 	register(operator{
@@ -695,41 +695,4 @@ func (first reduceTack) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 	return ret, nil
-}
-
-// selection returns a general selection function for selective assignment.
-// It creates an index array of the same shape of R and applies f to it.
-func selection(f func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)) func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error) {
-	return func(a *apl.Apl, L apl.Value, R apl.Value) (apl.IndexArray, error) {
-
-		// Create an index array with the shape of R.
-		var ai apl.IndexArray
-		ar, ok := R.(apl.Array)
-		if ok == false {
-			return ai, fmt.Errorf("cannot select from %T", R)
-		}
-		ai.Dims = apl.CopyShape(ar)
-		ai.Ints = make([]int, apl.ArraySize(ai))
-		for i := range ai.Ints {
-			ai.Ints[i] = i + 1
-		}
-
-		// Apply the selection function to it.
-		v, err := f(a, L, ai)
-		if err != nil {
-			return ai, err
-		}
-
-		to := ToIndexArray(nil)
-		if av, ok := to.To(a, v); ok == false {
-			return ai, fmt.Errorf("could not convert selection to index array: %T", v)
-		} else {
-			// Fill elements will be reported as ¯1, which the assignment should ignore.
-			ai = av.(apl.IndexArray)
-			for i := range ai.Ints {
-				ai.Ints[i]--
-			}
-			return ai, nil
-		}
-	}
 }

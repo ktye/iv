@@ -9,10 +9,11 @@ import (
 
 func init() {
 	register(operator{
-		symbol:  "[]",
-		Domain:  DyadicOp(nil),
-		doc:     "axis specification",
-		derived: axis,
+		symbol:    "[]",
+		Domain:    DyadicOp(nil),
+		doc:       "axis specification",
+		derived:   axis,
+		selection: selection(axis),
 	})
 }
 
@@ -23,7 +24,6 @@ func axis(a *apl.Apl, f, g apl.Value) apl.Function {
 		} else {
 			return nil, fmt.Errorf("axis: expected primitive on the left: %T", f)
 		}
-
 	}
 	return function(derived)
 }
