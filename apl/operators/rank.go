@@ -227,7 +227,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 					idx.Ints = make([]int, len(common))
 					copy(idx.Ints, common)
 					var err error
-					vr, err = Take(a, idx, vr)
+					vr, err = Take(a, idx, vr, nil)
 					if err != nil {
 						return nil, err
 					}
@@ -272,48 +272,64 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 
 // Take is defined and exported here, because it is used by both the rank operator and the take primitive function.
 
-func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array) (apl.Array, error) {
+func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array, x []int) (apl.Array, error) {
 	rs := ar.Shape()
 
-	// The shape of the result is ,|L
-	shape := make([]int, len(ai.Ints))
-	for i, n := range ai.Ints {
-		if n < 0 {
-			shape[i] = -n
-		} else {
-			shape[i] = n
+	if x == nil {
+		x = make([]int, len(ai.Ints))
+		for i := range x {
+			x[i] = i
 		}
 	}
+
+	if len(ai.Ints) != len(x) {
+		return nil, fmt.Errorf("take: length of L and axis must match")
+	}
+
+	shape := make([]int, len(rs))
+	for i := range shape {
+		shape[i] = rs[i]
+	}
+	for i, k := range x {
+		shape[k] = ai.Ints[i]
+		if shape[k] < 0 {
+			shape[k] = -shape[k]
+		}
+	}
+
+	// Offset for negative arguments.
+	off := make([]int, len(ar.Shape()))
+	for i := range off {
+		if i < len(ai.Ints) {
+			if n := ai.Ints[i]; n < 0 {
+				k := x[i]
+				off[k] = rs[k] + n
+			}
+		}
+	}
+
 	res := apl.GeneralArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
-
-	ic, J := apl.NewIdxConverter(rs)
 	idx := make([]int, len(shape))
+	ic, src := apl.NewIdxConverter(ar.Shape())
 	for i := range res.Values {
-		for k := range J {
-			J[k] = idx[k]
-			if n := ai.Ints[k]; n < 0 {
-				J[k] += n + rs[k]
+		copy(src, idx)
+		zero := false
+		for k, n := range off {
+			src[k] += n
+			if src[k] < 0 || src[k] >= rs[k] {
+				zero = true
 			}
 		}
-		iszero := false
-		for k := range J {
-			if J[k] < 0 || J[k] >= rs[k] {
-				iszero = true
-				break
-			}
-		}
-		if iszero {
-			res.Values[i] = apl.Index(0) // TODO: typical element of R?
+		if zero {
+			res.Values[i] = apl.Index(0) // TODO: fill element of R?
 		} else {
-			n := ic.Index(J)
-			v, err := ar.At(n)
+			v, err := ar.At(ic.Index(src))
 			if err != nil {
 				return nil, err
 			}
 			res.Values[i] = v // TODO: copy?
 		}
-
 		apl.IncArrayIndex(idx, shape)
 	}
 	return res, nil
