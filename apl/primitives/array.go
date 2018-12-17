@@ -1,6 +1,9 @@
 package primitives
 
 import (
+	"fmt"
+	"sort"
+
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/domain"
 )
@@ -72,6 +75,41 @@ func (ars arrays) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	return L, R, false
 }
 func (ars arrays) String(a *apl.Apl) string { return "arithmetic arrays" }
+
+// ArraysWithAxis is the domain for binary arithmetic functions
+// with an axis specification.
+// The axis specification is bound to the right argument in an Axis value.
+// It converts L, R and the axis specification to Arrays.
+type arraysWithAxis struct{}
+
+func (ars arraysWithAxis) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
+	if L == nil {
+		return L, R, false
+	}
+	ax, ok := R.(apl.Axis)
+	if ok == false {
+		return L, R, false
+	}
+
+	toArray := domain.ToArray(nil)
+	al, ok := toArray.To(a, L)
+	if ok == false {
+		return L, R, false
+	}
+	ar, ok := toArray.To(a, ax.R)
+	if ok == false {
+		return L, R, false
+	}
+
+	toIdxArray := domain.ToIndexArray(nil)
+	x, ok := toIdxArray.To(a, ax.A)
+	if ok == false {
+		return L, R, false
+	}
+
+	return al, apl.Axis{A: x, R: ar}, true
+}
+func (ars arraysWithAxis) String(a *apl.Apl) string { return "arithmetic arrays with axis" }
 
 // array1 tries to apply the elementary function returned by arith1(fn)
 // monadically to each element of the array R
@@ -150,36 +188,112 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 	}
 }
 
-/* TODO should we try all primitives for arrays?
-// arithmonads takes monadic primitives and applies it to the array R.
-func arithmonads(p ...primitive) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
-	return func(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-		r := R.(apl.Array)
-		ar := apl.GeneralArray{
-			Values: make([]apl.Value, apl.ArraySize(r)),
-			Dims:   apl.CopyShape(r),
+// ArrayAxis is like array2 but with R bound in an axis specification.
+func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bool)) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
+	efn := arith2(symbol, fn)
+	return func(a *apl.Apl, L, ax apl.Value) (apl.Value, error) {
+		axis := ax.(apl.Axis)
+		R := axis.R
+		X := axis.A.(apl.IndexArray)
+
+		_, emptyL := L.(apl.EmptyArray)
+		_, emptyR := R.(apl.EmptyArray)
+		if emptyL || emptyR {
+			return apl.EmptyArray{}, nil
 		}
-		for i := range ar.Values {
-			v, err := r.At(i)
+
+		al := L.(apl.Array)
+		ar := R.(apl.Array)
+		ls := al.Shape()
+		rs := ar.Shape()
+
+		// We assume L has higher rank, otherwise flip L and R.
+		flip := false
+		if len(ls) < len(rs) {
+			flip = true
+			al, ar = ar, al
+			ls, rs = rs, ls
+		}
+
+		// See APL2 p.55 for conformance:
+		// 	L f[X] R
+		// (⍴,X) ←→ (⍴⍴L)⌊⍴⍴R
+		// (⍴,X) ←→ ∧/X∊⍳(⍴⍴L)⌈⍴⍴R
+		if len(X.Dims) != 1 {
+			return nil, fmt.Errorf("axis specification must have rank 1: %T", len(X.Dims))
+		}
+
+		// X≡X[⍋X]
+		x := make([]int, len(X.Ints))
+		copy(x, X.Ints)
+		sort.Ints(x)
+		for i := range x {
+			x[i] -= a.Origin
+		}
+
+		// (⍴L)[X] ←→ (⍴R).
+		if len(rs) != len(x) {
+			return nil, fmt.Errorf("axis rank must match lower argument rank")
+		}
+		for i, n := range x {
+			if n < 0 || n >= len(ls) {
+				return nil, fmt.Errorf("axis exceeds higher argument rank")
+			}
+			if i > 0 && n == x[i-1] {
+				return nil, fmt.Errorf("axis values are not unique")
+			}
+			if ls[n] != rs[i] {
+				return nil, fmt.Errorf("arguments with axis do not conform")
+			}
+		}
+
+		// There is no explicit algorithm description in APL2, DyaRef or ISO. We do:
+		// Extend the rank of argument with lower rank (already flipped to R),
+		// to the higher rank by filling missing axes with 1s.
+		// Apply the function elementwise, but use index 1 if an axis has only one element.
+		rightShape := make([]int, len(ls))
+		for i := range rightShape {
+			rightShape[i] = 1
+		}
+		for i, n := range x {
+			rightShape[n] = rs[i]
+		}
+
+		var err error
+		var lv, rv, v apl.Value
+		res := apl.GeneralArray{Dims: apl.CopyShape(al)}
+		res.Values = make([]apl.Value, apl.ArraySize(res))
+		idx := make([]int, len(res.Dims))
+		ic, rdx := apl.NewIdxConverter(rightShape)
+		for i := range res.Values {
+			copy(rdx, idx)
+			for k := range rdx {
+				if rdx[k] >= rightShape[k] {
+					rdx[k] = 0
+				}
+			}
+
+			lv, err = al.At(i)
 			if err != nil {
 				return nil, err
 			}
-			// Try each primitive.
-			for k, pk := range p {
-				_, u, ok := pk.Domain.To(a, nil, v)
-				if ok {
-					if w, err := pk.fn(a, nil, u); err != nil {
-						return nil, err
-					} else {
-						ar.Values[i] = w
-						break
-					}
-				} else if k == len(p)-1 {
-					return nil, fmt.Errorf("cannot apply monadic %s to array element %T", pk.symbol, v)
-				}
+
+			rv, err = ar.At(ic.Index(rdx))
+			if err != nil {
+				return nil, err
 			}
+
+			if flip {
+				lv, rv = rv, lv
+			}
+			v, err = efn(a, lv, rv)
+			if err != nil {
+				return nil, err
+			}
+			res.Values[i] = v
+
+			apl.IncArrayIndex(idx, res.Dims)
 		}
-		return ar, nil
+		return res, nil
 	}
 }
-*/

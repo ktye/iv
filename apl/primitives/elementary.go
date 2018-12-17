@@ -53,6 +53,12 @@ func init() {
 			Domain: arrays{},
 			fn:     array2(e.symbol, e.dyadic),
 		})
+		register(primitive{
+			symbol: e.symbol,
+			doc:    e.doc2,
+			Domain: arraysWithAxis{},
+			fn:     arrayAxis(e.symbol, e.dyadic),
+		})
 	}
 }
 

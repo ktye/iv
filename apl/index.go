@@ -60,4 +60,12 @@ func (x idxSpec) Eval(a *Apl) (Value, error) {
 	return idx, nil
 }
 
-// TODO: make idxSpec implement an indexer(?) interface for index assignments.
+// Axis combines the right argument with an axis specification.
+type Axis struct {
+	R Value
+	A Value
+}
+
+func (ax Axis) String(a *Apl) string {
+	return fmt.Sprintf("[%s]%s", ax.A.String(a), ax.R.String(a))
+}

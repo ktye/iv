@@ -31,13 +31,13 @@ type Apl struct {
 	parser
 	stdout     io.Writer
 	Tower      Tower
+	Origin     int
 	vars       map[string]Value
 	primitives map[Primitive][]PrimitiveHandler
 	operators  map[string][]Operator
 	symbols    map[rune]string
 	doc        map[string]string
 	initscan   bool
-	Origin     int
 	debug      bool
 }
 

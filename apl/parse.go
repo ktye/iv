@@ -434,10 +434,10 @@ func (p *parser) reduce(last bool) error {
 	return nil
 }
 
-// ResolveBrackets changes the order of bracket expresssions.
-// Brackets are parsed as idxSpec following an Identifier or an operator as an axis specification.
+// ResolveBrackets changes the order of bracket expressions.
+// Brackets are parsed as idxSpec following an Identifier or as
+// an axis specification following a primitive or an operator.
 // IdxSpec is converted to dyadic indexing function.
-// Axis specification is converted to a dyadic operator.
 func (p *parser) resolveBrackets() error {
 	if len(p.stack) < 2 {
 		return nil
@@ -453,8 +453,18 @@ func (p *parser) resolveBrackets() error {
 			p.setLeft(1, item{e: fn, class: noun})
 			p.removeLeft(0)
 			return nil
+		} else if _, ok := l.e.(Primitive); ok {
+			if len(spec) != 1 {
+				return fmt.Errorf("axis must hold a single expression, not %d", len(spec))
+			}
+			d := derived{
+				lo: l.e,
+				ro: spec[0],
+				op: "[]",
+			}
+			p.setLeft(1, item{e: &d, class: verb})
+			p.removeLeft(0)
 		} else {
-			// TODO parse axis
 			return fmt.Errorf("bracket expr following an %T\n", l.e)
 		}
 	}
