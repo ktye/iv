@@ -510,7 +510,7 @@ var testCases = []struct {
 	{"⍴⍴(⍳0)⍉5", "0", nil},
 	{"⍴2 1 3⍉3 2 4⍴⍳24", "2 3 4", nil},
 	{"⎕IO←0⋄⍴1 0 2⍉3 2 4⍴⍳24", "2 3 4", nil},
-	{"⍝ TODO selective specification", "", nil},
+	{"A←3 3⍴⍳9⋄(1 1⍉A)←10 20 30⋄A", "10 2 3\n4 20 6\n7 8 30", nil},
 
 	{"⍝ Domino, solve linear system", "", nil},
 	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", format5g},
