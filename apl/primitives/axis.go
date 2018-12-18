@@ -90,33 +90,25 @@ func splitCatAxis(a *apl.Apl, L, R apl.Value) (apl.Value, int, bool, error) {
 
 	// The axis is fractional, depending on the numerical tower.
 	// Substract index origin from the axis.
-	if s, ok := num.(substracter2); ok == false {
-		return nil, 0, false, fmt.Errorf("cannot substract from axis: %T", num)
+	n := 0
+	if fl, ok := num.(floorer); ok == false {
+		return nil, 0, false, fmt.Errorf("cannot floor axis: %T", num)
 	} else {
-		if v, ok := s.Sub2(apl.Index(a.Origin)); ok == false {
-			return nil, 0, false, fmt.Errorf("cannot substract index origin from axis")
+		if fnum, ok := fl.Floor(); ok == false {
+			return nil, 0, false, fmt.Errorf("could not floor axis: %T", num)
+		} else if i, ok := fnum.(apl.Number).ToIndex(); ok == false {
+			return nil, 0, false, fmt.Errorf("|axis is not an index")
 		} else {
-			num = v.(apl.Number)
+			n = i
 		}
 	}
 
-	less, ok := num.(lesser)
-	if ok == false {
-		return nil, 0, false, fmt.Errorf("axis is not comparable: %T", num)
-	}
+	// Substract index origin.
+	n -= a.Origin
 
-	// num must be between -1 and max.
-	if l, ok := less.Less(apl.Index(-1)); ok == false {
-		return nil, 0, false, fmt.Errorf("axis cannot be compared")
-	} else if l == true {
-		return nil, 0, false, fmt.Errorf("axis is < ¯1+⎕IO")
+	// x must be between -1 and max.
+	if n < -1 || n > max {
+		return nil, 0, false, fmt.Errorf("axis must be: X∊⍳(⍴⍴L)⌈⍴⍴R")
 	}
-	for i := 0; i <= max; i++ {
-		if l, ok := less.Less(apl.Index(i)); ok == false {
-			return nil, 0, false, fmt.Errorf("axis cannot be compared")
-		} else if l {
-			return R, i, true, nil
-		}
-	}
-	return nil, 0, false, fmt.Errorf("axis is too large")
+	return R, n, true, nil
 }

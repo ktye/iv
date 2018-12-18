@@ -19,15 +19,6 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
-
-	/*
-		{"1 2 3,[0.5]4", "1 2 3\n4 4 4", nil}, // laminate
-		{"1 2 3,[1.5]4", "1 4\n2 4\n 3 4", nil},
-		{"⎕IO←0⋄1 2 3,[¯0.5]4", "1 2 3\n4 4 4", nil},
-		{"'FOR',[.5]'AXE'", "F O R\nA X E", nil},
-		{"'FOR',[1.1]'AXE'", "F A\nO X\nR E", nil},
-	*/
-
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -279,7 +270,13 @@ var testCases = []struct {
 	{"⍴(3 5⍴⍳15),[1]3 3 5⍴-⍳45", "4 3 5", nil},
 	{"⍴(3 5⍴⍳15),[2]3 3 5⍴-⍳45", "3 4 5", nil},
 	{"⍝ TODO ravel with axis", "", nil},
-	{"⍝ TODO laminate", "", nil},
+
+	{"⍝ Laminate", "", nil},
+	{"1 2 3,[0.5]4", "1 2 3\n4 4 4", nil},
+	{"1 2 3,[1.5]4", "1 4\n2 4\n3 4", nil},
+	{"⎕IO←0⋄1 2 3,[¯0.5]4", "1 2 3\n4 4 4", nil},
+	{"'FOR',[.5]'AXE'", "F O R\nA X E", nil},
+	{"'FOR',[1.1]'AXE'", "F A\nO X\nR E", nil},
 
 	{"⍝ Decode, encode", "", nil},
 	{"3⊥1 2 1", "16", nil},                                // decode

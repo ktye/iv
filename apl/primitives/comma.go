@@ -78,7 +78,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return nil, err
 	}
 	if frac {
-		return laminate(a, L, R, x)
+		return laminate(a, L, R, x+1)
 	}
 	_ = x
 
@@ -186,37 +186,80 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		apl.IncArrayIndex(dst, newshape)
 	}
 	return res, nil
-
-	/*
-			lidx, ridx := 0, 0
-			nl, nr := sl[len(sl)-1], sr[len(sr)-1] // inner length
-			kl, kr := 0, 0
-			var v apl.Value
-			for i := range ret.Values {
-				if kl < nl {
-					v, err = al.At(lidx)
-					kl++
-					lidx++
-				} else if kr < nr {
-					v, err = ar.At(ridx)
-					kr++
-					ridx++
-					if kr == nr {
-						kl = 0
-						kr = 0
-					}
-				} else {
-					panic("catenate: illegal state: this should not happen")
-				}
-				if err != nil {
-					return nil, err
-				}
-				ret.Values[i] = v
-			}
-		return ret, nil
-	*/
 }
 
 func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
-	return nil, fmt.Errorf("TODO: laminate")
+	al, lok := L.(apl.Array)
+	ar, rok := R.(apl.Array)
+	if lok == false && rok == false {
+		if x != 0 {
+			return nil, fmt.Errorf("cannot laminate two scalar for given axis")
+		}
+		return apl.GeneralArray{Dims: []int{2}, Values: []apl.Value{L, R}}, nil
+	}
+
+	reshape := func(scalar apl.Value, shape []int) apl.Array {
+		ary := apl.GeneralArray{
+			Dims: shape,
+		}
+		ary.Values = make([]apl.Value, apl.ArraySize(ary))
+		for i := range ary.Values {
+			ary.Values[i] = scalar // TODO: copy?
+		}
+		return ary
+	}
+
+	if lok == false {
+		al = reshape(L, apl.CopyShape(ar))
+	} else if rok == false {
+		ar = reshape(R, apl.CopyShape(al))
+	}
+	ls := al.Shape()
+	rs := ar.Shape()
+
+	if len(ls) != len(rs) {
+		return nil, fmt.Errorf("laminate: arguments must have the same rank")
+	}
+	for i := range ls {
+		if ls[i] != rs[i] {
+			return nil, fmt.Errorf("laminate: arguments must have the same shape")
+		}
+	}
+
+	// The new array has one more dimension with length 2 at axis x,
+	// otherwise the shape is the same as for L and R.
+	shape := make([]int, len(ls)+1)
+	off := 0
+	for i := range shape {
+		if i == x {
+			shape[i] = 2
+			off = -1
+		} else {
+			shape[i] = ls[i+off]
+		}
+	}
+
+	// Iterate over the result and copy values from L or R depending,
+	// if the the index at axis x is 0 or 1.
+	var err error
+	res := apl.GeneralArray{Dims: shape}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
+	dst := make([]int, len(shape))
+	ic, src := apl.NewIdxConverter(ls)
+	for i := range res.Values {
+		var v apl.Value
+		copy(src[:x], dst[:x])
+		copy(src[x:], dst[x+1:])
+		if dst[x] == 0 {
+			v, err = al.At(ic.Index(src))
+		} else {
+			v, err = ar.At(ic.Index(src))
+		}
+		if err != nil {
+			return nil, err
+		}
+		res.Values[i] = v // TODO: copy?
+		apl.IncArrayIndex(dst, shape)
+	}
+	return res, nil
 }
