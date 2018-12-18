@@ -109,6 +109,18 @@ func rotFirst(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // It must have the shape of R, with the axis removed.
 // It it is a single element array, it is repeated to conform.
 func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
+	if _, ok := R.(apl.Axis); ok {
+		if r, n, err := splitAxis(a, R); err != nil {
+			return nil, err
+		} else {
+			R = r
+			if len(n) != 1 {
+				return nil, fmt.Errorf("rotate with axis: axis must be a scalar or length 1")
+			}
+			axis = n[0]
+		}
+	}
+
 	ar, ok := R.(apl.Array)
 
 	// Scalar R are returned as scalars.
