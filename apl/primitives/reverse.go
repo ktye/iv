@@ -48,6 +48,18 @@ func revFirst(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	return reverse(a, R, 0)
 }
 func reverse(a *apl.Apl, R apl.Value, axis int) (apl.Value, error) {
+	if _, ok := R.(apl.Axis); ok {
+		if r, n, err := splitAxis(a, R); err != nil {
+			return nil, err
+		} else {
+			R = r
+			if len(n) != 1 {
+				return nil, fmt.Errorf("reverse with axis: axis must be a scalar or length 1")
+			}
+			axis = n[0]
+		}
+	}
+
 	ar, ok := R.(apl.Array)
 
 	// Scalar values are returned as scalars.
