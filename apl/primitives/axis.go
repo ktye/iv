@@ -14,6 +14,9 @@ func splitAxis(a *apl.Apl, R apl.Value) (apl.Value, []int, error) {
 	if ok == false {
 		return R, nil, nil
 	}
+	if _, ok := ax.A.(apl.EmptyArray); ok {
+		return ax.R, nil, nil
+	}
 	to := domain.ToIndexArray(nil)
 	X, ok := to.To(a, ax.A)
 	if ok == false {

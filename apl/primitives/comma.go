@@ -10,8 +10,8 @@ import (
 func init() {
 	register(primitive{
 		symbol: ",",
-		doc:    "ravel, create row vector",
-		Domain: Monadic(ToArray(nil)),
+		doc:    "ravel, create row vector, ravel with axis",
+		Domain: Monadic(nil),
 		fn:     ravel,
 		sel:    ravelSelection,
 	})
@@ -27,15 +27,22 @@ func init() {
 		Domain: Dyadic(nil),
 		fn:     catenate,
 	})
-	// TODO ravel with axis
-	// TODO catenate with axis
-	// TODO laminate
 }
 
 // ravel returns a vector from all elements of R.
 // R is already converted to an array.
 func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	ar, _ := R.(apl.Array)
+	if _, ok := R.(apl.Axis); ok {
+		return ravelWithAxis(a, R)
+	}
+
+	to := ToArray(nil)
+	r, ok := to.To(a, R)
+	if ok == false {
+		return nil, fmt.Errorf("ravel: cannot convert to array: %T", R)
+	}
+
+	ar, _ := r.(apl.Array)
 	n := apl.ArraySize(ar)
 	res := apl.GeneralArray{
 		Dims:   []int{n},
@@ -64,6 +71,98 @@ func ravelSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 	return ai, nil
 }
 
+func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
+	var x []int
+	if r, vec, err := splitAxis(a, R); err == nil {
+		R = r
+		x = vec
+	} else if r, n, frac, err := splitCatAxis(a, apl.Index(0), R); err != nil {
+		return nil, fmt.Errorf("ravel with axis: %s", err)
+	} else {
+		// The result has rank ⍴⍴R+1 with the same shape as R,
+		// but a new axis 1 at position x.
+		if frac == false {
+			return nil, fmt.Errorf("ravel with axis: expected fractional axis")
+		}
+		x := n + 1
+		R = r
+		ar, ok := R.(apl.Array)
+		if ok == false {
+			return apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
+		}
+
+		rs := ar.Shape()
+		shape := make([]int, len(rs)+1)
+		off := 0
+		for i := range shape {
+			if i == x {
+				shape[i] = 1
+				off = -1
+			} else {
+				shape[i] = rs[i+off]
+			}
+		}
+		if rs, ok := ar.(apl.Reshaper); ok {
+			return rs.Reshape(shape), nil
+		} else {
+			return nil, fmt.Errorf("cannot reshape %T", R)
+		}
+	}
+
+	// The axis is an integer vector.
+	// It must be continuous and in ascending order.
+	for i := range x {
+		if i > 0 && x[i-1] != x[i]-1 {
+			return nil, fmt.Errorf("ravel with axis: axis must be ascending and continuous")
+		}
+	}
+	if len(x) == 1 {
+		return R, nil
+	}
+
+	ar, Rarray := R.(apl.Array)
+
+	// APL2: if the axis is empty, a new last axis of length 1 is appended.
+	if len(x) == 0 {
+		if Rarray == false {
+			return apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
+		}
+		shape := apl.CopyShape(ar)
+		shape = append(shape, 1)
+		if rs, ok := ar.(apl.Reshaper); ok {
+			return rs.Reshape(shape), nil
+		} else {
+			return nil, fmt.Errorf("cannot reshape %T", R)
+		}
+	}
+
+	if Rarray == false {
+		return nil, fmt.Errorf("ravel with axis: R must be an array: %T", R)
+	}
+	rs := ar.Shape()
+
+	// The axis in x are combined.
+	prod := 1
+	for _, n := range x {
+		prod *= rs[n]
+	}
+	shape := make([]int, 1+len(rs)-len(x))
+	off := 0
+	for i := range shape {
+		if i == x[0] {
+			shape[i] = prod
+			off = len(x) - 1
+		} else {
+			shape[i] = rs[i+off]
+		}
+	}
+	if rs, ok := ar.(apl.Reshaper); ok {
+		return rs.Reshape(shape), nil
+	} else {
+		return nil, fmt.Errorf("cannot reshape %T", R)
+	}
+}
+
 // L and R are conformable if
 //	they have the same rank, or
 //	at least one argument is scalar
@@ -80,7 +179,6 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if frac {
 		return laminate(a, L, R, x+1)
 	}
-	_ = x
 
 	al, isLarray := L.(apl.Array)
 	ar, isRarray := R.(apl.Array)
