@@ -473,13 +473,13 @@ var testCases = []struct {
 	{"⍝ Grade up, grade down, sort.", "", nil},
 	{"⍋23 11 13 31 12", "2 5 3 1 4", nil},                             // grade up
 	{"⍋23 14 23 12 14", "4 2 5 1 3", nil},                             // identical subarrays
-	{"⍋5 3⍴4 16 37 2 9 26 5 11 63 3 18 45 5 11 54", "2 4 1 5 3", nil}, // grade up rank 2                   //
+	{"⍋5 3⍴4 16 37 2 9 26 5 11 63 3 18 45 5 11 54", "2 4 1 5 3", nil}, // grade up rank 2
 	{"⍋22.5 1 15 3 ¯4", "5 2 4 3 1", nil},                             // grade up
-	{"⍒33 11 44 66 22", "4 3 1 5 2", nil},                             // grade down                                                  //
+	{"⍒33 11 44 66 22", "4 3 1 5 2", nil},                             // grade down
 	{"⍋'alpha'", "1 5 4 2 3", nil},                                    // strings grade up
 	{"'ABCDE'⍒'BEAD'", "2 4 1 3", nil},                                // grade down with collating sequence
 	{"⍝ TODO dyadic grade up/down is only implemented for vector L", "", nil},
-	//{"A←423 11 13 31 12⋄A[⍋A]", "11 12 13 23 31", nil}, // sort
+	{"A←23 11 13 31 12⋄A[⍋A]", "11 12 13 23 31", nil}, // sort
 
 	{"⍝ Reverse, rotate", "", nil},
 	{"⌽1 2 3 4 5", "5 4 3 2 1", nil},                                                  // reverse vector
@@ -495,19 +495,21 @@ var testCases = []struct {
 	{"(2 3⍴2 ¯3 3 ¯2 1 2)⊖2 2 3⍴⍳12", "1 8 9\n4 11 6\n\n7 2 3\n10 5 12", nil},         // rotate array
 
 	{"⍝ Transpose", "", nil},
-	{"1 2 1⍉2 3 4⍴⍳6", "1 5 3\n2 6 4", nil},                       // transpose
-	{"⍉3 1⍴1 2 3", "1 2 3", nil},                                  // transpose
-	{"⍴⍉2 3⍴⍳6", "3 2", nil},                                      // transpose
-	{"+/+/1 3 2⍉2 3 4⍴⍳24", "78 222", nil},                        // transpose
-	{"+/+/3 2 1⍉2 3 4⍴⍳24", "66 72 78 84", nil},                   // transpose
-	{"+/+/2 1 3⍉2 3 4⍴⍳24", "68 100 132", nil},                    // transpose
-	{"1 1 1⍉2 3 3⍴⍳18", "1 14", nil},                              // transpose
-	{"1 1 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A 6", nil},                // transpose
-	{"1 1 2⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A B C D\n5 6 7 8", nil},   // transpose
-	{"2 2 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A 5\nB 6\nC 7\nD 8", nil}, // transpose
-	{"1 2 2⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A F K\n1 6 11", nil},      // transpose
-	{"1 2 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A E I\n2 6 10", nil},      // transpose
-	{"⍴⍴(⍳0)⍉5", "0", nil},                                        // transpose
+	{"1 2 1⍉2 3 4⍴⍳6", "1 5 3\n2 6 4", nil},
+	{"⍉3 1⍴1 2 3", "1 2 3", nil},
+	{"⍴⍉2 3⍴⍳6", "3 2", nil},
+	{"+/+/1 3 2⍉2 3 4⍴⍳24", "78 222", nil},
+	{"+/+/3 2 1⍉2 3 4⍴⍳24", "66 72 78 84", nil},
+	{"+/+/2 1 3⍉2 3 4⍴⍳24", "68 100 132", nil},
+	{"1 1 1⍉2 3 3⍴⍳18", "1 14", nil},
+	{"1 1 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A 6", nil},
+	{"1 1 2⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A B C D\n5 6 7 8", nil},
+	{"2 2 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A 5\nB 6\nC 7\nD 8", nil},
+	{"1 2 2⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A F K\n1 6 11", nil},
+	{"1 2 1⍉2 3 4⍴'ABCDEFGHIJKL',⍳12", "A E I\n2 6 10", nil},
+	{"⍴⍴(⍳0)⍉5", "0", nil},
+	{"⍴2 1 3⍉3 2 4⍴⍳24", "2 3 4", nil},
+	{"⎕IO←0⋄⍴1 0 2⍉3 2 4⍴⍳24", "2 3 4", nil},
 	{"⍝ TODO selective specification", "", nil},
 
 	{"⍝ Domino, solve linear system", "", nil},

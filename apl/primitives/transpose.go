@@ -98,7 +98,7 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 	max := -1
 	m := make(map[int]bool)
 	for _, v := range al.Ints {
-		if v < a.Origin {
+		if v < 1 {
 			return nil, nil, fmt.Errorf("transpose: value in L out of range: %d", v)
 		}
 		if v > max {
@@ -106,7 +106,7 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 		}
 		m[v] = true
 	}
-	for i := a.Origin; i <= max; i++ {
+	for i := 1; i <= max; i++ {
 		if m[i] == false {
 			return nil, nil, fmt.Errorf("transpose: all of ⍳⌈/L must be included in L: %d is missing", i)
 		}
