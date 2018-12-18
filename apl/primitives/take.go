@@ -2,6 +2,7 @@ package primitives
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
@@ -55,6 +56,9 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 	}
 
 	ai := L.(apl.IndexArray)
+	if len(ai.Dims) > 1 {
+		return nil, fmt.Errorf("take/drop: L must be a vector")
+	}
 
 	// If R is an empty array, return 0s of the size of |L.
 	if _, ok := R.(apl.EmptyArray); ok {
@@ -70,13 +74,8 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 		}
 	}
 
-	ar, ok := R.(apl.Array)
-
-	if len(ai.Dims) > 1 {
-		return nil, fmt.Errorf("take/drop: L must be a vector")
-	}
-
 	// If R is a scalar, set it's shape to (⍴,L)⍴1.
+	ar, ok := R.(apl.Array)
 	if ok == false {
 		r := apl.GeneralArray{Values: []apl.Value{R}} // TODO copy?
 		r.Dims = make([]int, len(ai.Ints))
@@ -87,76 +86,65 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 	}
 	rs := ar.Shape()
 
+	// The default axis is the shape list of R: L↑R ←→ L↑[⍳⍴⍴R]R, same for drop.
+	// Shorter axis are filled with the missing default items.
+	// Elements may not repeat.
+	if len(x) > len(rs) {
+		return nil, fmt.Errorf("axis is too long")
+	}
+	m := make(map[int]int)
+	for i := range rs {
+		m[i] = i
+	}
+	axis := make([]int, len(rs))
+	for i, n := range x {
+		if k, ok := m[n]; ok == false {
+			return nil, fmt.Errorf("axis does not conform")
+		} else {
+			axis[i] = k
+			delete(m, k)
+		}
+	}
+	tail := make([]int, len(m))
+	i := 0
+	for _, n := range m {
+		tail[i] = n
+		i++
+	}
+	sort.Ints(tail)
+	copy(axis[len(x):], tail)
+	x = axis
+
+	// Missing items in L default to values of ⍴R[x] for take and 0 for drop.
+	if len(ai.Ints) > len(rs) {
+		return nil, fmt.Errorf("take/drop: length of L is too large")
+	} else if len(ai.Ints) < len(rs) {
+		n := make([]int, len(rs))
+		copy(n, ai.Ints)
+		if take {
+			for i := len(ai.Ints); i < len(rs); i++ {
+				n[i] = rs[x[i]]
+			}
+		}
+		ai.Ints = n
+		ai.Dims[0] = len(n)
+	}
+
 	if take == false {
-		// Missing items in L default to 0.
-		if n := len(rs) - ai.Dims[0]; n > 0 {
-			zeros := make([]int, n)
-			ai.Ints = append(ai.Ints, zeros...)
-			ai.Dims[0] = len(ai.Ints)
+		// Convert L to the left argument of an equivalent call to take.
+		for i, n := range ai.Ints {
+			m := rs[x[i]]
+			if n >= m || -n >= m { // over drop
+				ai.Ints[i] = 0
+			} else if n > 0 {
+				ai.Ints[i] = n - m
+			} else {
+				ai.Ints[i] = n + m
+			}
 		}
 	}
-
-	// APL2: Default axis: L↑R ←→ L↑[⍳⍴⍴R]R, same for drop.
-	// Is this true? or should that be L↑[⍳⍴⍴L]R ?
-	if x == nil {
-		x = make([]int, len(ai.Ints))
-		for i := range x {
-			x[i] = i
-		}
-	}
-
-	// X∊⍳⍴⍴R, the order is not important, but no repetitions.
-	m := make(map[int]bool)
-	for _, n := range x {
-		if m[n] {
-			return nil, fmt.Errorf("axis has repeated elements")
-		}
-		m[n] = true
-		if n < 0 || n >= len(rs) {
-			return nil, fmt.Errorf("axis is out of range")
-		}
-	}
-
-	// ⍴L must match the length of x
-	if len(ai.Ints) != len(x) {
-		return nil, fmt.Errorf("take/drop: length of L must match length of axis vector")
-	}
-
-	if take {
-		// Take is defined in opearators/rank.go
-		return operators.Take(a, ai, ar, x)
-	} else {
-		return dodrop(a, ai, ar, x)
-	}
-}
-
-func dodrop(a *apl.Apl, L apl.IndexArray, R apl.Array, x []int) (apl.Value, error) {
-	// (((L<0)×0⌈L+⍴R)+(L≥0)×x0⌊L-⍴R) ↑R
-	b := apl.IndexArray{
-		Dims: apl.CopyShape(L),
-		Ints: make([]int, len(L.Ints)),
-	}
-	rs := R.Shape()
-	for i := range b.Ints {
-		l := L.Ints[i]
-		r := rs[i]
-		t := l - r // L-⍴R
-		if t > 0 {
-			t = 0 // 0⌊L-⍴R
-		}
-		if l < 0 {
-			t = 0 // (L≥0)×x0⌊L-⍴R
-		}
-		s := l + r // L+⍴R
-		if s < 0 {
-			s = 0 // 0⌈L+⍴R
-		}
-		if l >= 0 {
-			s = 0 // ((L<0)×0⌈L+⍴R)
-		}
-		b.Ints[i] = s + t // (((L<0)×0⌈L+⍴R)+(L≥0)×x0⌊L-⍴R)
-	}
-	return operators.Take(a, b, R, x)
+	// Take is defined in opearators/rank.go
+	return operators.Take(a, ai, ar, x)
 }
 
 func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IndexArray, error) {
