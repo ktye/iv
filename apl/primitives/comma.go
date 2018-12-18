@@ -70,6 +70,18 @@ func ravelSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 //	they differ in rank by 1
 // For arrays the length of all axis but the last must be the same.
 func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	var err error
+	var x int
+	var frac bool
+	R, x, frac, err = splitCatAxis(a, L, R)
+	if err != nil {
+		return nil, err
+	}
+	if frac {
+		return laminate(a, L, R, x)
+	}
+	_ = x
+
 	al, isLarray := L.(apl.Array)
 	ar, isRarray := R.(apl.Array)
 
@@ -80,15 +92,16 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return L, nil
 	}
 
+	// Catenate two scalars.
 	if isLarray == false && isRarray == false {
 		return apl.GeneralArray{
-			Values: []apl.Value{L, R}, // TODO: do we need a copy?
+			Values: []apl.Value{L, R}, // TODO: copy?
 			Dims:   []int{2},
 		}, nil
 	}
 
 	reshapeScalar := func(scalar apl.Value, othershape []int) apl.Array {
-		othershape[len(othershape)-1] = 1
+		othershape[x] = 1
 		ary := apl.GeneralArray{
 			Dims: othershape,
 		}
@@ -100,12 +113,14 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 
 	// If one is scalar, reshape to match the other's shape, with
-	// the last axis length to 1.
+	// the x axis length to 1.
 	if isLarray == false {
 		al = reshapeScalar(L, apl.CopyShape(ar))
 	} else if isRarray == false {
 		ar = reshapeScalar(R, apl.CopyShape(al))
 	}
+	sl := al.Shape()
+	sr := ar.Shape()
 
 	reshape := func(ary apl.Array, shape []int) (apl.Array, error) {
 		if rs, ok := ary.(apl.Reshaper); ok {
@@ -115,20 +130,22 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 
-	// Catenate arrays.
-	sl := al.Shape()
-	sr := ar.Shape()
-	var err error
-	// If ranks differ by 1: reshape.
+	// If ranks differ by 1: insert 1 at the axis.
+	insert1 := func(s []int, i int) []int {
+		s = append(s, 0)
+		copy(s[i+1:], s[i:])
+		s[x] = 1
+		return s
+	}
 	if d := len(sl) - len(sr); d != 0 {
 		if d < -1 || d > 2 {
 			return nil, fmt.Errorf("catenate: ranks differ more that 1")
 		}
 		if d == -1 {
-			sl = append(apl.CopyShape(al), 1)
+			sl = insert1(apl.CopyShape(al), x)
 			al, err = reshape(al, sl)
 		} else if d == 1 {
-			sr = append(apl.CopyShape(ar), 1)
+			sr = insert1(apl.CopyShape(ar), x)
 			ar, err = reshape(ar, sr)
 		}
 	}
@@ -136,46 +153,70 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return nil, err
 	}
 
-	// All axis lengths but the last must match.
+	// All axis lengths except for x must match.
 	newshape := make([]int, len(sl))
 	for i := range sl {
 		newshape[i] = sl[i]
-		if i == len(sl)-1 {
+		if i == x { // i == len(sl)-1 {
 			newshape[i] = sl[i] + sr[i]
 		} else if sl[i] != sr[i] {
-			return nil, fmt.Errorf("catenate: all axis lengths but the last must match")
+			return nil, fmt.Errorf("catenate: all axis lengths except for the catenation axis must match")
 		}
 	}
-	ret := apl.GeneralArray{
+	res := apl.GeneralArray{
 		Dims: newshape,
 	}
-	ret.Values = make([]apl.Value, apl.ArraySize(ret))
+	res.Values = make([]apl.Value, apl.ArraySize(res))
 
 	// Iterate over combined elements, taking from L or R.
-	lidx, ridx := 0, 0
-	nl, nr := sl[len(sl)-1], sr[len(sr)-1] // inner length
-	kl, kr := 0, 0
-	var v apl.Value
-	for i := range ret.Values {
-		if kl < nl {
-			v, err = al.At(lidx)
-			kl++
-			lidx++
-		} else if kr < nr {
-			v, err = ar.At(ridx)
-			kr++
-			ridx++
-			if kr == nr {
-				kl = 0
-				kr = 0
-			}
+	split := sl[x]
+	dst := make([]int, len(newshape))
+	lc, src := apl.NewIdxConverter(sl)
+	rc, _ := apl.NewIdxConverter(sr)
+	for i := range res.Values {
+		var v apl.Value
+		copy(src, dst)
+		if n := src[x]; n >= split {
+			src[x] -= split
+			v, err = ar.At(rc.Index(src))
 		} else {
-			panic("catenate: illegal state: this should not happen")
+			v, err = al.At(lc.Index(src))
 		}
-		if err != nil {
-			return nil, err
-		}
-		ret.Values[i] = v
+		res.Values[i] = v // TODO: copy?
+		apl.IncArrayIndex(dst, newshape)
 	}
-	return ret, nil
+	return res, nil
+
+	/*
+			lidx, ridx := 0, 0
+			nl, nr := sl[len(sl)-1], sr[len(sr)-1] // inner length
+			kl, kr := 0, 0
+			var v apl.Value
+			for i := range ret.Values {
+				if kl < nl {
+					v, err = al.At(lidx)
+					kl++
+					lidx++
+				} else if kr < nr {
+					v, err = ar.At(ridx)
+					kr++
+					ridx++
+					if kr == nr {
+						kl = 0
+						kr = 0
+					}
+				} else {
+					panic("catenate: illegal state: this should not happen")
+				}
+				if err != nil {
+					return nil, err
+				}
+				ret.Values[i] = v
+			}
+		return ret, nil
+	*/
+}
+
+func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
+	return nil, fmt.Errorf("TODO: laminate")
 }

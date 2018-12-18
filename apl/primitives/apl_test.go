@@ -19,6 +19,15 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
+
+	/*
+		{"1 2 3,[0.5]4", "1 2 3\n4 4 4", nil}, // laminate
+		{"1 2 3,[1.5]4", "1 4\n2 4\n 3 4", nil},
+		{"⎕IO←0⋄1 2 3,[¯0.5]4", "1 2 3\n4 4 4", nil},
+		{"'FOR',[.5]'AXE'", "F O R\nA X E", nil},
+		{"'FOR',[1.1]'AXE'", "F A\nO X\nR E", nil},
+	*/
+
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -261,9 +270,14 @@ var testCases = []struct {
 	{"1 2 3,4 5 6", "1 2 3 4 5 6", nil}, // catenate
 	{`"abc",1 2`, `abc 1 2`, nil},
 	{"(2 3⍴⍳6),2 2⍴7 8 9 10", "1 2 3 7 8\n4 5 6 9 10", nil},
-	{"2 3≡2,3", "1", nil},                // catenate vector result
-	{"(1 2 3,4 5 6)≡⍳6", "1", nil},       // catenate vector result
-	{"0,2 3⍴1", "0 1 1 1\n0 1 1 1", nil}, // catenate scalar and array
+	{"2 3≡2,3", "1", nil},                       // catenate vector result
+	{"(1 2 3,4 5 6)≡⍳6", "1", nil},              // catenate vector result
+	{"0,2 3⍴1", "0 1 1 1\n0 1 1 1", nil},        // catenate scalar and array
+	{"0,[1]2 3⍴⍳6", "0 0 0\n1 2 3\n4 5 6", nil}, // catenate with axis
+	{"(2 3⍴⍳6),[1]0", "1 2 3\n4 5 6\n0 0 0", nil},
+	{"(2 3⍴⍳6),[1]5 4 3", "1 2 3\n4 5 6\n5 4 3", nil},
+	{"⍴(3 5⍴⍳15),[1]3 3 5⍴-⍳45", "4 3 5", nil},
+	{"⍴(3 5⍴⍳15),[2]3 3 5⍴-⍳45", "3 4 5", nil},
 	{"⍝ TODO ravel with axis", "", nil},
 	{"⍝ TODO laminate", "", nil},
 
