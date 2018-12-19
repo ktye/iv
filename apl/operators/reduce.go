@@ -237,6 +237,18 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 			return nil, fmt.Errorf("scan: derived function is not defined for dyadic context")
 		}
 
+		if _, ok := R.(apl.Axis); ok {
+			if r, n, err := splitAxis(a, R); err != nil {
+				return nil, err
+			} else {
+				R = r
+				if len(n) != 1 {
+					return nil, fmt.Errorf("scan with axis: axis must be a scalar")
+				}
+				axis = n[0]
+			}
+		}
+
 		ar, ok := R.(apl.Array)
 		if ok == false {
 			// If R is scalar, return unchanged.

@@ -20,18 +20,9 @@ var testCases = []struct {
 	formats map[reflect.Type]string
 }{
 
-	/*
-				{"+.×/2 3 4", "", nil},
-				{"1 2/[2]3 2 4⍴'HIGHLOW HOT COLD UP  DOWN'", "", nil},
+	//{``, "", nil},
 
-
-		{"", "", nil},
-		{"", "", nil},
-
-				{"", "", nil},
-				{"", "", nil},
-	*/
-	{"1 2/[2]2 2 1⍴⍳4", "1\n2\n2\n\n3\n4\n4", nil},
+	//{"1 2/[2]2 2 1⍴⍳4", "1\n2\n2\n\n3\n4\n4", nil},
 
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
@@ -362,7 +353,9 @@ var testCases = []struct {
 	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", nil},
 	{`-\1 2 3`, "1 ¯1 2", nil},
 	{"∨/0 0 1 0 0 1 0", "1", nil},
-	{"⍝ TODO scan with axis", "", nil},
+	{`^\1 1 1 0 1 1 1`, "1 1 1 0 0 0 0", nil},
+	{`+\1 2 3 4 5`, "1 3 6 10 15", nil},
+	{`+\[1]2 3⍴⍳6`, "1 2 3\n5 7 9", nil},
 
 	{"⍝ Replicate, compress", "", nil},
 	{"1 1 0 0 1/'STRAY'", "S T Y", nil},
