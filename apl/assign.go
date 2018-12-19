@@ -70,7 +70,7 @@ func evalAssign(a *Apl, e expr, modifier Value) (Value, error) {
 			if nv, ok := v.(numVar); ok {
 				as.Identifiers[i] = nv.name
 			} else {
-				return nil, fmt.Errorf("vector assignment can contain only numVars: %T")
+				return nil, fmt.Errorf("vector assignment can contain only numVars: %T", v)
 			}
 		}
 		return &as, nil

@@ -19,6 +19,20 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
+
+	/*
+				{"+.×/2 3 4", "", nil},
+				{"1 2/[2]3 2 4⍴'HIGHLOW HOT COLD UP  DOWN'", "", nil},
+
+
+		{"", "", nil},
+		{"", "", nil},
+
+				{"", "", nil},
+				{"", "", nil},
+	*/
+	{"1 2/[2]2 2 1⍴⍳4", "1\n2\n2\n\n3\n4\n4", nil},
+
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -326,18 +340,29 @@ var testCases = []struct {
 	{"3 2J3⊤2", "0J2 ¯1J2", format5J},                     // encode complex (Dyalog) why is it not representable?
 	{"3 2J3⊤2 1", "0J2 0J2\n¯1J2 ¯2J2", format5J},         // complex encode (Dyalog)
 
-	{"⍝ Reduce, reduce first, scan, scan first.", "", nil},
-	{"+/1 2 3", "6", nil},                // reduce vector
-	{"+⌿1 2 3", "6", nil},                // reduce vector (first axis)
-	{"+/2 3 1 ⍴⍳6", "1 2 3\n4 5 6", nil}, // special case: reshape if axis length is 1
-	{"⍴+/3", "", nil},                    // reduce scalar result
-	{"⍴+/1 1⍴3", "1", nil},               // reduce vector result
-	{"+/2 3⍴⍳6", "6 15", nil},            // reduce matrix
-	{"+⌿2 3⍴⍳6", "5 7 9", nil},           // reduce matrix (first axis)
-	{`+\1 2 3 4 5`, "1 3 6 10 15", nil},  // scan vector
-	{`+\2 3⍴⍳6`, "1 3 6\n4 9 15", nil},   // scan array
-	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", nil},    // scan first
-	{`-\1 2 3`, "1 ¯1 2", nil},           // scan
+	{"⍝ Reduce, reduce first, reduce with axis", "", nil},
+	{"+/1 2 3", "6", nil},
+	{"+⌿1 2 3", "6", nil},
+	{"+/2 3 1 ⍴⍳6", "1 2 3\n4 5 6", nil},
+	{"⍴+/3", "", nil},
+	{"⍴+/1 1⍴3", "1", nil},
+	{"+/2 3⍴⍳6", "6 15", nil},
+	{"+⌿2 3⍴⍳6", "5 7 9", nil},
+	{"+/⍳0", "0", nil},
+	{"+/[1]2 3⍴⍳6", "5 7 9", nil},
+	{"+/[1]3 4⍴⍳12", "15 18 21 24", nil},
+	{"+/[2]3 4⍴⍳12", "10 26 42", nil},
+	{"×/[1]3 4 ⍴⍳12", "45 120 231 384", nil},
+	{"÷/[2]2 1 4⍴2×⍳8", "2 4 6 8\n10 12 14 16", nil},
+	{"÷/[2]2 0 3⍴0", "1 1 1\n1 1 1", nil},
+
+	{"⍝ Scan, scan first, scan with axis.", "", nil},
+	{`+\1 2 3 4 5`, "1 3 6 10 15", nil},
+	{`+\2 3⍴⍳6`, "1 3 6\n4 9 15", nil},
+	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", nil},
+	{`-\1 2 3`, "1 ¯1 2", nil},
+	{"∨/0 0 1 0 0 1 0", "1", nil},
+	{"⍝ TODO scan with axis", "", nil},
 
 	{"⍝ Replicate, compress", "", nil},
 	{"1 1 0 0 1/'STRAY'", "S T Y", nil},
@@ -538,6 +563,9 @@ var testCases = []struct {
 	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", nil}, // matrix multiplication
 	{`-\×\+\1 2 3`, "1 ¯2 16", nil},                  // chained monadic operators
 	{"+/+/+/+/1 2 3", "6", nil},
+	{`+.×/2 3 4`, "24", nil},
+	{`+.×.*/2 3 4`, "2.4179e+24", format5g},
+	{`+.*.×/2 3 4`, "24", nil},
 
 	{"⍝ Identify item for reduction over empty array", "", nil},
 	{"+/⍳0", "0", nil},
@@ -708,6 +736,10 @@ var testCases = []struct {
 	// ⎕IO←0 ⋄ '-:'⊣@(' '=⊢)¨(14⍴(4⍴1),0)(17⍴1 1 0)\¨⊂⍉(⎕D,6↑⎕A)[(12⍴16)⊤?10⍴2*48] // 04-MacAddress
 	// life←{⊃1 ⍵∨.∧3 4=+⌿,1 0 ¯1∘.⊖1 0 ¯1⌽¨⊂⍵} // 05-life
 	// life2←{3=s-⍵∧4=s←{+/,⍵}⌺3 3⊢⍵} // 05-life
+
+	//http://foldoc.org/one-liner+wars
+	//https://github.com/theaplroom/apl-sound-wave/blob/master/src/DSP.dyalog
+
 }
 
 func testCompare(got, exp string) bool {

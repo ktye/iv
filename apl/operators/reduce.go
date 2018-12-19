@@ -108,8 +108,19 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 		if l != nil {
 			return nwise(a, l, r)
 		}
-
 		d := f.(apl.Function)
+
+		if _, ok := r.(apl.Axis); ok {
+			if rr, n, err := splitAxis(a, r); err != nil {
+				return nil, err
+			} else {
+				r = rr
+				if len(n) != 1 {
+					return nil, fmt.Errorf("reduce with axis: axis must be a scalar")
+				}
+				axis = n[0]
+			}
+		}
 
 		// If R is a scalar, the operation is not applied and Z←R
 		ar, ok := r.(apl.Array)
@@ -156,8 +167,13 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 			}
 		}
 		if n == 0 {
-			// TODO: If the last axis is 0, apply an identity function, DyaRef p 169
-			return nil, fmt.Errorf("reduce on R, with last axis 0: TODO apply identity function")
+			// If the axis is 0, apply an identity function, DyaRef p 169
+			if id := identityItem(f); id == nil {
+				return nil, fmt.Errorf("reduce empty axis: cannot get identify item for %T", d)
+			} else {
+				ida := apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{id}}
+				return ida.Reshape(dims), nil
+			}
 		}
 
 		// Reduce directly, if R is a vector.
@@ -509,6 +525,18 @@ func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IndexArray, apl.Ar
 	ai := L.(apl.IndexArray)
 	if len(ai.Dims) != 1 {
 		return ai, nil, axis, fmt.Errorf("LO must be a vector")
+	}
+
+	// R may contain an axis from a bracket expression, which overwrites axis.
+	if r, n, err := splitAxis(a, R); err != nil {
+		return ai, nil, axis, err
+	} else {
+		R = r
+		if len(n) == 1 {
+			axis = n[0]
+		} else if len(n) > 1 {
+			return ai, nil, axis, fmt.Errorf("compress/replicate: axis must be a scalar")
+		}
 	}
 
 	// If R is scalar or a single-element array, convert it to (⍴L)⍴B

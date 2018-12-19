@@ -1,6 +1,8 @@
 package domain
 
-import "github.com/ktye/iv/apl"
+import (
+	"github.com/ktye/iv/apl"
+)
 
 func Function(child SingleDomain) SingleDomain {
 	return function{child}
