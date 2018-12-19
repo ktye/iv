@@ -20,9 +20,9 @@ var testCases = []struct {
 	formats map[reflect.Type]string
 }{
 
-	//{``, "", nil},
-
-	//{"1 2/[2]2 2 1⍴⍳4", "1\n2\n2\n\n3\n4\n4", nil},
+	//{"", "", nil},
+	//{"", "", nil},
+	//{"", "", nil},
 
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
@@ -375,8 +375,13 @@ var testCases = []struct {
 	{"1 0 1/4", "4 4", nil},
 	{"1 0 1/,3", "3 3", nil},
 	{"1 0 1/1 1⍴5", "5 5", nil},
-	{"⍝ TODO replicate, compress with axis", "", nil},
-	{"⍝ TODO compress with selective specification", "", nil},
+	{"1 2/[2]2 2 1⍴⍳4", "1\n2\n2\n\n3\n4\n4", nil},
+	{"A←2 ¯1 1/[1]3 2 4⍴⍳24⋄⍴A⋄+/+/A", "4 2 4\n36 36 0 164", nil},
+	{"⍴2/[2]3 2 4⍴⍳24", "3 4 4", nil},
+	{"⍴¯1 1/[2]3 1 4⍴⍳12", "3 2 4", nil},
+	{"⍴1 0 2 ¯1⌿[2]3 4⍴⍳12", "3 4", nil},
+	{"0 1/[1]2 3⍴⍳6", "4 5 6", nil},
+	{"B←2 2⍴'ABCD'⋄A←3 2⍴⍳6⋄(1 0 1/[1]A)←B⋄A", "A B\n3 4\nC D", nil},
 
 	{"⍝ Expand, expand first", "", nil},
 	{`1 0 1 0 0 1\1 2 3`, "1 0 2 0 0 3", nil},
@@ -399,6 +404,7 @@ var testCases = []struct {
 	{`1 0 1⍀2 3⍴⍳6`, "1 2 3\n0 0 0\n4 5 6", nil},
 	{`1 0 1\3 2⍴⍳6`, "1 0 2\n3 0 4\n5 0 6", nil},
 	{`1 0 1 1\2 3⍴⍳6`, "1 0 2 3\n4 0 5 6", nil},
+	{`1 0 1\[1]2 3⍴⍳6`, "1 2 3\n0 0 0\n4 5 6", nil},
 	{"⍝ TODO expand with selective specification", "", nil},
 
 	{"⍝ Pi times, circular, trigonometric", "", nil},
@@ -679,16 +685,16 @@ var testCases = []struct {
 	{"A←4 3⍴⍳12 ⋄ (1 0 0/A)←1 4⍴⍳4 ⋄ A[3;1]", "3", nil}, // single element axis are collapsed
 	{"A←3 2⍴⍳6 ⋄ (1 0/A)←'ABC' ⋄ A", "A 2\nB 4\nC 6", nil},
 	{"A←4 5 6 ⋄ (1 ¯1  1/A)←7 8 9 ⋄ A", "7 5 9", nil},
-	//{"A←3 2⍴⍳6 ⋄ B←2 2⍴'ABCD' ⋄ (1 0 1/[1]A)←B ⋄ A", "A B\n3 4\nC D", nil},
+	{"A←3 2⍴⍳6 ⋄ B←2 2⍴'ABCD' ⋄ (1 0 1/[1]A)←B ⋄ A", "A B\n3 4\nC D", nil},
 	{"A←5 6 7 8 9 ⋄ (2↓A)←⍳3 ⋄ A", "5 6 1 2 3", nil},
 	{"A←3 4⍴'ABCDEFGHIJKL' ⋄ (1 ¯1↓A)←2 3⍴⍳6 ⋄ A", "A B C D\n1 2 3 H\n4 5 6 L", nil},
 	{"A←2 3⍴⍳6 ⋄ (1↓[1]A)←9 8 7 ⋄ A", "1 2 3\n9 8 7", nil},
 	{"A←2 3 4⍴⍳12⋄(¯1 2↓[3 2]A)←0⋄A", "1 2 3 4\n5 6 7 8\n0 0 0 12\n\n1 2 3 4\n5 6 7 8\n0 0 0 12", nil},
 	{`A←'ABC' ⋄ (1 0 1 0 1\A)←⍳5 ⋄ A`, "1 3 5", nil},
 	{`A←2 3⍴⍳6 ⋄ (1 0 1 1\A)←10×2 4⍴⍳8 ⋄ A`, "10 30 40\n50 70 80", nil},
-	//{`A←3 2⍴⍳6 ⋄ (1 1 0 0 1\[1]A)←5 2⍴-⍳10 ⋄ A`, "¯1 ¯2\n¯3 ¯4\n¯9 ¯10", nil},
+	{`A←3 2⍴⍳6 ⋄ (1 1 0 0 1\[1]A)←5 2⍴-⍳10 ⋄ A`, "¯1 ¯2\n¯3 ¯4\n¯9 ¯10", nil},
 	{"A←2 3⍴⍳6 ⋄ (,A)←10×⍳6 ⋄ A", "10 20 30\n40 50 60", nil},
-	//{"A←2 3 4⍴⍳24 ⋄ (,[2 3]A)←2 12⍴-⍳24⋄⍴A⋄A[2;3;]", "2 3 4\n¯21 ¯22 ¯23 ¯24", nil},
+	{"A←2 3 4⍴⍳24 ⋄ (,[2 3]A)←2 12⍴-⍳24⋄⍴A⋄A[2;3;]", "2 3 4\n¯21 ¯22 ¯23 ¯24", nil},
 	{"A←'GROWTH' ⋄ (2 3⍴A)←2 3⍴-⍳6 ⋄ (4⍴A)←⍳4 ⋄ A", "1 2 3 4 ¯5 ¯6", nil},
 	{"A←3 4⍴⍳12 ⋄ (⌽A)←3 4⍴'STOPSPINODER' ⋄ A", "P O T S\nN I P S\nR E D O", nil},
 	{"A←2 3⍴⍳6 ⋄ (⌽[1]A)←2 3⍴-⍳6 ⋄ A", "¯4 ¯5 ¯6\n¯1 ¯2 ¯3", nil},
@@ -699,16 +705,12 @@ var testCases = []struct {
 	{"A←2 3⍴⍳6 ⋄ (¯2↑[2]A)←2 2⍴10×⍳4 ⋄ A", "1 10 20\n4 30 40", nil},
 	{"A←3 3⍴⍳9 ⋄ (1 1⍉A)←10 20 30 ⋄ A", "10 2 3\n4 20 6\n7 8 30", nil},
 	{"A←3 3⍴'STYPIEANT' ⋄ (⍉A)←3 3⍴⍳9 ⋄ A", "1 4 7\n2 5 8\n3 6 9", nil},
-	{"⍝ First (↓) and Pick (⊃) is not implemented", "", nil},
+	{"⍝ First (↓) and Pick (⊃) are not implemented", "", nil},
 
 	{"⍝ IBM APL Language, 3rd edition, June 1976.", "", nil},
 	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8476965428547 1814.0184086689414 1819.3967340322804 1822.0289545386752", nil},
 	// the original prints as: "1790.85 1413.02 1819.4 1822.03"
 	{"Area ← 3×4\nX←2+⎕←3×Y←4\nX\nY", "12\n14\n4", nil},
-
-	// TODO DyaRef page 21.
-	// Every primitive and some mixed functions may have indexes.
-	{"⍝ TODO axis specification", "", nil},
 
 	{"⍝ Lambda expressions.", "", nil},
 	{"{2×⍵}3", "6", nil},           // lambda in monadic context
