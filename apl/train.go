@@ -95,10 +95,8 @@ func (fk fork) String(a *Apl) string {
 }
 
 func (fk fork) Call(a *Apl, L, R Value) (Value, error) {
-	f, ok := fk[0].(Function)
-	if ok == false {
-		return nil, fmt.Errorf("fork: expected function f: %T", fk[0])
-	}
+	f, fok := fk[0].(Function)
+
 	g, ok := fk[1].(Function)
 	if ok == false {
 		return nil, fmt.Errorf("fork: expected function g: %T", fk[1])
@@ -108,10 +106,15 @@ func (fk fork) Call(a *Apl, L, R Value) (Value, error) {
 		return nil, fmt.Errorf("fork: expected function h: %T", fk[2])
 	}
 
-	// L may be nil.
-	l, err := f.Call(a, L, R) // TODO copy?
-	if err != nil {
-		return nil, err
+	// Agh fork if f is not a function.
+	var l Value
+	l = fk[0]
+	if fok {
+		if v, err := f.Call(a, L, R); err != nil { // TODO copy?
+			return nil, err
+		} else {
+			l = v
+		}
 	}
 	r, err := h.Call(a, L, R) // TODO copy?
 	if err != nil {

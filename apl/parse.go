@@ -685,10 +685,24 @@ func (p *parser) reduceAfA(last bool) bool {
 // 	+!ff
 // The reduction is called train reduction.
 // It is repeated until the pattern is not found again.
+// On the last call, also
+//	Af
+// is reduced to a train, if f is already a train with an even length.
+// This builds an Agh fork. It might need parenthesis.
 func (p *parser) resolveFunctions(last bool) {
 	for {
 		if p.reduceff(last) == false {
-			return
+			break
+		}
+	}
+	// Reduce Agh fork.
+	if last && len(p.stack) == 2 {
+		r0 := p.rightItem(0)
+		r1 := p.rightItem(1)
+		if t, ok := r0.e.(train); ok && r1.class == noun && len(t)%2 == 0 {
+			t = append(train{r1.e}, t...)
+			p.setRight(1, item{e: t, class: verb})
+			p.removeRight(0)
 		}
 	}
 }

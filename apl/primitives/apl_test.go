@@ -19,6 +19,8 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
+	//{"{3=S-⍵∧4=S←{+/,⍵}⌺3 3⊢⍵}", "1 2 3", nil},
+
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -732,9 +734,10 @@ var testCases = []struct {
 	{"(÷+×-)4", "¯0.0625", nil},
 	{"(⌊÷+×-)4", "¯0.25", nil},
 	{"6(⌊÷+×-)4", "0.2", nil},
+	{"(3+*)4", "57.598", format5g}, // Agh fork
 	//{"(⍳(/∘⊢)⍳)3", "1 2 2 3 3 3", nil}, // The hybrid token does not parse.
-	{"⍝ TODO: Agh fork", "", nil},
-	// {"(3+*)4", "57.5982", nil}, // TODO: Agh fork
+
+	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", format5g},
 
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", nil},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
