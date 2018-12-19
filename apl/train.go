@@ -11,10 +11,7 @@ import (
 type train []expr
 
 func (t train) Eval(a *Apl) (Value, error) {
-	// TODO: should a train evaluate as a train of trains,
-	// if it has more than 3 arguments?
-	// Or should that be done at Call?
-	return t, fmt.Errorf("TODO: evaluate train")
+	return t, nil
 }
 
 func (t train) String(a *Apl) string {
@@ -26,5 +23,99 @@ func (t train) String(a *Apl) string {
 }
 
 func (t train) Call(a *Apl, L, R Value) (Value, error) {
-	return nil, fmt.Errorf("TODO: call function train")
+	if len(t) < 2 {
+		return nil, fmt.Errorf("cannot call short train, length %d", len(t))
+	} else if len(t)%2 == 0 {
+		// even number: f g h i j k → f(g h(i j k)) ⍝ atop(fork(fork))
+		f := atop{}
+		end := 1
+		if len(t) == 2 {
+			end = 2
+		}
+		for i, e := range t[:end] {
+			if v, err := e.Eval(a); err != nil {
+				return nil, err
+			} else {
+				f[i] = v
+			}
+		}
+		if len(t) > 3 {
+			f[1] = train(t[1:])
+		}
+		return f.Call(a, L, R)
+	} else {
+		// odd number: e f g h i j k → e f(g h(i j k)) ⍝ fork(fork(fork))
+		f := fork{}
+		end := 2
+		if len(t) == 3 {
+			end = 3
+		}
+		for i, e := range t[:end] {
+			if v, err := e.Eval(a); err != nil {
+				return nil, err
+			} else {
+				f[i] = v
+			}
+		}
+		if len(t) > 3 {
+			f[2] = train(t[2:])
+		}
+		return f.Call(a, L, R)
+	}
+}
+
+type atop [2]Value
+
+func (t atop) String(a *Apl) string {
+	return fmt.Sprintf("(%s %s)", t[0].String(a), t[1].String(a))
+}
+
+func (t atop) Call(a *Apl, L, R Value) (Value, error) {
+	g, ok := t[0].(Function)
+	if ok == false {
+		return nil, fmt.Errorf("atop: expected function g: %T", t[0])
+	}
+	h, ok := t[1].(Function)
+	if ok == false {
+		return nil, fmt.Errorf("atop: expected function h: %T", t[1])
+	}
+
+	// L may be nil.
+	v, err := h.Call(a, L, R)
+	if err != nil {
+		return nil, err
+	}
+	return g.Call(a, nil, v)
+}
+
+type fork [3]Value
+
+func (fk fork) String(a *Apl) string {
+	return fmt.Sprintf("(%s %s %s)", fk[0].String(a), fk[1].String(a), fk[2].String(a))
+}
+
+func (fk fork) Call(a *Apl, L, R Value) (Value, error) {
+	f, ok := fk[0].(Function)
+	if ok == false {
+		return nil, fmt.Errorf("fork: expected function f: %T", fk[0])
+	}
+	g, ok := fk[1].(Function)
+	if ok == false {
+		return nil, fmt.Errorf("fork: expected function g: %T", fk[1])
+	}
+	h, ok := fk[2].(Function)
+	if ok == false {
+		return nil, fmt.Errorf("fork: expected function h: %T", fk[2])
+	}
+
+	// L may be nil.
+	l, err := f.Call(a, L, R) // TODO copy?
+	if err != nil {
+		return nil, err
+	}
+	r, err := h.Call(a, L, R) // TODO copy?
+	if err != nil {
+		return nil, err
+	}
+	return g.Call(a, l, r)
 }

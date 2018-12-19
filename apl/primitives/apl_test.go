@@ -19,11 +19,6 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
-
-	//{"", "", nil},
-	//{"", "", nil},
-	//{"", "", nil},
-
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -720,7 +715,26 @@ var testCases = []struct {
 	{"2{}4", "", nil},          // empty lambda expression ignores arguments
 	{"{⍺×⍵}/2 3 4", "24", nil}, // TODO
 
-	// Tool of thought.
+	{"⍝ Trains, forks, atops", "", nil},
+	{"-,÷ 5", "¯0.2", nil},
+	{"(-,÷)5", "¯5 0.2", nil},
+	{"3(+×-)1", "8", nil},
+	{"(+⌿÷≢)3+⍳13", "10", nil},
+	{"(⍳{⍺/⍵}⍳)3", "1 2 2 3 3 3", nil},
+	{"(2/⍳)3", "1 1 2 2 3 3", nil},
+	{"6(+,-,×,÷)2", "8 4 12 3", nil},
+	{"6(⌽+,-,×,÷)2", "3 12 4 8", nil},
+	{"(⍳12) (⍳∘1 ≥)9", "9", nil},
+	{"(*-)1", "0.36788", format5g},
+	{"2(*-)1", "2.7183", format5g},
+	{"1(*-)2", "0.36788", format5g},
+	{"3(÷+×-)1", "0.125", nil},
+	{"(÷+×-)4", "¯0.0625", nil},
+	{"(⌊÷+×-)4", "¯0.25", nil},
+	{"6(⌊÷+×-)4", "0.2", nil},
+	//{"(⍳(/∘⊢)⍳)3", "1 2 2 3 3 3", nil}, // The hybrid token does not parse.
+	{"⍝ TODO: Agh fork", "", nil},
+	// {"(3+*)4", "57.5982", nil}, // TODO: Agh fork
 
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", nil},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
@@ -732,7 +746,6 @@ var testCases = []struct {
 	// life←{⊃1 ⍵∨.∧3 4=+⌿,1 0 ¯1∘.⊖1 0 ¯1⌽¨⊂⍵} // 05-life
 	// life2←{3=s-⍵∧4=s←{+/,⍵}⌺3 3⊢⍵} // 05-life
 
-	//http://foldoc.org/one-liner+wars
 	//https://github.com/theaplroom/apl-sound-wave/blob/master/src/DSP.dyalog
 
 }
