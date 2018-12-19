@@ -19,6 +19,7 @@ func TestParse(t *testing.T) {
 		a.RegisterOperator("/", mop{})
 		a.RegisterOperator("←", mop{})
 		a.RegisterOperator(".", dot{})
+		a.RegisterOperator("[]", brack{})
 		if err := a.SetTower(newTower()); err != nil {
 			panic(err)
 		}
@@ -48,6 +49,7 @@ func TestParse(t *testing.T) {
 		{"f ← +", "((f ←) +)"},
 		{"f ← +.*", "((f ←) (+ . *))"},
 		{"1 2/3 4 5", "(((1 2) /) (3 4 5))"},
+		{"1 2/[2]3 4 5", "((((1 2) /) [] 2) (3 4 5))"},
 		{"X ← +/ 3 4 5 + 1 2 3", "((X ←) ((+ /) ((3 4 5) + (1 2 3))))"},
 		{"+.*/1", "(((+ . *) /) 1)"},
 		{"+.*.*/1", "((((+ . *) . *) /) 1)"},
@@ -133,7 +135,10 @@ func (r mop) To(a *Apl, LO, RO Value) (Value, Value, bool) { return LO, RO, true
 func (r mop) String(a *Apl) string                         { return "any" }
 func (r mop) DyadicOp() bool                               { return false }
 func (r mop) Derived(a *Apl, lo, ro Value) Function        { return dummyfunc }
-func (r mop) Doc() string                                  { return "reduce" }
+func (r mop) Select(a *Apl, l Value, lo Value, ro Value, R Value) (IndexArray, error) {
+	return IndexArray{}, nil
+}
+func (r mop) Doc() string { return "reduce" }
 
 // Dyadic operators.
 type dot struct {
@@ -143,7 +148,21 @@ func (d dot) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
 func (d dot) String(a *Apl) string                       { return "any" }
 func (d dot) DyadicOp() bool                             { return true }
 func (d dot) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
-func (d dot) Doc() string                                { return "dot" }
+func (d dot) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IndexArray, error) {
+	return IndexArray{}, nil
+}
+func (d dot) Doc() string { return "dot" }
+
+type brack struct{}
+
+func (d brack) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
+func (d brack) String(a *Apl) string                       { return "any" }
+func (d brack) DyadicOp() bool                             { return true }
+func (d brack) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
+func (d brack) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IndexArray, error) {
+	return IndexArray{}, nil
+}
+func (d brack) Doc() string { return "bracket operator" }
 
 func newTower() Tower {
 	m := make(map[reflect.Type]Numeric)

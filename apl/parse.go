@@ -437,7 +437,8 @@ func (p *parser) reduce(last bool) error {
 // ResolveBrackets changes the order of bracket expressions.
 // Brackets are parsed as idxSpec following an Identifier or as
 // an axis specification following a primitive or an operator.
-// IdxSpec is converted to dyadic indexing function.
+// IdxSpec is converted to a dyadic indexing function.
+// An axis specification is converted to a dyadic operator.
 func (p *parser) resolveBrackets() error {
 	if len(p.stack) < 2 {
 		return nil
@@ -464,6 +465,17 @@ func (p *parser) resolveBrackets() error {
 			}
 			p.setLeft(1, item{e: &d, class: verb})
 			p.removeLeft(0)
+		} else if _, ok := l.e.(*derived); ok {
+			// The axis specification following an operator is rewritten as a dyadic operator.
+			// The operator is called "[]" and as the left operand the axis spec is inserted.
+			if len(spec) != 1 {
+				return fmt.Errorf("axis must hold a single expression, not %d", len(spec))
+			}
+			d := derived{
+				op: "[]",
+			}
+			p.setLeft(1, item{e: &d, class: conjunction})
+			p.insertLeft(1, item{e: spec[0], class: noun})
 		} else {
 			return fmt.Errorf("bracket expr following an %T\n", l.e)
 		}
@@ -525,6 +537,9 @@ func (p *parser) mopReduce(i int) bool {
 			return reduced
 		}
 		d := p.leftItem(i + 1).e.(*derived)
+		if d.lo != nil {
+			fmt.Println("dopReduce: overwriting LO")
+		}
 		d.lo = p.leftItem(i).e
 		p.setLeft(i, item{e: d, class: verb})
 		p.removeLeft(i + 1)
@@ -548,6 +563,12 @@ func (p *parser) dopReduce(i int) bool {
 		return false
 	}
 	d := p.leftItem(i + 1).e.(*derived)
+	if d.lo != nil {
+		fmt.Println("dopReduce: overwriting LO")
+	}
+	if d.ro != nil {
+		fmt.Println("dopReduce overwriting RO")
+	}
 	d.lo = p.leftItem(i).e
 	d.ro = p.leftItem(i + 2).e
 	p.setLeft(i, item{e: d, class: verb})
@@ -723,6 +744,14 @@ func (p *parser) removeLeft(l int) {
 // SetLeft overwrites the item at position i from left with the new item.
 func (p *parser) setLeft(l int, i item) {
 	p.stack[len(p.stack)-1-l] = i
+}
+
+// InsertLeft inserts an item at position i from the left.
+func (p *parser) insertLeft(l int, e item) {
+	i := len(p.stack) - l - 1
+	p.stack = append(p.stack, item{})
+	copy(p.stack[i+1:], p.stack[i:])
+	p.stack[i] = e
 }
 
 // LeftItem returns the item number i from the left end, starting at 0.
