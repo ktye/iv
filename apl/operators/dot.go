@@ -39,12 +39,12 @@ func Scalarproduct(a *apl.Apl, f, g apl.Value) apl.Function {
 	df := f.(apl.Primitive) // +
 	dg := g.(apl.Primitive) // ×
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
+
 		// Special case for a scalar product.
 		// If both have the same type and implement a ScalarProducter, use the interface.
 		if reflect.TypeOf(l) == reflect.TypeOf(r) {
 			if sc, ok := l.(scalarProducter); ok {
-				v, err := sc.ScalarProduct(r)
-				return v, err
+				return sc.ScalarProduct(r)
 			}
 		}
 		return inner(a, l, r, df, dg)
@@ -58,7 +58,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 
 	if lok == false && rok == false {
 		// Both are scalars, compute l g r.
-		v, err := g.Call(a, al, ar)
+		v, err := g.Call(a, l, r)
 		return v, err
 	}
 
