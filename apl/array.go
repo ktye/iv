@@ -307,6 +307,13 @@ func (i Bool) Less(v Value) (Bool, bool) {
 	return i == false && j == true, true
 }
 
+func (i Bool) ToIndex() (int, bool) {
+	if i {
+		return 1, true
+	}
+	return 0, true
+}
+
 type Index int
 
 func (i Index) String(a *Apl) string {
