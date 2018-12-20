@@ -104,7 +104,7 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 				out := false
 				for d := range tmp.Dims {
 					dst[d] = idx[d] + sdx[d] - tmp.Dims[d]/2
-					if dst[d] < 0 || dst[d] >= tmp.Dims[d] {
+					if dst[d] < 0 || dst[d] >= res.Dims[d] {
 						out = true
 					}
 					if v := dst[d]; v < 0 && -v > vec[d] {
