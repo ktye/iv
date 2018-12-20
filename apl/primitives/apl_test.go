@@ -19,7 +19,8 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
-	//{"{3=S-⍵∧4=S←{+/,⍵}⌺3 3⊢⍵}", "1 2 3", nil},
+	//{"p←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} ⋄ p 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", nil},
+	//{"{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}¯1+?8 8⍴2", "1 2 3", nil},
 
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
@@ -717,6 +718,19 @@ var testCases = []struct {
 	{"2{}4", "", nil},          // empty lambda expression ignores arguments
 	{"{⍺×⍵}/2 3 4", "24", nil}, // TODO
 
+	{"⍝ Lexical scoping", "", nil},
+	{"A←1⋄{A←2⋄A}0⋄A", "2\n1", nil},
+	{"X←{A←3⋄B←4⋄0:ignored⋄42}0⋄X⋄A⋄B", "42\nA\nB", nil},
+	{"{A←1⋄{A←⍵}⍵+1}1", "2", nil},
+	{"A←1⋄S←{A←2}0⋄A", "1", nil},
+	{"A←1⋄S←{A⊢←2}0⋄A", "2", nil}, // overwrite a global
+	{"A←1⍴1⋄S←{A[1]←2}0⋄A", "2", nil},
+	{"A←1⋄{A+←1⋄A}0⋄A", "2\n2", nil},
+	{"+X←{A←3⋄B←4}0", "4", nil},
+
+	{"⍝ Default left argument", "", nil},
+	{"f←{⍺←3⋄⍺+⍵}⋄ f 4 ⋄ 1 f 4", "7\n5", nil},
+
 	{"⍝ Trains, forks, atops", "", nil},
 	{"-,÷ 5", "¯0.2", nil},
 	{"(-,÷)5", "¯5 0.2", nil},
@@ -738,6 +752,11 @@ var testCases = []struct {
 	//{"(⍳(/∘⊢)⍳)3", "1 2 2 3 3 3", nil}, // The hybrid token does not parse.
 
 	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", format5g},
+
+	{"⍝ π", "", nil},
+	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", format5g},
+	{"4×-/÷¯1+2×⍳100", "3.1316", format5g},
+	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.1216", format5g},
 
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", nil},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes

@@ -22,6 +22,11 @@ func (id Identifier) Eval(a *Apl) (Value, error) {
 
 // Assign assigns a value to a variable with the given name.
 func (a *Apl) Assign(name string, v Value) error {
+	return a.AssignEnv(name, v, nil)
+}
+
+// AssignEnv assigns a variable in the given environment.
+func (a *Apl) AssignEnv(name string, v Value, env *env) error {
 	ok, isfunc := isVarname(name)
 	if ok == false {
 		return fmt.Errorf("variable name is not allowed: %s", name)
@@ -50,22 +55,47 @@ func (a *Apl) Assign(name string, v Value) error {
 		return fmt.Errorf("only functions can be assigned to lowercase variables")
 	}
 
-	a.vars[name] = v
+	if env == nil {
+		env = a.env
+	}
+
+	// Special case: Default left argument in lambda expressions:
+	// Do not overwrite the given argument.
+	if name == "⍺" && env.vars["⍺"] != nil {
+		return nil
+	}
+
+	env.vars[name] = v
 	return nil
 }
 
 // Lookup returns the value stored under the given variable name.
 // It returns nil, if the variable does not exist.
+// Variables are lexically scoped.
 func (a *Apl) Lookup(name string) Value {
+	v, _ := a.LookupEnv(name)
+	return v
+}
+
+// LookupEnv returns the value of a variable and a pointer to the environment,
+// where it was found.
+func (a *Apl) LookupEnv(name string) (Value, *env) {
 	if name == "⎕IO" {
-		return Index(a.Origin)
+		return Index(a.Origin), nil
 	}
 
-	v, ok := a.vars[name]
-	if ok == false {
-		return nil
+	e := a.env
+	for {
+		v, ok := e.vars[name]
+		if ok {
+			return v, e
+		}
+		if e.parent == nil {
+			break
+		}
+		e = e.parent
 	}
-	return v
+	return nil, nil
 }
 
 // NumVar contains the identifier to a value.
@@ -103,7 +133,6 @@ func (f fnVar) Eval(a *Apl) (Value, error) {
 func (f fnVar) Call(a *Apl, l, r Value) (Value, error) {
 	x := a.Lookup(string(f))
 	if x == nil {
-		fmt.Println(f, "is not assigned")
 		return Identifier(f), nil
 	}
 	fn, ok := x.(Function)

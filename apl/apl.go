@@ -12,9 +12,10 @@ import (
 
 // New starts a new interpreter.
 func New(w io.Writer) *Apl {
+	e := env{vars: make(map[string]Value)}
 	a := Apl{
 		stdout:     w,
-		vars:       make(map[string]Value),
+		env:        &e,
 		Origin:     1,
 		primitives: make(map[Primitive][]PrimitiveHandler),
 		operators:  make(map[string][]Operator),
@@ -29,10 +30,11 @@ func New(w io.Writer) *Apl {
 type Apl struct {
 	scan.Scanner
 	parser
-	stdout     io.Writer
-	Tower      Tower
-	Origin     int
-	vars       map[string]Value
+	stdout io.Writer
+	Tower  Tower
+	Origin int
+	env    *env
+	//vars       map[string]Value
 	primitives map[Primitive][]PrimitiveHandler
 	operators  map[string][]Operator
 	symbols    map[rune]string

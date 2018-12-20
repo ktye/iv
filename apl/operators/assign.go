@@ -89,7 +89,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		return a.Assign(name, R)
 	}
 
-	w := a.Lookup(name)
+	w, env := a.LookupEnv(name)
 	if w == nil {
 		return fmt.Errorf("modified/indexed assignment to non-existing variable %s", name)
 	}
@@ -108,7 +108,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		if v, err := f.Call(a, w, R); err != nil {
 			return err
 		} else {
-			return a.Assign(name, v)
+			return a.AssignEnv(name, v, env)
 		}
 	}
 
@@ -228,5 +228,5 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 			}
 		}
 	}
-	return a.Assign(name, ar)
+	return a.AssignEnv(name, ar, env)
 }
