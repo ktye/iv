@@ -20,7 +20,7 @@ var testCases = []struct {
 	formats map[reflect.Type]string
 }{
 	//{"p←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} ⋄ p 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", nil},
-	//{"{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}¯1+?8 8⍴2", "1 2 3", nil},
+	//{"A←¯1+?8 8⍴2⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄l A", "1 2 3", nil},
 
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
@@ -718,6 +718,11 @@ var testCases = []struct {
 	{"2{}4", "", nil},          // empty lambda expression ignores arguments
 	{"{⍺×⍵}/2 3 4", "24", nil}, // TODO
 
+	{"⍝ Evaluation order", "", nil},
+	{"A←1⋄A+(A←2)", "4", nil},
+	{"A+A←3", "6", nil},
+	{"A←1⋄A{(⍺ ⍵)}A+←10", "11 10", nil},
+
 	{"⍝ Lexical scoping", "", nil},
 	{"A←1⋄{A←2⋄A}0⋄A", "2\n1", nil},
 	{"X←{A←3⋄B←4⋄0:ignored⋄42}0⋄X⋄A⋄B", "42\nA\nB", nil},
@@ -767,6 +772,8 @@ var testCases = []struct {
 	// ⎕IO←0 ⋄ '-:'⊣@(' '=⊢)¨(14⍴(4⍴1),0)(17⍴1 1 0)\¨⊂⍉(⎕D,6↑⎕A)[(12⍴16)⊤?10⍴2*48] // 04-MacAddress
 	// life←{⊃1 ⍵∨.∧3 4=+⌿,1 0 ¯1∘.⊖1 0 ¯1⌽¨⊂⍵} // 05-life
 	// life2←{3=s-⍵∧4=s←{+/,⍵}⌺3 3⊢⍵} // 05-life
+
+	// Trees: https://youtu.be/hzPd3umu78g
 
 	//https://github.com/theaplroom/apl-sound-wave/blob/master/src/DSP.dyalog
 

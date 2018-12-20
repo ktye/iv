@@ -22,6 +22,14 @@ type function struct {
 func (f *function) Eval(a *Apl) (Value, error) {
 	var err error
 	var l, r Value
+
+	// The right argument must be evaluated first.
+	// Otherwise this A←1⋄A+(A←2) evaluates to 3,
+	// but it should evaluate to 4.
+	r, err = f.right.Eval(a)
+	if err != nil {
+		return nil, err
+	}
 	if f.left != nil {
 
 		// Special case for modified assignments.
@@ -34,10 +42,6 @@ func (f *function) Eval(a *Apl) (Value, error) {
 				return nil, err
 			}
 		}
-	}
-	r, err = f.right.Eval(a)
-	if err != nil {
-		return nil, err
 	}
 
 	// Special case: the last function in a selective assignment uses Select instead of Call.
