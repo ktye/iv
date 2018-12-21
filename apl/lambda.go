@@ -42,10 +42,28 @@ func (λ *lambda) Call(a *Apl, l, r Value) (Value, error) {
 	a.env = &e
 	defer func() { a.env = save }()
 
+	e.vars["∇"] = λ
+tail:
 	e.vars["⍺"] = l
 	e.vars["⍵"] = r
-	e.vars["∇"] = λ
-	return λ.body.Eval(a)
+
+	if v, err := λ.body.Eval(a); err != nil {
+		return nil, err
+	} else if t, ok := v.(*tail); ok {
+		r, err = t.right.Eval(a)
+		if err != nil {
+			return nil, err
+		}
+		if t.left != nil {
+			l, err = t.left.Eval(a)
+			if err != nil {
+				return nil, err
+			}
+		}
+		goto tail
+	} else {
+		return v, nil
+	}
 }
 
 // guardList is the body of a lambda expression.
@@ -76,6 +94,15 @@ func (l guardList) Eval(a *Apl) (Value, error) {
 		if g.cond == nil && i < len(l)-1 && isa == false {
 			return nil, fmt.Errorf("λ contains non-reachable code")
 		}
+
+		if f, ok := g.e.(Function); ok && isa == false {
+			if fn, ok := f.(*function); ok {
+				if _, ok := fn.Function.(self); ok {
+					return &tail{fn.left, fn.right}, nil
+				}
+			}
+		}
+
 		if v, err := g.Eval(a); err != nil {
 			return nil, err
 		} else if v != nil {
@@ -161,4 +188,13 @@ func (s self) Call(a *Apl, L, R Value) (Value, error) {
 		return nil, fmt.Errorf("∇ is not a lambda") // should not happen
 	}
 	return λ.Call(a, L, R)
+}
+
+// Tail contains the left and right expression for a tail call.
+type tail struct {
+	left, right expr
+}
+
+func (t tail) String(a *Apl) string {
+	return fmt.Sprintf("tail{%s %s}", t.left.String(a), t.right.String(a))
 }
