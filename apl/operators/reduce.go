@@ -105,11 +105,7 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 	}
 
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
-		if l != nil {
-			return nwise(a, l, r)
-		}
 		d := f.(apl.Function)
-
 		if _, ok := r.(apl.Axis); ok {
 			if rr, n, err := splitAxis(a, r); err != nil {
 				return nil, err
@@ -120,6 +116,9 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 				}
 				axis = n[0]
 			}
+		}
+		if l != nil {
+			return nwise(a, d, l, r, axis)
 		}
 
 		// If R is a scalar, the operation is not applied and Z←R
@@ -667,8 +666,179 @@ func scan(a *apl.Apl, vec []apl.Value, d apl.Function) ([]apl.Value, error) {
 
 // Nwise is the function handle for n-wise recution.
 // l must be a scalar (integer) or a 1 element vector.
-func nwise(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
-	return nil, fmt.Errorf("TODO: n-wise reduction")
+func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, error) {
+
+	var n int
+	neg := false
+	to := ToScalar(ToIndex(nil))
+	if idx, ok := to.To(a, L); ok == false {
+		return nil, fmt.Errorf("nwise reduction: left argument must be a scalar integer: %T", L)
+	} else {
+		n = int(idx.(apl.Index))
+		if n < 0 {
+			n = -n
+			neg = true
+		}
+	}
+
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		return nil, fmt.Errorf("n-wise reduction: right argument must be an array")
+	}
+	rs := ar.Shape()
+
+	if _, ok := R.(apl.EmptyArray); ok {
+		if n == 0 {
+			return apl.IndexArray{Dims: []int{1}, Ints: []int{0}}, nil
+		} else if n == 1 {
+			return apl.EmptyArray{}, nil
+		} else {
+			return nil, fmt.Errorf("n-wise reduction: length error")
+		}
+	}
+
+	if axis == -1 {
+		axis = len(rs) + axis
+	}
+	if axis < 0 || axis >= len(rs) {
+		return nil, fmt.Errorf("n-wise reduction: axis out of range")
+	}
+
+	shape := apl.CopyShape(ar)
+	shape[axis] -= n - 1
+	if n-rs[axis] > 2 {
+		return nil, fmt.Errorf("n-wise reduction: length error")
+	}
+
+	res := apl.GeneralArray{Dims: shape}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
+	if len(res.Values) == 0 {
+		return res, nil
+	}
+
+	if n == 0 {
+		var id apl.Value
+		if p, ok := f.(apl.Primitive); ok {
+			id = identityItem(p)
+		}
+		if id == nil {
+			return nil, fmt.Errorf("n-wise reduction: unknown identify function")
+		}
+		for i := range res.Values {
+			res.Values[i] = id
+		}
+		return res, nil
+	}
+
+	// Fast accumulative algorithm for +/ and ×/
+	var inv apl.Function
+	if p, ok := f.(apl.Primitive); ok {
+		if p == "+" {
+			inv = apl.Primitive("-")
+		} else if p == "×" {
+			inv = apl.Primitive("÷")
+		}
+	}
+
+	// Iterate over all items, except for the reduction axis.
+	axlen := rs[axis]
+	vec := make([]apl.Value, axlen)
+	xs := apl.CopyShape(ar)
+	xs[axis] = 1
+	outer := apl.ArraySize(apl.GeneralArray{Dims: xs})
+	ic, idx := apl.NewIdxConverter(rs)
+	dc, dst := apl.NewIdxConverter(res.Dims)
+	var err error
+	for i := 0; i < outer; i++ {
+		for k := range vec {
+			j := k
+			if neg {
+				j = axlen - 1 - k
+			}
+			idx[axis] = j
+			vec[k], err = ar.At(ic.Index(idx))
+			if err != nil {
+				return nil, err
+			}
+		}
+		if err := applyNwise(a, vec, n, f, inv); err != nil {
+			return nil, err
+		}
+		copy(dst, idx)
+		for k := 0; k < axlen-n+1; k++ {
+			j := k
+			if neg {
+				j = axlen - n - k
+			}
+			dst[axis] = j
+			res.Values[dc.Index(dst)] = vec[k]
+		}
+
+		idx[axis] = 0
+		apl.IncArrayIndex(idx, xs)
+	}
+
+	return res, nil
+}
+
+func applyNwise(a *apl.Apl, vec []apl.Value, n int, f, g apl.Function) error {
+	var err error
+	reduce := func(x []apl.Value) apl.Value {
+		r := x[len(x)-1]
+		for i := len(x) - 2; i >= 0; i-- {
+			r, err = f.Call(a, x[i], r)
+			if err != nil {
+				return nil
+			}
+		}
+		return r
+	}
+
+	// Fast path: Moving window with accumulator.
+	if g != nil && n > 3 {
+		var acc apl.Value
+		window := make([]apl.Value, n)
+		p := 0
+		reduce = func(x []apl.Value) apl.Value {
+			// Initial call: fill the window.
+			if acc == nil {
+				for i, v := range x {
+					window[i] = v
+				}
+				acc = x[0]
+				for _, v := range x[1:] {
+					acc, err = f.Call(a, acc, v)
+					if err != nil {
+						return nil
+					}
+				}
+			} else {
+				xnew := x[len(x)-1]
+				acc, err = g.Call(a, acc, window[p])
+				if err != nil {
+					return nil
+				}
+				window[p] = xnew
+				acc, err = f.Call(a, acc, xnew)
+				if err != nil {
+					return nil
+				}
+				p++
+				if p == len(window) {
+					p = 0
+				}
+			}
+			return acc
+		}
+	}
+
+	for i := 0; i < len(vec)-n+1; i++ {
+		vec[i] = reduce(vec[i : i+n])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // reduceTack is the derived function from ⊣/ or ⊢/ .
