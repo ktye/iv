@@ -94,9 +94,34 @@ func extendAxis(ar apl.Array, axis, n int) (apl.Array, []int) {
 	return res, res.Dims
 }
 
+// ISO p.151
 func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	al, lok := L.(apl.Array)
 	ar, rok := R.(apl.Array)
+
+	// If L or R is empty, return (⍴L,⍴R)⍴0.
+	_, ae := L.(apl.EmptyArray)
+	_, re := R.(apl.EmptyArray)
+	if ae || re {
+		var shape []int
+		if lok {
+			if ae {
+				shape = []int{0}
+			} else {
+				shape = append(shape, al.Shape()...)
+			}
+		}
+		if rok {
+			if re {
+				shape = append(shape, 0)
+			} else {
+				shape = append(shape, ar.Shape()...)
+			}
+		}
+		sv := apl.IndexArray{Dims: []int{len(shape)}, Ints: shape}
+		zv := apl.IndexArray{Dims: []int{1}, Ints: []int{0}}
+		return rho2(a, sv, zv)
+	}
 
 	// If L is a scalar, return L|R.
 	if lok == false {
@@ -109,11 +134,75 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 
+	// L is a vector and R is a scalar.
+	ls := al.Shape()
+	if len(ls) == 1 && rok == false {
+		ravelL := make([]apl.Value, ls[0])
+		for i := range ravelL {
+			ravelL[i], _ = al.At(i)
+		}
+		return encodeVecScalar(a, ravelL, R)
+	}
+
+	return encodeArray(a, al, R)
+}
+
+// encodeVecScalar returns L⊤R for vector L and scalar R.
+func encodeVecScalar(a *apl.Apl, L []apl.Value, R apl.Value) (apl.Value, error) {
+	eq := arith2("=", compare("="))
+	fsub := arith2("-", sub2)
+	fdiv := arith2("÷", div2)
+	mod := arith2("|", abs2)
+
+	// Two vectors Z (len ⍴A) and C (len 1+⍴A)
+	var err error
+	Z := make([]apl.Value, len(L))
+	C := make([]apl.Value, len(L)+1)
+	C[len(C)-1] = R
+	for i := len(Z) - 1; i >= 0; i-- {
+		// Z[i] ← L[i] ⊤ C[i+1]
+		Z[i], err = mod(a, L[i], C[i+1])
+		if err != nil {
+			return nil, err
+		}
+
+		// If L[i] is 0: C[i] ← 0
+		a0, err := eq(a, L[i], apl.Index(0))
+		if err != nil {
+			return nil, err
+		}
+		if iszero := a0.(apl.Bool); iszero == true {
+			C[i] = apl.Index(0)
+		} else {
+			// Otherwise: C[i] ← (C[i+1] - Z[i])÷A[i]
+			d, err := fsub(a, C[i+1], Z[i])
+			if err != nil {
+				return nil, err
+			}
+			d, err = fdiv(a, d, L[i])
+			if err != nil {
+				return nil, err
+			}
+			C[i] = d
+		}
+	}
+	return apl.GeneralArray{Dims: []int{len(Z)}, Values: Z}, nil
+}
+
+func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	ls := al.Shape()
 	rs := []int{}
+	ar, rok := R.(apl.Array)
 	if rok {
 		rs = ar.Shape()
 	}
+
+	fdiv := arith2("/", div2)
+	flor := arith1("⌊", min)
+	fmul := arith2("×", mul2)
+	fsub := arith2("-", sub2)
+	mod := arith2("|", abs2)
+	eq := arith2("=", compare("="))
 
 	// The shape of the result is the catenation of the shapes of L and R.
 	shape := make([]int, len(ls)+len(rs))
@@ -123,12 +212,6 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 
 	// enc represents r in the given radix power vector and sets the result to vec.
-	fdiv := arith2("/", div2)
-	flor := arith1("⌊", min)
-	fmul := arith2("×", mul2)
-	fsub := arith2("-", sub2)
-	mod := arith2("|", abs2)
-	eq := arith2("=", compare("="))
 	enc := func(rad []apl.Value, r apl.Value, vec []apl.Value) error {
 		var p apl.Value
 		for i := range rad {
@@ -244,3 +327,50 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 	return res, nil
 }
+
+/* There should be a simpler algorithm for encodeArray:
+// ISO p.151
+// The shape of the result is ⍴L,⍴R
+shape := apl.CopyShape(al)
+if rok {
+	shape = append(shape, apl.CopyShape(ar)...)
+}
+res := apl.GeneralArray{Dims: shape}
+res.Values = make([]apl.Value, apl.ArraySize(res))
+
+// Ravel list of R
+var r []apl.Value
+if rok == false {
+	r = []apl.Value{R}
+} else {
+	r = make([]apl.Value, apl.ArraySize(ar))
+	for i := 0; i < len(r); i++ {
+		r[i], _ = ar.At(i)
+	}
+}
+N := len(r)
+
+// Ravel-along-axis one (see ISO p.23)
+// A1: Vector item i of ravel-along-axis one of L
+A1 := make([]apl.Value, apl.ArraySize(al)/ls[0])
+var err error
+for i := 0; i < ls[0]; i++ {
+	off := i * len(A1)
+	for k := range A1 {
+		A1[k], err = al.At(off + k)
+		if err != nil {
+			return nil, err
+		}
+	}
+	fmt.Println("A1", A1)
+	for j, B1 := range r {
+		P := j + N*i
+		v, err := encodeVecScalar(a, A1, B1)
+		if err != nil {
+			return nil, err
+		}
+		res.Values[P] = v
+	}
+}
+return res, nil
+*/

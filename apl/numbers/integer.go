@@ -84,6 +84,9 @@ func (i Integer) Div() (apl.Value, bool) {
 }
 func (a Integer) Div2(b apl.Value) (apl.Value, bool) {
 	n := int64(b.(Integer))
+	if n == 0 {
+		return nil, false
+	}
 	r := int64(a) / n
 	if r*n == int64(a) {
 		return Integer(r), true
