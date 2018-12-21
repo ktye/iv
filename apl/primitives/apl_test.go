@@ -19,8 +19,6 @@ var testCases = []struct {
 	in, exp string
 	formats map[reflect.Type]string
 }{
-	//{"A←¯1+?8 8⍴2⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄+A l← A⋄+A l← A", "1 2 3", nil},
-
 	{"⍝ Basic numbers and arithmetics", "", nil},
 	{"1", "1", nil},
 	{"1+1", "2", nil},
@@ -776,6 +774,9 @@ var testCases = []struct {
 	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", format5g},
 	{"4×-/÷¯1+2×⍳100", "3.1316", format5g},
 	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.1216", format5g},
+
+	{"⍝ Conways game of life", "", nil},
+	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", nil},
 
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", nil},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
