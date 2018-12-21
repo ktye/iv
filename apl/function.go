@@ -67,6 +67,8 @@ func (f *function) String(a *Apl) string {
 			s = string(p)
 		case fnVar:
 			s = string(p)
+		case self:
+			s = "∇"
 		case *lambda:
 			s = p.String(a)
 		}

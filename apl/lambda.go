@@ -44,6 +44,7 @@ func (λ *lambda) Call(a *Apl, l, r Value) (Value, error) {
 
 	e.vars["⍺"] = l
 	e.vars["⍵"] = r
+	e.vars["∇"] = λ
 	return λ.body.Eval(a)
 }
 
@@ -134,4 +135,30 @@ func (g *guardExpr) Eval(a *Apl) (Value, error) {
 	} else {
 		return g.e.Eval(a)
 	}
+}
+
+// Self is both an expression and a Value self-pointing to a lambda function.
+type self struct{}
+
+func (s self) String(a *Apl) string {
+	return "∇"
+}
+
+func (s self) Eval(a *Apl) (Value, error) {
+	return s, nil
+}
+
+func (s self) Call(a *Apl, L, R Value) (Value, error) {
+	if a.env.parent == nil {
+		return nil, fmt.Errorf("cannot call ∇ outside lambda")
+	}
+	v, ok := a.env.vars["∇"]
+	if ok == false {
+		return nil, fmt.Errorf("∇ has not been registered") // should not happen
+	}
+	λ, ok := v.(*lambda)
+	if ok == false {
+		return nil, fmt.Errorf("∇ is not a lambda") // should not happen
+	}
+	return λ.Call(a, L, R)
 }

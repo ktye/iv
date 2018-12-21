@@ -151,7 +151,6 @@ func isVarname(s string) (ok, isfunc bool) {
 	if s == "" {
 		return false, false
 	}
-	special := false
 	upper := false
 	for i, r := range s {
 		if scan.AllowedInVarname(r, i == 0) == false {
@@ -160,9 +159,6 @@ func isVarname(s string) (ok, isfunc bool) {
 		if i == 0 && unicode.IsUpper(r) || strings.IndexRune("⎕⍺⍵", r) != -1 {
 			upper = true
 		}
-	}
-	if special {
-		return true, false
 	}
 	return true, upper == false
 }

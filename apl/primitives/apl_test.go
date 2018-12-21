@@ -793,6 +793,10 @@ var testCases = []struct {
 	{"⍝ Default left argument", "", nil},
 	{"f←{⍺←3⋄⍺+⍵}⋄ f 4 ⋄ 1 f 4", "7\n5", nil},
 
+	{"⍝ Recursion", "", nil},
+	{"f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10", "3628800", nil},
+	{"S←0{⍺>20:⍺⋄⍵∇⎕←⍺+⍵}1", "1\n2\n3\n5\n8\n13\n21\n34", nil},
+
 	{"⍝ Trains, forks, atops", "", nil},
 	{"-,÷ 5", "¯0.2", nil},
 	{"(-,÷)5", "¯5 0.2", nil},

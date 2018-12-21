@@ -59,6 +59,13 @@ func TestScan(t *testing.T) {
 			Token{T: RightBrack, S: "]"},
 			Token{T: RightBrace, S: "}"},
 		}},
+		{`{⍵∇1}`, []Token{
+			Token{T: LeftBrace, S: "{"},
+			Token{T: Symbol, S: "⍵"},
+			Token{T: Self, S: "∇"},
+			Token{T: Number, S: "1"},
+			Token{T: RightBrace, S: "}"},
+		}},
 	}
 
 	var scn Scanner

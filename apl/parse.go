@@ -178,6 +178,9 @@ func (p *parser) parseStatement() (item, error) {
 			}
 			push(i, false)
 
+		case scan.Self:
+			push(item{e: self{}, class: verb}, false)
+
 		case scan.LeftParen, scan.LeftBrack, scan.LeftBrace:
 			return item{}, fmt.Errorf(":%d: unexpected opening %s", t.Pos, t.S)
 

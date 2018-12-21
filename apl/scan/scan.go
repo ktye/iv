@@ -32,6 +32,7 @@ const (
 	RightBrace      // }
 	Colon           // :
 	Semicolon       // ;
+	Self            // ∇
 	Diamond         // ⋄
 )
 
@@ -112,6 +113,8 @@ func (t Token) String() string {
 		s = ":"
 	case Semicolon:
 		s = ";"
+	case Self:
+		s = "∇"
 	case Diamond:
 		s = "⋄"
 	case Endl:
@@ -211,6 +214,8 @@ func (s *Scanner) nextToken() (Token, error) {
 			return Token{T: Colon, S: ":"}, nil
 		case ';':
 			return Token{T: Semicolon, S: ";"}, nil
+		case '∇':
+			return Token{T: Self, S: "∇"}, nil
 		case '⋄':
 			return Token{T: Diamond, S: "⋄"}, nil
 		case ' ', '\r', '\t':
