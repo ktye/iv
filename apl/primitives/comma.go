@@ -27,6 +27,18 @@ func init() {
 		Domain: Dyadic(nil),
 		fn:     catenate,
 	})
+	register(primitive{
+		symbol: "⍪",
+		doc:    "catenate first",
+		Domain: Dyadic(nil),
+		fn:     catenateFirst,
+	})
+	register(primitive{
+		symbol: "⍪",
+		doc:    "table",
+		Domain: Monadic(nil),
+		fn:     table,
+	})
 }
 
 // ravel returns a vector from all elements of R.
@@ -360,4 +372,31 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 		apl.IncArrayIndex(dst, shape)
 	}
 	return res, nil
+}
+
+func catenateFirst(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	if _, ok := R.(apl.Axis); ok == true {
+		return catenate(a, L, R)
+	}
+	return catenate(a, L, apl.Axis{A: apl.Index(a.Origin), R: R})
+}
+
+func table(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		return apl.GeneralArray{Dims: []int{1, 1}, Values: []apl.Value{R}}, nil
+	}
+	rs := ar.Shape()
+
+	prod := 1
+	for _, n := range rs[1:] {
+		prod *= n
+	}
+	shape := []int{rs[0], prod}
+
+	if rs, ok := ar.(apl.Reshaper); ok == false {
+		return nil, fmt.Errorf("cannot reshape %T", R)
+	} else {
+		return rs.Reshape(shape), nil
+	}
 }

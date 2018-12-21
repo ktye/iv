@@ -298,6 +298,14 @@ var testCases = []struct {
 	{"'FOR',[.5]'AXE'", "F O R\nA X E", nil},
 	{"'FOR',[1.1]'AXE'", "F A\nO X\nR E", nil},
 
+	{"⍝ Table, catenate first", "", nil},
+	{"⍪0", "0", nil},
+	{"⍴⍪0", "1 1", nil},
+	{"⍪⍳4", "1\n2\n3\n4", nil},
+	{"⍪2 2⍴⍳4", "1 2\n3 4", nil},
+	{"⍪2 2 2⍴⍳8", "1 2 3 4\n5 6 7 8", nil},
+	{"10 20⍪2 2⍴⍳4", "10 20\n1 2\n3 4", nil},
+
 	{"⍝ Decode", "", nil},
 	{"3⊥1 2 1", "16", nil},
 	{"3⊥4 3 2 1", "142", nil},
