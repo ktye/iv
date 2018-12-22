@@ -11,6 +11,7 @@ import (
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
+	aplstrings "github.com/ktye/iv/apl/strings"
 )
 
 //go:generate go run gen.go
@@ -585,6 +586,11 @@ var testCases = []struct {
 	{"⎕IO←0⋄⍴1 0 2⍉3 2 4⍴⍳24", "2 3 4", nil},
 	{"A←3 3⍴⍳9⋄(1 1⍉A)←10 20 30⋄A", "10 2 3\n4 20 6\n7 8 30", nil},
 
+	{"⍝ Enclose, string catenation, join strings, newline", "", nil},
+	{`⊂'alpha'`, "alpha", nil},
+	{`"+"⊂'alpha'`, "a+l+p+h+a", nil},
+	{`⎕NL⊂"alpha" "beta" "gamma"`, "alpha\nbeta\ngamma", nil},
+
 	{"⍝ Domino, solve linear system", "", nil},
 	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", format5g},
 	{"(1 ¯2 0)⌹3 3⍴3 2 ¯1 2 ¯2 4 ¯1 .5 ¯1", "1\n¯2\n¯2", format5g},
@@ -820,8 +826,6 @@ var testCases = []struct {
 	{"(3+*)4", "57.598", format5g}, // Agh fork
 	//{"(⍳(/∘⊢)⍳)3", "1 2 2 3 3 3", nil}, // The hybrid token does not parse.
 
-	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", format5g},
-
 	{"⍝ π", "", nil},
 	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", format5g},
 	{"4×-/÷¯1+2×⍳100", "3.1316", format5g},
@@ -829,6 +833,10 @@ var testCases = []struct {
 
 	{"⍝ Conways game of life", "", nil},
 	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", nil},
+
+	{"⍝ Go interface: package strings", "", nil},
+	{`u←strings→toupper ⋄ u "alpha"`, "ALPHA", nil},
+	{`";" strings→join "alpha" "beta" `, "alpha;beta", nil},
 
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", nil},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
@@ -887,6 +895,7 @@ func TestApl(t *testing.T) {
 		numbers.Register(a)
 		Register(a)
 		operators.Register(a)
+		aplstrings.Register(a)
 
 		// Set numeric formats.
 		if tc.formats != nil {

@@ -290,13 +290,18 @@ func (s *Scanner) scanString(quoteChar rune) (Token, error) {
 
 // An identifier may start with _ or a unicode letter.
 // Later characters may also be digits.
+// A → may be present within an identifier.
 func (s *Scanner) scanIdentifier() (Token, error) {
 	var buf strings.Builder
 	first := true
+	arrow := false
 	for {
 		r := s.nextRune()
 		if AllowedInVarname(r, first) {
 			buf.WriteRune(r)
+		} else if r == '→' && arrow == false {
+			buf.WriteRune(r)
+			arrow = true
 		} else {
 			if r != -1 {
 				s.unreadRune()

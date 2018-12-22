@@ -2,6 +2,7 @@ package apl
 
 import (
 	"fmt"
+	"reflect"
 	"unicode/utf8"
 )
 
@@ -42,4 +43,21 @@ func (a *Apl) registerSymbol(s string) {
 	if r, w := utf8.DecodeRuneInString(s); w == len(s) {
 		a.symbols[r] = s
 	}
+}
+
+func (a *Apl) RegisterPackage(name string, m map[string]Value) {
+	a.pkg[name] = &env{parent: nil, vars: m}
+}
+
+func (a *Apl) RegisterImport(t reflect.Type, f ImportFunc) {
+	a.importers[t] = f
+}
+
+type ImportFunc func(reflect.Value) Value
+
+func (a *Apl) Import(v reflect.Value) Value {
+	if f, ok := a.importers[v.Type()]; ok {
+		return f(v)
+	}
+	return nil
 }

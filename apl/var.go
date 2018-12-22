@@ -73,6 +73,9 @@ func (a *Apl) AssignEnv(name string, v Value, env *env) error {
 // It returns nil, if the variable does not exist.
 // Variables are lexically scoped.
 func (a *Apl) Lookup(name string) Value {
+	if idx := strings.Contains(name, "→"); idx {
+		return a.packageVar(name)
+	}
 	v, _ := a.LookupEnv(name)
 	return v
 }
@@ -82,6 +85,9 @@ func (a *Apl) Lookup(name string) Value {
 func (a *Apl) LookupEnv(name string) (Value, *env) {
 	if name == "⎕IO" {
 		return Index(a.Origin), nil
+	}
+	if idx := strings.Contains(name, "→"); idx {
+		return a.packageVar(name), nil
 	}
 
 	e := a.env
@@ -96,6 +102,20 @@ func (a *Apl) LookupEnv(name string) (Value, *env) {
 		e = e.parent
 	}
 	return nil, nil
+}
+
+func (a *Apl) packageVar(name string) Value {
+	idx := strings.Index(name, "→")
+	if idx == -1 {
+		return nil
+	}
+	pkgname := name[:idx]
+	varname := name[idx+len("→"):]
+	pkg, ok := a.pkg[pkgname]
+	if ok == false {
+		return nil
+	}
+	return pkg.vars[varname]
 }
 
 // NumVar contains the identifier to a value.
@@ -150,6 +170,9 @@ func (f fnVar) Call(a *Apl, l, r Value) (Value, error) {
 func isVarname(s string) (ok, isfunc bool) {
 	if s == "" {
 		return false, false
+	}
+	if n := strings.Index(s, "→"); n != -1 {
+		s = s[n+len("→"):]
 	}
 	upper := false
 	for i, r := range s {

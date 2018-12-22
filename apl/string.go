@@ -1,5 +1,7 @@
 package apl
 
+import "reflect"
+
 type String string
 
 // String formats s with %s by default.
@@ -19,4 +21,8 @@ func (s String) Less(r Value) (Bool, bool) {
 		return false, false
 	}
 	return s < b, true
+}
+
+func (s String) Export() reflect.Value {
+	return reflect.ValueOf(string(s))
 }
