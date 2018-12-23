@@ -16,7 +16,7 @@ func TestParse(t *testing.T) {
 		{"¯2", Integer(-2)},
 		{"¯2.0", Float(-2)},
 		{"3J¯2.0", Complex(complex(3, -2))},
-		{"5@90", Complex(complex(0, 5))},
+		{"5a90", Complex(complex(0, 5))},
 		{"3.12E¯2", Float(0.0312)},
 		{".5", Float(0.5)},
 		{"¯.3", Float(-0.3)},

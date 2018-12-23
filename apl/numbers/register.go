@@ -32,6 +32,11 @@ func newTower() apl.Tower {
 		Parse:  ParseComplex,
 		Uptype: func(n apl.Number) (apl.Number, bool) { return n, false },
 	}
+	m[reflect.TypeOf(Time{})] = apl.Numeric{
+		Class:  3,
+		Parse:  ParseTime,
+		Uptype: func(n apl.Number) (apl.Number, bool) { return n, false },
+	}
 	t := apl.Tower{
 		Numbers: m,
 		FromIndex: func(n int) apl.Number {
