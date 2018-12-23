@@ -28,7 +28,7 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 		if ok == false {
 			return nil, fmt.Errorf("not a number: %T", from)
 		}
-		_, n, err := a.Tower.SameType(src, to)
+		n, _, err := a.Tower.SameType(src, to)
 		if err != nil {
 			return nil, err
 		}

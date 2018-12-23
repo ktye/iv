@@ -28,7 +28,8 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	args := t.NumIn()
 	in := make([]reflect.Value, args)
 	var err error
-	if args == 1 {
+	if args == 0 {
+	} else if args == 1 {
 		in[0], err = export(a, R, t.In(0))
 		if err != nil {
 			return nil, errarg(0, err)
@@ -45,7 +46,7 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	} else if L == nil {
 		ar, ok := R.(apl.Array)
 		if ok == false {
-			return nil, fmt.Errorf("function %s requires %d arguments", f.Name)
+			return nil, fmt.Errorf("function %s requires %d arguments", f.Name, args)
 		}
 		rs := ar.Shape()
 		if len(rs) > 1 {

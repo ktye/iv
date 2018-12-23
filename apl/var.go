@@ -27,6 +27,19 @@ func (a *Apl) Assign(name string, v Value) error {
 
 // AssignEnv assigns a variable in the given environment.
 func (a *Apl) AssignEnv(name string, v Value, env *env) error {
+	if idx := strings.Index(name, "→"); idx != -1 {
+		objname := name[:idx]
+		field := name[idx+len("→"):]
+		ov := a.Lookup(objname)
+		if ov == nil {
+			return fmt.Errorf("variable %s does not exist", objname)
+		} else if o, ok := ov.(Object); ok == false {
+			return fmt.Errorf("variable %s is not an object", objname)
+		} else {
+			return o.Set(a, field, v)
+		}
+	}
+
 	ok, isfunc := isVarname(name)
 	if ok == false {
 		return fmt.Errorf("variable name is not allowed: %s", name)
@@ -73,9 +86,6 @@ func (a *Apl) AssignEnv(name string, v Value, env *env) error {
 // It returns nil, if the variable does not exist.
 // Variables are lexically scoped.
 func (a *Apl) Lookup(name string) Value {
-	if idx := strings.Contains(name, "→"); idx {
-		return a.packageVar(name)
-	}
 	v, _ := a.LookupEnv(name)
 	return v
 }
@@ -86,8 +96,23 @@ func (a *Apl) LookupEnv(name string) (Value, *env) {
 	if name == "⎕IO" {
 		return Index(a.Origin), nil
 	}
-	if idx := strings.Contains(name, "→"); idx {
-		return a.packageVar(name), nil
+
+	if idx := strings.Index(name, "→"); idx != -1 {
+		prefix := name[:idx]
+		if strings.ToLower(prefix) == prefix {
+			return a.packageVar(name), nil
+		} else {
+			field := name[idx+len("→"):]
+			v, e := a.LookupEnv(prefix)
+			if v == nil {
+				return nil, nil
+			}
+			if o, ok := v.(Object); ok == false {
+				return nil, nil
+			} else {
+				return o.Field(a, field), e
+			}
+		}
 	}
 
 	e := a.env
