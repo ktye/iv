@@ -32,7 +32,13 @@ func (a *Apl) AssignEnv(name string, v Value, env *env) error {
 		field := name[idx+len("→"):]
 		ov := a.Lookup(objname)
 		if ov == nil {
-			return fmt.Errorf("variable %s does not exist", objname)
+			// If the object does not exist, create a new dictionary
+			// and assign it.
+			d := new(Dict)
+			if err := d.Set(a, field, v); err != nil {
+				return err
+			}
+			return a.AssignEnv(objname, d, env)
 		} else if o, ok := ov.(Object); ok == false {
 			return fmt.Errorf("variable %s is not an object", objname)
 		} else {

@@ -862,6 +862,9 @@ var testCases = []struct {
 	{"X←testpkg→new 0⋄X→I←55⋄X→inc 0⋄X→I", "56", nil},
 	{"X←testpkg→new 0⋄X→V←'abcd'⋄X→join '+'", "4 a+b+c+d", nil},
 
+	{"⍝ Dictionaries", "", nil},
+	{`D→Alpha←1 2 3⋄D→Beta←"xyz"⋄D`, "Alpha: 1 2 3\nBeta: xyz", nil},
+
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", nil},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
 	{"f←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", nil},        // 01-primes
