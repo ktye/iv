@@ -4,6 +4,7 @@ package numbers
 
 import (
 	"reflect"
+	"time"
 
 	"github.com/ktye/iv/apl"
 )
@@ -28,9 +29,16 @@ func newTower() apl.Tower {
 		Uptype: floatToComplex,
 	}
 	m[reflect.TypeOf(Complex(0))] = apl.Numeric{
-		Class:  2,
-		Parse:  ParseComplex,
-		Uptype: func(n apl.Number) (apl.Number, bool) { return n, false },
+		Class: 2,
+		Parse: ParseComplex,
+		Uptype: func(n apl.Number) (apl.Number, bool) {
+			// Uptype converts a number to seconds, if the imag part is 0
+			if imag(complex128(n.(Complex))) != 0 {
+				return nil, false
+			}
+			d := time.Duration(int64(1e9 * real(complex128(n.(Complex)))))
+			return Time(y0.Add(d)), true
+		},
 	}
 	m[reflect.TypeOf(Time{})] = apl.Numeric{
 		Class:  3,

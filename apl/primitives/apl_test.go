@@ -604,6 +604,25 @@ var testCases = []struct {
 	// B←3 3⍴9?100
 	// 0=⌈/⌈/|B-A+.×B⌹A
 
+	{"⍝ Dates, Times and durations", "", nil},
+	{"2018.12.23", "2018.12.23T00.00.00.000", nil},       // Parse a time
+	{"2018.12.23+12s", "2018.12.23T00.00.12.000", nil},   // Add a duration to a time
+	{"2018.12.24<2018.12.23", "0", nil},                  // Times are comparable
+	{"⌊/3s 2s 10s 4s", "2s", nil},                        // Durations are comparable
+	{"2018.12.23-1s", "2018.12.22T23.59.59.000", nil},    // Substract a duration from a time
+	{"2017.03.01-2017.02.28", "24h0m0s", nil},            // Substract two times returns a duration
+	{"2016.03.01-2016.02.28", "48h0m0s", nil},            // Leap years are covered
+	{"3m-62s", "1m58s", nil},                             // Substract two durations
+	{"-3s", "-3s", nil},                                  // Negate a duration
+	{"×¯3h 0s 2m 2015.01.02", "¯1 0 1 1", nil},           // Signum
+	{"(|¯1s)+|1s", "2s", nil},                            // Absolute value of a duration
+	{"3×1h", "3h0m0s", nil},                              // Uptype numbers to seconds and multiply durations
+	{"1m × ⍳5", "1m0s 2m0s 3m0s 4m0s 5m0s", nil},         // Generate a duration vector
+	{"⍴⍪2018.12.23 + 1h×(¯1+⍳24)", "24 1", nil},          // Table with all starting hours in a day
+	{"4m×42.195", "2h48m46.8s", nil},                     //
+	{"⌈2018.12.23+3.5s", "2018.12.23T00.00.04.000", nil}, // Ceil rounds to seconds
+	{"⌊3h÷42.195", "4m15s", nil},                         // Floor truncates seconds.
+
 	{"⍝ Basic operators.", "", nil},
 	{"+/1 2 3", "6", nil},                            // plus reduce
 	{"1 2 3 +.× 4 3 2", "16", nil},                   // scalar product
