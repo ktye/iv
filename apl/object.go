@@ -21,6 +21,10 @@ type Object interface {
 	Set(*Apl, string, Value) error
 }
 
+// TODO
+//	- delete keys
+//	- set key order
+//		e.g. by indexing: D←D[2 1 3]
 type Dict struct {
 	keys []string
 	m    map[string]Value
