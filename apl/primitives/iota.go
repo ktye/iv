@@ -266,8 +266,14 @@ func isEqual(a *apl.Apl, x, y apl.Value) bool {
 	if isxnum == false || isynum == false {
 		return false
 	}
-	if xn, yn, err := a.Tower.SameType(xn.(apl.Number), yn.(apl.Number)); err == nil && xn == yn {
-		return true
+	if xn, yn, err := a.Tower.SameType(xn.(apl.Number), yn.(apl.Number)); err == nil {
+		if eq, ok := xn.(equaler); ok {
+			if iseq, ok := eq.Equals(yn); ok {
+				return bool(iseq)
+			}
+		} else {
+			return xn == yn
+		}
 	}
 	return false
 }

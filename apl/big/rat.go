@@ -1,6 +1,7 @@
 package big
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
@@ -17,11 +18,24 @@ type Rat struct {
 }
 
 func (r Rat) String(a *apl.Apl) string {
-	s := strings.Replace(r.Rat.String(), "¯", "-", -1)
-	if strings.HasSuffix(s, "/1") {
-		return s[:len(s)-2]
+	format, minus := getformat(a, r, "")
+	if format == "" {
+		s := r.Rat.String()
+		if minus == false {
+			s = strings.Replace(s, "¯", "-", -1)
+		}
+		if strings.HasSuffix(s, "/1") {
+			return s[:len(s)-2]
+		}
+		return strings.Replace(s, "/", "r", 1)
+	} else {
+		n, _ := r.Rat.Float64()
+		s := fmt.Sprintf(format, n)
+		if minus == false {
+			s = strings.Replace(s, "-", "¯", -1)
+		}
+		return s
 	}
-	return strings.Replace(s, "/", "r", 1)
 }
 
 func (r Rat) ToIndex() (int, bool) {

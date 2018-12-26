@@ -240,6 +240,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 				return err
 			}
 		}
+
 		// If L has no zero lead, numbers exceeding the representation is incomplete.
 		zerold, err := eq(a, rad[0], apl.Index(0))
 		if err != nil {

@@ -340,6 +340,12 @@ func abs2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	if ok == false {
 		return nil, false
 	}
+
+	L, x, err = a.Tower.SameType(L.(apl.Number), x.(apl.Number))
+	if err != nil {
+		return nil, false
+	}
+
 	x, ok = mul2(a, L, x)
 	if ok == false {
 		return nil, false

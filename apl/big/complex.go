@@ -73,12 +73,17 @@ func (c Complex) ToIndex() (int, bool) {
 
 func floatToComplex(f apl.Number) (apl.Number, bool) {
 	z := f.(Float).cpy()
-	return Complex{z, z.SetInt64(0)}, false
+	return Complex{z, new(big.Float)}, true
 }
 
 func (c Complex) cpy() Complex {
 	re, im := new(big.Float), new(big.Float)
 	return Complex{re.Copy(c.re), im.Copy(c.im)}
+}
+
+func (c Complex) Equals(R apl.Value) (apl.Bool, bool) {
+	z := R.(Complex)
+	return apl.Bool(c.re.Cmp(z.re) == 0 && c.im.Cmp(z.im) == 0), true
 }
 
 func (c Complex) Add() (apl.Value, bool) {
@@ -242,7 +247,34 @@ func (c Complex) abs() *big.Float {
 	return y
 }
 
-// TODO Floor, Ceil.
+func (c Complex) Floor() (apl.Value, bool) {
+	a, b := Float{c.re}, Float{c.im}
+	fa, _ := a.Floor()
+	fb, _ := b.Floor()
+	afa, _ := a.Sub2(fa)
+	bfb, _ := b.Sub2(fb)
+	sum, _ := afa.(Float).Add2(bfb)
+	one := new(big.Float).SetInt64(1)
+	isless, _ := sum.(Float).Less(Float{one})
+	if isless {
+		return Complex{fa.(Float).Float, fb.(Float).Float}, true
+	}
+	isless, _ = afa.(Float).Less(bfb)
+	if isless {
+		return Complex{fa.(Float).Float, one.Add(one, fb.(Float).Float)}, true
+	}
+	return Complex{one.Add(one, fa.(Float).Float), fb.(Float).Float}, true
+}
+
+func (c Complex) Ceil() (apl.Value, bool) {
+	z, _ := c.Sub()
+	f, ok := z.(Complex).Floor()
+	if ok == false {
+		return nil, false
+	}
+	z, _ = f.(Complex).Sub()
+	return z, true
+}
 
 // TODO port sin.go asin.go from ivy.
 

@@ -18,6 +18,9 @@ type Float struct {
 func (f Float) String(a *apl.Apl) string {
 	format, minus := getformat(a, f, "%v")
 	s := fmt.Sprintf(format, f.Float)
+	if s == "-0" {
+		s = "0"
+	}
 	if minus == false {
 		s = strings.Replace(s, "-", "¯", -1)
 	}
@@ -67,7 +70,8 @@ func (f Float) Add2(R apl.Value) (apl.Value, bool) {
 }
 
 func (f Float) Sub() (apl.Value, bool) {
-	return Float{f.Float.Neg(f.Float)}, true
+	z := f.cpy()
+	return Float{z.Neg(f.Float)}, true
 }
 func (f Float) Sub2(R apl.Value) (apl.Value, bool) {
 	z := f.cpy()
