@@ -41,8 +41,6 @@ func main() {
 	flag.IntVar(&fontsize, "fontsize", fontsize, "size of built-in font")
 	flag.BoolVar(&quiet, "quiet", false, "dont show welcome message")
 	flag.BoolVar(&extra, "extra", true, "register all packages in aplextra")
-	flag.BoolVar(&bignum, "big", false, "use big numbers int and rational")
-	flag.UintVar(&prec, "prec", 0, "use multi precision floats and complex")
 	flag.Parse()
 
 	if bignum && prec != 0 {
@@ -51,13 +49,12 @@ func main() {
 
 	// Start APL.
 	a := apl.New(nil)
-	if bignum {
-		big.SetBigTower(a)
-	} else if prec > 0 {
-		big.SetPreciseTower(a, prec)
-	} else {
-		numbers.Register(a)
-	}
+	numbers.Register(a)
+	big.Register(a)
+	primitives.Register(a)
+	operators.Register(a)
+	aplstrings.Register(a)
+
 	/* TODO
 	if extra {
 		aplextra.RegisterAll(a)
@@ -66,9 +63,6 @@ func main() {
 		operators.Register(a)
 	}
 	*/
-	primitives.Register(a)
-	operators.Register(a)
-	aplstrings.Register(a)
 
 	// Build the gui.
 	registerFont(fontsize)

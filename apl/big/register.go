@@ -1,11 +1,20 @@
 package big
 
 import (
+	"fmt"
 	"math/big"
 	"reflect"
 
 	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/numbers"
 )
+
+func Register(a *apl.Apl) {
+	pkg := map[string]apl.Value{
+		"set": settower{},
+	}
+	a.RegisterPackage("big", pkg)
+}
 
 // SetBigTower sets the numerical tower to Int->Rat.
 func SetBigTower(a *apl.Apl) {
@@ -53,6 +62,31 @@ func SetPreciseTower(a *apl.Apl, prec uint) {
 	if err := a.SetTower(t); err != nil {
 		panic(err)
 	}
+}
+
+type settower struct{}
+
+func (s settower) String(a *apl.Apl) string { return "set" }
+
+func (_ settower) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	n, ok := R.(apl.Number)
+	if ok == false {
+		return nil, fmt.Errorf("set needs a number (0, 1, 256...)")
+	}
+	idx, ok := n.ToIndex()
+	if ok == false {
+		return nil, fmt.Errorf("set needs an integer")
+	}
+	if idx < 0 {
+		return nil, fmt.Errorf("set: precision must be positive")
+	} else if idx == 0 {
+		numbers.Register(a)
+	} else if idx == 1 {
+		SetBigTower(a)
+	} else {
+		SetPreciseTower(a, uint(idx))
+	}
+	return R, nil
 }
 
 func getformat(a *apl.Apl, num apl.Number, def string) (string, bool) {
