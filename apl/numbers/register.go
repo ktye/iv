@@ -3,6 +3,7 @@
 package numbers
 
 import (
+	"fmt"
 	"reflect"
 	"time"
 
@@ -14,6 +15,11 @@ func Register(a *apl.Apl) {
 	if err := a.SetTower(newTower()); err != nil {
 		panic(err)
 	}
+
+	pkg := map[string]apl.Value{
+		"fmt": setformat{},
+	}
+	a.RegisterPackage("numbers", pkg)
 }
 
 func newTower() apl.Tower {
@@ -52,4 +58,30 @@ func newTower() apl.Tower {
 		},
 	}
 	return t
+}
+
+type setformat struct{}
+
+func (s setformat) String(a *apl.Apl) string { return "fmt" }
+
+func (_ setformat) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	if L == nil {
+		return nil, fmt.Errorf("fmt must be called dyadically")
+	}
+	n, ok := L.(apl.Number)
+	if ok == false {
+		return nil, fmt.Errorf("fmt: left argument must be a number")
+	}
+	s, ok := R.(apl.String)
+	if ok == false {
+		return nil, fmt.Errorf("fmt: right argument must be a string")
+	}
+	t := reflect.TypeOf(n)
+	num, ok := a.Tower.Numbers[t]
+	if ok == false {
+		return nil, fmt.Errorf("fmt: %T is not a member of the current tower", n)
+	}
+	num.Format = string(s)
+	a.Tower.Numbers[t] = num
+	return apl.String(fmt.Sprintf("%T: %q\n", n, s)), nil
 }
