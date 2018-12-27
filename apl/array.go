@@ -65,11 +65,16 @@ func (ar array) String(a *Apl) string {
 // Arrays can be implemented externally.
 type Array interface {
 	String(*Apl) string
-	Eval(*Apl) (Value, error)
 	At(int) (Value, error)
 	Shape() []int
-	//ApplyMonadic(*Apl, PrimitiveHandler) (Value, error)
-	//ApplyDyadic(*Apl, Value, bool, PrimitiveHandler) (Value, error)
+	Size() int
+}
+
+// Uniform is an array of a single type.
+// Zero returns the zero element of the type.
+type Uniform interface {
+	Array
+	Zero() interface{}
 }
 
 // Reshaper is an array that can reshape itself.
@@ -231,10 +236,6 @@ type GeneralArray struct {
 	Dims   []int
 }
 
-func (v GeneralArray) Eval(a *Apl) (Value, error) {
-	return v, nil
-}
-
 func (v GeneralArray) String(a *Apl) string {
 	return ArrayString(a, v)
 }
@@ -258,6 +259,10 @@ func (v GeneralArray) Shape() []int {
 	return v.Dims
 }
 
+func (v GeneralArray) Size() int {
+	return len(v.Values)
+}
+
 func (v GeneralArray) Reshape(shape []int) Value {
 	res := GeneralArray{Dims: shape}
 	res.Values = make([]Value, ArraySize(res))
@@ -278,6 +283,7 @@ func (e EmptyArray) String(a *Apl) string       { return "" }
 func (e EmptyArray) Eval(a *Apl) (Value, error) { return e, nil }
 func (e EmptyArray) At(i int) (Value, error)    { return nil, fmt.Errorf("index out of range") }
 func (e EmptyArray) Shape() []int               { return nil }
+func (e EmptyArray) Size() int                  { return 0 }
 func (e EmptyArray) Reshape(s []int) Value {
 	if len(s) == 0 {
 		return e
@@ -343,15 +349,15 @@ func (ar IndexArray) String(a *Apl) string {
 	return ArrayString(a, ar)
 }
 
-func (ar IndexArray) Eval(a *Apl) (Value, error) {
-	return ar, nil
-}
-
 func (ar IndexArray) At(i int) (Value, error) {
 	if i < 0 || i >= len(ar.Ints) {
 		return nil, fmt.Errorf("index exceeds array dimensions")
 	}
 	return Index(ar.Ints[i]), nil
+}
+
+func (ar IndexArray) Size() int {
+	return len(ar.Ints)
 }
 
 func (ar IndexArray) Set(i int, v Value) error {
