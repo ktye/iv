@@ -12,4 +12,3 @@
 - [cmd/apl](cmd/apl): APL interpreter as a command line program
 - [cmd/aplui](cmd/aplui): APL gui application
 - [cmd/iv](cmd/iv): iv command line application of the stream processor
-- [web/server.go](web): APL embedded into a web application with editor, symbol keyboard and image output
