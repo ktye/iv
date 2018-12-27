@@ -101,6 +101,9 @@ var testCases = []struct {
 	{"⎕IO", "1", 0},
 	{"⎕IO←0 ⋄ ⎕IO", "0", 0},
 
+	{"⍝ Type, typeof.", "", 0},
+	{"⌶'a'", "apl.String", 0},
+
 	{"⍝ Bracket indexing.", "", 0},
 	{"A←⍳6 ⋄ A[1]", "1", 0},
 	{"A←2 3⍴⍳6 ⋄ A[1;] ⋄ ⍴A[1;]", "1 2 3\n3", 0},
