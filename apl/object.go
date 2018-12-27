@@ -17,6 +17,7 @@ import (
 // It is created, if the object does not exist.
 // Another implementation is xgo.Value.
 type Object interface {
+	Fields() []string
 	Field(*Apl, string) Value
 	Set(*Apl, string, Value) error
 }
@@ -24,10 +25,15 @@ type Object interface {
 // TODO
 //	- delete keys
 //	- set key order
-//		e.g. by indexing: D←D[2 1 3]
+//		e.g. by indexing: D←D[`key1`key2]
 type Dict struct {
 	keys []string
 	m    map[string]Value
+}
+
+// Fields returns the keys of a dictionary.
+func (d *Dict) Fields() []string {
+	return d.keys
 }
 
 // Field returns the value for the key.

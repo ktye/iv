@@ -19,6 +19,23 @@ func (v Value) String(a *apl.Apl) string {
 	return fmt.Sprintf("%v:%v", reflect.Value(v).Type(), reflect.Value(v))
 }
 
+// Fields returns the field names, if the value is a struct.
+// It does not return the method names.
+// It returns nil, if the Value is not a struct.
+func (v Value) Fields() []string {
+	val := reflect.Value(v)
+	if val.Kind() != reflect.Struct {
+		return nil
+	}
+	t := val.Type()
+	n := t.NumField()
+	res := make([]string, n)
+	for i := 0; i < n; i++ {
+		res[i] = t.Field(i).Name
+	}
+	return res
+}
+
 // Field returns the value of a field or a method with the given name.
 func (v Value) Field(a *apl.Apl, name string) apl.Value {
 	val := reflect.Value(v)

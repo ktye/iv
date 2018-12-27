@@ -16,6 +16,12 @@ func init() {
 	})
 	register(primitive{
 		symbol: "⍳",
+		doc:    "fields, field names",
+		Domain: Monadic(IsObject(nil)),
+		fn:     fieldnames,
+	})
+	register(primitive{
+		symbol: "⍳",
 		doc: `index of, first occurrence of L in items of R
 If an item is not found, the value is ⍴L+⎕IO.
 If an item recurs: the value is the index of the first occurence`,
@@ -59,6 +65,18 @@ func interval(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		ar.Ints[i] = a.Origin + i
 	}
 	return ar, nil
+}
+
+// fieldnames: R: object
+func fieldnames(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	obj := R.(apl.Object)
+	fields := obj.Fields()
+	res := apl.GeneralArray{Dims: []int{len(fields)}}
+	res.Values = make([]apl.Value, len(fields))
+	for i := range res.Values {
+		res.Values[i] = apl.String(fields[i])
+	}
+	return res, nil
 }
 
 // indexof: L: vector, R: array

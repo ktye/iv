@@ -870,6 +870,7 @@ var testCases = []struct {
 
 	{"⍝ Dictionaries", "", 0},
 	{`D→Alpha←1 2 3⋄D→Beta←"xyz"⋄D`, "Alpha: 1 2 3\nBeta: xyz", 0},
+	{`D→A←1 2 3⋄D→B←"xyz"⋄⍳D`, "A B", 0},
 
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", 0},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
