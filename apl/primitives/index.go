@@ -18,6 +18,12 @@ func init() {
 		fn:     index,
 		sel:    indexSelection,
 	})
+	register(primitive{
+		symbol: "⌷",
+		doc:    "object index, []",
+		Domain: Dyadic(Split(indexSpec{}, IsObject(nil))),
+		fn:     objindex,
+	})
 }
 
 // indexSpec is the domain type for an index specification.
@@ -158,4 +164,21 @@ func spec2ints(a *apl.Apl, spec apl.IdxSpec, shape []int) ([][]int, error) {
 		}
 	}
 	return idx, nil
+}
+
+// objindex returns a dictionary with only the given keys.
+// Keys may be indexed by integers, or strings.
+func objindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	/*
+		spec := L.(apl.IdxSpec)
+		obj := R.(apl.Object)
+
+		keys := obj.Fields()
+		if len(spec) != 1 {
+			return nil, fmt.Errorf("object index: index spec must be a single scalar or vector")
+		}
+		toidx := ToIndexArray(nil)
+		tostr := ToStringArray(nil)
+	*/
+	return nil, fmt.Errorf("TODO objindex")
 }

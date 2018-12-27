@@ -2,6 +2,7 @@ package apl
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -23,7 +24,7 @@ func (a *Apl) isScalar(v Value) bool {
 	return true
 }
 
-// array evaluates to a EmptyArray, a single Value or a GeneralArray.
+// array evaluates to a single Value or an Array.
 type array []expr
 
 func (ar array) Eval(a *Apl) (Value, error) {
@@ -33,6 +34,8 @@ func (ar array) Eval(a *Apl) (Value, error) {
 		return ar[0].Eval(a)
 	}
 
+	uni := true
+	var t reflect.Type
 	v := make([]Value, len(ar))
 	for i, x := range ar {
 		e, err := x.Eval(a)
@@ -42,7 +45,30 @@ func (ar array) Eval(a *Apl) (Value, error) {
 		if a.isScalar(e) == false {
 			return nil, fmt.Errorf("vector element must be scalar: %T", e)
 		}
+		if i == 0 {
+			t = reflect.TypeOf(e)
+		} else if uni {
+			if reflect.TypeOf(e) != t {
+				uni = false
+			}
+		}
 		v[i] = e
+	}
+	if uni {
+		switch t {
+		case reflect.TypeOf(String("")):
+			return makeStringArray(v), nil
+		case reflect.TypeOf(Bool(false)):
+			return makeBoolArray(v), nil
+		case reflect.TypeOf(Index(0)):
+			return makeIndexArray(v), nil
+		default:
+			if mk := a.Tower.Uniform; mk != nil {
+				if u, ok := mk(v); ok {
+					return u, nil
+				}
+			}
+		}
 	}
 	return GeneralArray{Values: v, Dims: []int{len(ar)}}, nil
 }
@@ -74,7 +100,7 @@ type Array interface {
 // Zero returns the zero element of the type.
 type Uniform interface {
 	Array
-	Zero() interface{}
+	Zero() Value
 }
 
 // Reshaper is an array that can reshape itself.
@@ -335,12 +361,16 @@ func (ar IndexArray) At(i int) (Value, error) {
 	return Index(ar.Ints[i]), nil
 }
 
-func (ar IndexArray) Zero() interface{} {
-	return int(0)
+func (ar IndexArray) Zero() Value {
+	return Index(0)
 }
 
 func (ar IndexArray) Size() int {
 	return len(ar.Ints)
+}
+
+func (ar IndexArray) Shape() []int {
+	return ar.Dims
 }
 
 func (ar IndexArray) Set(i int, v Value) error {
@@ -360,8 +390,15 @@ func (ar IndexArray) Set(i int, v Value) error {
 	return fmt.Errorf("cannot set %T to IndexArray", v)
 }
 
-func (ar IndexArray) Shape() []int {
-	return ar.Dims
+func makeIndexArray(v []Value) IndexArray {
+	b := make([]int, len(v))
+	for i, e := range v {
+		b[i] = int(e.(Index))
+	}
+	return IndexArray{
+		Dims: []int{len(v)},
+		Ints: b,
+	}
 }
 
 func (ar IndexArray) Reshape(shape []int) Value {

@@ -149,9 +149,10 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 			return nil
 		}
 		if f == nil {
-			if err := ar.Set(i, v); err != nil {
-				upgrade()
+			if err := ar.Set(i, v); err == nil {
+				return nil
 			}
+			upgrade()
 			return ar.Set(i, v)
 		}
 		u, err := ar.At(i)
@@ -162,9 +163,10 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		if err != nil {
 			return err
 		}
-		if err := ar.Set(i, v); err != nil {
-			upgrade()
+		if err := ar.Set(i, v); err == nil {
+			return nil
 		}
+		upgrade()
 		return ar.Set(i, v)
 	}
 

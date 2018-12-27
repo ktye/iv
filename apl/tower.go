@@ -8,6 +8,7 @@ import (
 type Tower struct {
 	Numbers   map[reflect.Type]Numeric
 	FromIndex func(int) Number
+	Uniform   func([]Value) (Value, bool)
 	idx       []*Numeric
 }
 

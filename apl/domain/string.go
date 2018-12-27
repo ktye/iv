@@ -27,8 +27,8 @@ func (s stringtype) String(a *apl.Apl) string {
 	return "string" + " " + s.child.String(a)
 }
 
-// IsStrings accepts uniform.Strings
-func IsStrings(child SingleDomain) SingleDomain {
+// IsStringArray accepts uniform.Strings
+func IsStringArray(child SingleDomain) SingleDomain {
 	return stringstype{child, false}
 }
 
@@ -38,14 +38,14 @@ type stringstype struct {
 }
 
 func (s stringstype) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
-	if _, ok := V.(apl.Strings); ok {
+	if _, ok := V.(apl.StringArray); ok {
 		return propagate(a, V, s.child)
 	} else {
 		if s.convert == false {
 			return V, false
 		}
 		if str, ok := V.(apl.String); ok {
-			return propagate(a, apl.Strings{
+			return propagate(a, apl.StringArray{
 				Dims:    []int{1},
 				Strings: []string{string(str)},
 			}, s.child)
@@ -61,7 +61,7 @@ func (s stringstype) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 					return V, false
 				}
 			}
-			return propagate(a, apl.Strings{
+			return propagate(a, apl.StringArray{
 				Dims:    apl.CopyShape(ar),
 				Strings: str,
 			}, s.child)

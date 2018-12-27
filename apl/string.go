@@ -30,37 +30,59 @@ func (s String) Export() reflect.Value {
 	return reflect.ValueOf(string(s))
 }
 
-// Strings is a uniform array of strings.
-type Strings struct {
+// StringArray is a uniform array of strings.
+type StringArray struct {
 	Dims    []int
 	Strings []string
 }
 
-func (s Strings) String(a *Apl) string {
+func (s StringArray) String(a *Apl) string {
 	return ArrayString(a, s)
 }
 
-func (s Strings) At(i int) (Value, error) {
+func (s StringArray) At(i int) (Value, error) {
 	if i < 0 || i >= len(s.Strings) {
 		return nil, fmt.Errorf("index out of range")
 	}
 	return String(s.Strings[i]), nil
 }
 
-func (s Strings) Shape() []int {
+func (s StringArray) Shape() []int {
 	return s.Dims
 }
 
-func (s Strings) Size() int {
+func (s StringArray) Size() int {
 	return len(s.Strings)
 }
 
-func (s Strings) Zero() interface{} {
-	return ""
+func (s StringArray) Zero() Value {
+	return String("")
 }
 
-func (s Strings) Reshape(shape []int) Value {
-	res := Strings{
+func (s StringArray) Set(i int, v Value) error {
+	if i < 0 || i > len(s.Strings) {
+		return fmt.Errorf("index out of range")
+	}
+	if c, ok := v.(String); ok {
+		s.Strings[i] = string(c)
+		return nil
+	}
+	return fmt.Errorf("cannot assign %T to StringArray", v)
+}
+
+func makeStringArray(v []Value) StringArray {
+	str := make([]string, len(v))
+	for i, e := range v {
+		str[i] = string(e.(String))
+	}
+	return StringArray{
+		Dims:    []int{len(v)},
+		Strings: str,
+	}
+}
+
+func (s StringArray) Reshape(shape []int) Value {
+	res := StringArray{
 		Dims:    shape,
 		Strings: make([]string, prod(shape)),
 	}

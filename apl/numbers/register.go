@@ -56,8 +56,21 @@ func newTower() apl.Tower {
 		FromIndex: func(n int) apl.Number {
 			return Integer(n)
 		},
+		Uniform: makeUniform,
 	}
 	return t
+}
+
+func makeUniform(v []apl.Value) (apl.Value, bool) {
+	if len(v) == 0 {
+		return nil, false
+	}
+	if t := reflect.TypeOf(v[0]); t == reflect.TypeOf(Float(0.0)) {
+		return makeFloatArray(v), true
+	} else if t == reflect.TypeOf(Complex(0)) {
+		return makeComplexArray(v), true
+	}
+	return nil, false
 }
 
 type setformat struct{}

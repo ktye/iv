@@ -1,6 +1,8 @@
 package apl
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Bool bool
 
@@ -26,37 +28,59 @@ func (i Bool) ToIndex() (int, bool) {
 	return 0, true
 }
 
-// Bools is a uniform array of type bool.
-type Bools struct {
+// BoolArray is a uniform array of type bool.
+type BoolArray struct {
 	Dims  []int
 	Bools []bool
 }
 
-func (b Bools) String(a *Apl) string {
+func (b BoolArray) String(a *Apl) string {
 	return ArrayString(a, b)
 }
 
-func (b Bools) At(i int) (Value, error) {
+func (b BoolArray) At(i int) (Value, error) {
 	if i < 0 || i >= len(b.Bools) {
 		return nil, fmt.Errorf("index out of range")
 	}
 	return Bool(b.Bools[i]), nil
 }
 
-func (b Bools) Shape() []int {
+func (b BoolArray) Shape() []int {
 	return b.Dims
 }
 
-func (b Bools) Size() int {
+func (b BoolArray) Size() int {
 	return len(b.Bools)
 }
 
-func (b Bools) Zero() interface{} {
-	return false
+func (b BoolArray) Zero() Value {
+	return Bool(false)
 }
 
-func (b Bools) Reshape(shape []int) Value {
-	res := Bools{
+func (b BoolArray) Set(i int, v Value) error {
+	if i < 0 || i > len(b.Bools) {
+		return fmt.Errorf("index out of range")
+	}
+	if c, ok := v.(Bool); ok {
+		b.Bools[i] = bool(c)
+		return nil
+	}
+	return fmt.Errorf("cannot assign %T to BoolArray", v)
+}
+
+func makeBoolArray(v []Value) BoolArray {
+	b := make([]bool, len(v))
+	for i, e := range v {
+		b[i] = bool(e.(Bool))
+	}
+	return BoolArray{
+		Dims:  []int{len(v)},
+		Bools: b,
+	}
+}
+
+func (b BoolArray) Reshape(shape []int) Value {
+	res := BoolArray{
 		Dims:  shape,
 		Bools: make([]bool, prod(shape)),
 	}

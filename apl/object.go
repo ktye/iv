@@ -6,12 +6,14 @@ import (
 	"text/tabwriter"
 )
 
-// Object is a compound type that has fields.
+// Object is a compound type that has keys (fields) and values.
 //
 // Fields are accessed by
 //	X←Object→Name
 // and set by assigning to them
 //	Object→Name←X
+//
+// Fieldnames are returned by ⍳Object.
 //
 // Dict is the default object implementation.
 // It is created, if the object does not exist.
@@ -27,22 +29,22 @@ type Object interface {
 //	- set key order
 //		e.g. by indexing: D←D[`key1`key2]
 type Dict struct {
-	keys []string
-	m    map[string]Value
+	K []string
+	M map[string]Value
 }
 
 // Fields returns the keys of a dictionary.
 func (d *Dict) Fields() []string {
-	return d.keys
+	return d.K
 }
 
 // Field returns the value for the key.
 // It returns nil, if the key does not exist.
 func (d *Dict) Field(a *Apl, key string) Value {
-	if d.m == nil {
+	if d.M == nil {
 		return nil
 	}
-	return d.m[key]
+	return d.M[key]
 }
 
 // Set updates the value for the given key, or creates a new one,
@@ -58,21 +60,21 @@ func (d *Dict) Set(a *Apl, key string, v Value) error {
 	} else if ok == false && isfunc == true {
 		return fmt.Errorf("arrays can only be stored in keys starting with a capital letter")
 	}
-	if d.m == nil {
-		d.m = make(map[string]Value)
+	if d.M == nil {
+		d.M = make(map[string]Value)
 	}
-	if _, ok := d.m[key]; ok == false {
-		d.keys = append(d.keys, key)
+	if _, ok := d.M[key]; ok == false {
+		d.K = append(d.K, key)
 	}
-	d.m[key] = v
+	d.M[key] = v
 	return nil
 }
 
 func (d *Dict) String(a *Apl) string {
 	var buf strings.Builder
 	tw := tabwriter.NewWriter(&buf, 1, 0, 1, ' ', 0)
-	for _, k := range d.keys {
-		fmt.Fprintf(tw, "%s:\t%s\n", k, d.m[k].String(a))
+	for _, k := range d.K {
+		fmt.Fprintf(tw, "%s:\t%s\n", k, d.M[k].String(a))
 	}
 	tw.Flush()
 	s := buf.String()
