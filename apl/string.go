@@ -1,6 +1,9 @@
 package apl
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 type String string
 
@@ -25,4 +28,49 @@ func (s String) Less(r Value) (Bool, bool) {
 
 func (s String) Export() reflect.Value {
 	return reflect.ValueOf(string(s))
+}
+
+// Strings is a uniform array of strings.
+type Strings struct {
+	Dims    []int
+	Strings []string
+}
+
+func (s Strings) String(a *Apl) string {
+	return ArrayString(a, s)
+}
+
+func (s Strings) At(i int) (Value, error) {
+	if i < 0 || i >= len(s.Strings) {
+		return nil, fmt.Errorf("index out of range")
+	}
+	return String(s.Strings[i]), nil
+}
+
+func (s Strings) Shape() []int {
+	return s.Dims
+}
+
+func (s Strings) Size() int {
+	return len(s.Strings)
+}
+
+func (s Strings) Zero() interface{} {
+	return ""
+}
+
+func (s Strings) Reshape(shape []int) Value {
+	res := Strings{
+		Dims:    shape,
+		Strings: make([]string, prod(shape)),
+	}
+	k := 0
+	for i := range s.Strings {
+		res.Strings[i] = s.Strings[k]
+		k++
+		if k == len(s.Strings) {
+			k = 0
+		}
+	}
+	return res
 }

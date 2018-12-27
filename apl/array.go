@@ -118,13 +118,16 @@ func MakeArray(prototype Array, shape []int) ArraySetter {
 
 // ArraySize returns the product of the array shape.
 func ArraySize(v Array) int {
-	shape := v.Shape()
+	return prod(v.Shape())
+}
+
+func prod(shape []int) int {
 	if len(shape) == 0 {
 		return 0
 	}
-	n := 1
-	for _, i := range shape {
-		n *= i
+	n := shape[0]
+	for i := 1; i < len(shape); i++ {
+		n *= shape[i]
 	}
 	return n
 }
@@ -296,30 +299,6 @@ func (e EmptyArray) Reshape(s []int) Value {
 	return res
 }
 
-type Bool bool
-
-func (b Bool) String(a *Apl) string {
-	if b {
-		return "1"
-	}
-	return "0"
-}
-
-func (i Bool) Less(v Value) (Bool, bool) {
-	j, ok := v.(Bool)
-	if ok == false {
-		return false, false
-	}
-	return i == false && j == true, true
-}
-
-func (i Bool) ToIndex() (int, bool) {
-	if i {
-		return 1, true
-	}
-	return 0, true
-}
-
 type Index int
 
 func (i Index) String(a *Apl) string {
@@ -356,6 +335,10 @@ func (ar IndexArray) At(i int) (Value, error) {
 	return Index(ar.Ints[i]), nil
 }
 
+func (ar IndexArray) Zero() interface{} {
+	return int(0)
+}
+
 func (ar IndexArray) Size() int {
 	return len(ar.Ints)
 }
@@ -385,10 +368,7 @@ func (ar IndexArray) Reshape(shape []int) Value {
 	if len(ar.Ints) == 0 {
 		return EmptyArray{}
 	}
-	size := 1
-	for _, k := range shape {
-		size *= k
-	}
+	size := prod(shape)
 	rv := IndexArray{
 		Ints: make([]int, size),
 		Dims: shape,
