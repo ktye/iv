@@ -50,5 +50,5 @@ func Register(a *apl.Apl) {
 		"trimspace":      xgo.Function{Name: "TrimSpace", Fn: reflect.ValueOf(strings.TrimSpace)},
 		"trimsuffix":     xgo.Function{Name: "TrimSuffix", Fn: reflect.ValueOf(strings.TrimSuffix)},
 	}
-	a.RegisterPackage("strings", pkg)
+	a.RegisterPackage("s", pkg)
 }

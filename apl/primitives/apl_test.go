@@ -390,7 +390,7 @@ var testCases = []struct {
 	{"2+/[1]4 3⍴⍳12", "5 7 9\n11 13 15\n17 19 21", 0},
 	{"0×/[1]2 3⍴⍳12", "1 1 1\n1 1 1\n1 1 1", 0},
 	{"1+/⍳6", "1 2 3 4 5 6", 0},
-	{`S←0.0 numbers→fmt "%.0f" ⋄ +/1000+/⍳10000`, "45009500500", 0},
+	{`S←0.0 n→f "%.0f" ⋄ +/1000+/⍳10000`, "45009500500", 0},
 
 	{"⍝ Scan, scan first, scan with axis.", "", 0},
 	{`+\1 2 3 4 5`, "1 3 6 10 15", 0},
@@ -633,7 +633,7 @@ var testCases = []struct {
 	{`-\×\+\1 2 3`, "1 ¯2 16", 0},                  // chained monadic operators
 	{"+/+/+/+/1 2 3", "6", 0},
 	{`+.×/2 3 4`, "24", 0},
-	{`S←0.0 numbers→fmt "%.0f"⋄ +.×.*/2 3 4`, "2417851639229258349412352", 0},
+	{`S←0.0 n→f "%.0f"⋄ +.×.*/2 3 4`, "2417851639229258349412352", 0},
 	{`+.*.×/2 3 4`, "24", 0},
 
 	{"⍝ Identify item for reduction over empty array", "", 0},
@@ -823,7 +823,7 @@ var testCases = []struct {
 	{"f←{⍺←3⋄⍺+⍵}⋄ f 4 ⋄ 1 f 4", "7\n5", 0},
 
 	{"⍝ Recursion", "", 0},
-	{`S←0.0 numbers→fmt "%.0f" ⋄ f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10`, "3628800", 0},
+	{`S←0.0 n→f "%.0f" ⋄ f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10`, "3628800", 0},
 	{"S←0{⍺>20:⍺⋄⍵∇⎕←⍺+⍵}1", "1\n2\n3\n5\n8\n13\n21\n34", 0},
 
 	{"⍝ Tail call", "", 0},
@@ -858,8 +858,8 @@ var testCases = []struct {
 	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", 0},
 
 	{"⍝ Go interface: package strings", "", 0},
-	{`u←strings→toupper ⋄ u "alpha"`, "ALPHA", 0},
-	{`";" strings→join "alpha" "beta" `, "alpha;beta", 0},
+	{`u←s→toupper ⋄ u "alpha"`, "ALPHA", 0},
+	{`";" s→join "alpha" "beta" `, "alpha;beta", 0},
 
 	{"⍝ Object, access fields and call methods", "", 0},
 	{"X←testpkg→new 0⋄X→I←55⋄X→inc 0⋄X→I", "56", small},

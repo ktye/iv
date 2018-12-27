@@ -17,9 +17,9 @@ func Register(a *apl.Apl) {
 	}
 
 	pkg := map[string]apl.Value{
-		"fmt": setformat{},
+		"f": setformat{},
 	}
-	a.RegisterPackage("numbers", pkg)
+	a.RegisterPackage("n", pkg)
 }
 
 func newTower() apl.Tower {
