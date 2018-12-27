@@ -23,6 +23,7 @@ func TestScan(t *testing.T) {
 		{"1", []Token{Token{T: Number, S: "1"}}},
 		{"1.23", []Token{Token{T: Number, S: "1.23"}}},
 		{"1J2", []Token{Token{T: Number, S: "1J2"}}},
+		{"`alpha`beta", []Token{Token{T: String, S: "alpha"}, Token{T: String, S: "beta"}}},
 		{"1.23 pkg→name+3", []Token{
 			Token{T: Number, S: "1.23"},
 			Token{T: Identifier, S: "pkg→name"},

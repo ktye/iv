@@ -592,6 +592,9 @@ var testCases = []struct {
 	{`⊂'alpha'`, "alpha", 0},
 	{`"+"⊂'alpha'`, "a+l+p+h+a", 0},
 	{`⎕NL⊂"alpha" "beta" "gamma"`, "alpha\nbeta\ngamma", 0},
+	{"`alpha`beta`gamma", "alpha beta gamma", 0},
+	{"(`alpha`beta`gamma)", "alpha beta gamma", 0},
+	{"`alpha`beta`gamma⋄", "alpha beta gamma", 0},
 
 	{"⍝ Domino, solve linear system", "", 0},
 	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", short},

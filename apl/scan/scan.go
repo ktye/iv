@@ -21,7 +21,7 @@ const (
 	Endl       Type = iota
 	Symbol          // single rune APL symbol
 	Number          // 1 1.23 1.234E12 -1.234 1.234@156
-	String          // "quoted text", "escape "" with double quotes"
+	String          // "quoted text", "escape "" with double quotes" `alpha
 	Chars           // 'rune vector' in single quotes
 	Identifier      // alpha_3
 	LeftParen       // (
@@ -168,7 +168,7 @@ func (s *Scanner) nextToken() (Token, error) {
 			return Token{T: Endl}, nil
 		}
 
-		if r == '"' || r == '\'' {
+		if r == '"' || r == '\'' || r == '`' {
 			return s.scanString(r)
 		}
 
@@ -262,6 +262,23 @@ func (s *Scanner) scanNumber(cmplx bool) (Token, error) {
 // There is currently no way to escape newlines etc.
 func (s *Scanner) scanString(quoteChar rune) (Token, error) {
 	var str strings.Builder
+	if quoteChar == '`' {
+	loop:
+		for {
+			r := s.nextRune()
+			switch r {
+			case '`', '}', ']', ')', ' ', '⋄':
+				s.unreadRune()
+				break loop
+			case -1:
+				break loop
+			default:
+				str.WriteRune(r)
+			}
+		}
+		return Token{T: String, S: str.String()}, nil
+	}
+
 	for {
 		r := s.nextRune()
 		if r == -1 {
