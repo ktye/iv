@@ -8,9 +8,7 @@ import (
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
-	"github.com/ktye/iv/aplextra/draw"
 	"github.com/ktye/iv/aplextra/help"
-	"github.com/ktye/iv/aplextra/image"
 	"github.com/ktye/iv/aplextra/shell"
 	"github.com/ktye/iv/aplextra/stats"
 )
@@ -25,9 +23,7 @@ import (
 func RegisterAll(a *apl.Apl) {
 	primitives.Register(a)
 	operators.Register(a)
-	draw.Register(a)
 	help.Register(a)
-	image.Register(a)
 	shell.Register(a)
 	stats.Register(a)
 }
