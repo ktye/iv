@@ -71,10 +71,9 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 	case reflect.Slice:
 		ar, ok := v.(apl.Array)
 		if ok == false {
-			return zero, fmt.Errorf("expected slice")
+			return zero, fmt.Errorf("expected slice: %T", v)
 		}
 		et := t.Elem()
-		//fmt.Println(t, et)
 		n := apl.ArraySize(ar)
 		s := reflect.MakeSlice(t, n, n)
 		for i := 0; i < n; i++ {

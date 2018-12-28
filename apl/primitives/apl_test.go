@@ -867,13 +867,17 @@ var testCases = []struct {
 	{`u←s→toupper ⋄ u "alpha"`, "ALPHA", 0},
 	{`";" s→join "alpha" "beta" `, "alpha;beta", 0},
 
-	{"⍝ Object, access fields and call methods", "", 0},
-	{"X←testpkg→new 0⋄X→I←55⋄X→inc 0⋄X→I", "56", small},
-	{"X←testpkg→new 0⋄X→V←'abcd'⋄X→join '+'", "4 a+b+c+d", small},
-
 	{"⍝ Dictionaries", "", 0},
-	{`D→Alpha←1 2 3⋄D→Beta←"xyz"⋄D`, "Alpha: 1 2 3\nBeta: xyz", 0},
-	{`D→A←1 2 3⋄D→B←"xyz"⋄⍳D`, "A B", 0},
+	{"D←`alpha#1 2 3⋄D[`alpha]←`xyz⋄D", "alpha: xyz", 0},
+	{"D←`alpha#1⋄D[`alpha`beta]←3 4⋄D", "alpha: 3\nbeta: 4", 0},
+	{"D←`a`b`c#1⋄D⋄#D", "a: 1\nb: 1\nc: 1\na b c", 0},
+	{"D←`a`b`c#1 2 3⋄G←D[`a`c]⋄G", "a: 1\nc: 3", 0},
+
+	{"⍝ Object, xgo example", "", 0},
+	{"X←xgo→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},
+	{"X←xgo→t 0⋄X[`I]←55⋄X[`inc]⍨0⋄X[`I]", "56", small},
+	{"X←xgo→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "4 a+b+c+d", small},
+	{"S←xgo→s 0⋄#[1]S", "sum", 0},
 
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", 0},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
@@ -968,7 +972,7 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 		Register(a)
 		operators.Register(a)
 		aplstrings.Register(a)
-		registerTestPkg(a)
+		xgo.Register(a)
 
 		// Set numeric formats.
 		m := make(map[reflect.Type]string)
@@ -1016,26 +1020,3 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 var rat0, _ = big.ParseRat("0")
 var spaces = regexp.MustCompile(`  *`)
 var newline = regexp.MustCompile(`\n *`)
-
-type TestObject struct {
-	A string
-	I int
-	F float64
-	C complex128
-	V []string
-}
-
-func (t *TestObject) Inc() {
-	t.I++
-}
-
-func (t *TestObject) Join(sep string) (int, string) {
-	s := strings.Join(t.V, sep)
-	return len(t.V), s
-}
-
-func registerTestPkg(a *apl.Apl) {
-	a.RegisterPackage("testpkg", map[string]apl.Value{
-		"new": xgo.New(reflect.TypeOf(TestObject{})),
-	})
-}

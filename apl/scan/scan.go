@@ -267,7 +267,7 @@ func (s *Scanner) scanString(quoteChar rune) (Token, error) {
 		for {
 			r := s.nextRune()
 			switch r {
-			case '`', '}', ']', ')', ' ', '⋄':
+			case '`', '}', ']', ')', ' ', '⋄', '#':
 				s.unreadRune()
 				break loop
 			case -1:

@@ -6,41 +6,44 @@ import (
 	"text/tabwriter"
 )
 
-// Object is a compound type that has keys (fields) and values.
+// Object is a compound type that has keys and values.
 //
-// Fields are accessed by
-//	X←Object→Name
-// and set by assigning to them
-//	Object→Name←X
+// Values are accessed by indexing with keys.
+//	Object[Key]
+// To set a key, use indexed assignment:
+//	Object[Name]←X
+// This also works for vectors
+//	Object[`k1`k2`k3] ← 5 6 7
 //
-// Fieldnames are returned by ⍳Object.
+// Keys are returned by #Object.
+// Number of keys can also be obtained by ⍴Object.
 //
-// Dict is the default object implementation.
-// It is created, if the object does not exist.
-// Another implementation is xgo.Value.
+// Indexing by vector returns a Dict with the specified keys.
+//	Object["key1" "key2"].
+//
+// Method calls (calling a function stored in a key) or a go method
+// for an xgo object cannot be applied directly:
+//	Object[`f] R  ⍝ cannot be parsed
+// Instead, assign it to a function variable, or commute:
+//	f←Object[`f] ⋄ f R
+//      Object[`f]⍨R
 type Object interface {
-	Fields() []string
-	Field(*Apl, string) Value
-	Set(*Apl, string, Value) error
+	Keys() []Value
+	At(*Apl, Value) Value
+	Set(*Apl, Value, Value) error
 }
 
-// TODO
-//	- delete keys
-//	- set key order
-//		e.g. by indexing: D←D[`key1`key2]
+// Dict is a dictionary object.
 type Dict struct {
-	K []string
-	M map[string]Value
+	K []Value
+	M map[Value]Value
 }
 
-// Fields returns the keys of a dictionary.
-func (d *Dict) Fields() []string {
+func (d *Dict) Keys() []Value {
 	return d.K
 }
 
-// Field returns the value for the key.
-// It returns nil, if the key does not exist.
-func (d *Dict) Field(a *Apl, key string) Value {
+func (d *Dict) At(a *Apl, key Value) Value {
 	if d.M == nil {
 		return nil
 	}
@@ -50,18 +53,9 @@ func (d *Dict) Field(a *Apl, key string) Value {
 // Set updates the value for the given key, or creates a new one,
 // if the key does not exist.
 // Keys must be valid variable names.
-func (d *Dict) Set(a *Apl, key string, v Value) error {
-	ok, isfunc := isVarname(key)
-	if ok == false {
-		return fmt.Errorf("not a valid key name: %s", key)
-	}
-	if _, ok := v.(Function); ok && isfunc == false {
-		return fmt.Errorf("function values can only be stored keys starting with a lowercase letter")
-	} else if ok == false && isfunc == true {
-		return fmt.Errorf("arrays can only be stored in keys starting with a capital letter")
-	}
+func (d *Dict) Set(a *Apl, key Value, v Value) error {
 	if d.M == nil {
-		d.M = make(map[string]Value)
+		d.M = make(map[Value]Value)
 	}
 	if _, ok := d.M[key]; ok == false {
 		d.K = append(d.K, key)
@@ -74,7 +68,7 @@ func (d *Dict) String(a *Apl) string {
 	var buf strings.Builder
 	tw := tabwriter.NewWriter(&buf, 1, 0, 1, ' ', 0)
 	for _, k := range d.K {
-		fmt.Fprintf(tw, "%s:\t%s\n", k, d.M[k].String(a))
+		fmt.Fprintf(tw, "%s:\t%s\n", k.String(a), d.M[k].String(a))
 	}
 	tw.Flush()
 	s := buf.String()

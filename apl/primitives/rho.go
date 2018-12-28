@@ -29,6 +29,10 @@ var reshape = primitive{
 
 // Rho1 returns the shape of R.
 func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	if o, ok := R.(apl.Object); ok == true {
+		n := len(o.Keys())
+		return apl.IndexArray{Dims: []int{1}, Ints: []int{n}}, nil
+	}
 	if _, ok := R.(apl.Array); ok == false {
 		return apl.EmptyArray{}, nil
 	}
@@ -53,6 +57,10 @@ func rho2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// L is empty, returns empty.
 	if apl.ArraySize(L.(apl.Array)) == 0 {
 		return apl.EmptyArray{}, nil
+	}
+
+	if _, ok := R.(apl.Object); ok {
+		return nil, fmt.Errorf("cannot reshape %T", R)
 	}
 
 	l := L.(apl.IndexArray)

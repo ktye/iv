@@ -122,6 +122,10 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		}
 	}
 
+	if obj, ok := w.(apl.Object); ok {
+		return assignObject(a, obj, idx, f, R)
+	}
+
 	ar, ok := w.(apl.ArraySetter)
 	if ok == false {
 		return fmt.Errorf("variable %s is no settable array: %T", name, w)
@@ -231,4 +235,42 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		}
 	}
 	return a.AssignEnv(name, ar, env)
+}
+
+// assignObject assigns R to index keys of a object.
+func assignObject(a *apl.Apl, obj apl.Object, idx apl.IndexArray, f apl.Function, R apl.Value) error {
+	if f != nil {
+		return fmt.Errorf("TODO: object: modified indexed assignment")
+	}
+	vectorize := false
+	ar, ok := R.(apl.Array)
+	if ok == true {
+		if len(idx.Ints) > 1 {
+			if len(idx.Ints) == ar.Size() {
+				vectorize = true
+			} else {
+				return fmt.Errorf("assing object: assignment does not conform")
+			}
+		}
+	}
+	keys := obj.Keys()
+	var err error
+	for i := 0; i < len(idx.Ints); i++ {
+		n := idx.Ints[i] - a.Origin
+		if n < 0 || n >= len(keys) {
+			return fmt.Errorf("assign object: index out of range")
+		}
+		k := keys[n]
+		v := R // TODO: copy?
+		if vectorize == true {
+			v, err = ar.At(i)
+			if err != nil {
+				return err
+			}
+		}
+		if err := obj.Set(a, k, v); err != nil {
+			return err
+		}
+	}
+	return nil
 }

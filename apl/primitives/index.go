@@ -23,6 +23,7 @@ func init() {
 		doc:    "object index, []",
 		Domain: Dyadic(Split(indexSpec{}, IsObject(nil))),
 		fn:     objindex,
+		sel:    objSelection,
 	})
 }
 
@@ -90,6 +91,61 @@ func indexSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 	}
 
 	return indexArray(a, spec, ar.Shape())
+}
+
+func objSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+	obj := R.(apl.Object)
+	d, isd := R.(*apl.Dict)
+	spec := L.(apl.IdxSpec)
+	if len(spec) != 1 {
+		return apl.IndexArray{}, fmt.Errorf("object index must be a vector")
+	}
+
+	keys := make(map[apl.Value]int)
+	for i, k := range obj.Keys() {
+		keys[k] = i + a.Origin
+	}
+
+	as, ok := spec[0].(apl.Array)
+	if ok == false {
+		if idx, ok := keys[spec[0]]; ok == false {
+			if isd {
+				// Index-assignment into a non-existing key in a dict, creates a new key.
+				if err := d.Set(a, spec[0], apl.EmptyArray{}); err != nil {
+					return apl.IndexArray{}, err
+				} else {
+					return apl.IndexArray{Dims: []int{1}, Ints: []int{len(keys) + a.Origin}}, nil
+				}
+			} else {
+				return apl.IndexArray{}, fmt.Errorf("key does not exist: %s", spec[0].String(a))
+			}
+		} else {
+			return apl.IndexArray{Dims: []int{1}, Ints: []int{idx}}, nil
+		}
+	}
+
+	ai := apl.IndexArray{Dims: []int{as.Size()}, Ints: make([]int, as.Size())}
+	for i := 0; i < as.Size(); i++ {
+		key, err := as.At(i)
+		if err != nil {
+			return apl.IndexArray{}, err
+		}
+		k, ok := keys[key]
+		if ok == false {
+			if isd {
+				if err := d.Set(a, key, apl.EmptyArray{}); err != nil {
+					return apl.IndexArray{}, err
+				} else {
+					k = len(keys) + a.Origin
+					keys[key] = k
+				}
+			} else {
+				return apl.IndexArray{}, fmt.Errorf("key does not exist: %s", key.String(a))
+			}
+		}
+		ai.Ints[i] = k
+	}
+	return ai, nil
 }
 
 // indexArray returns the indexes within the array A for the given index specification.
@@ -169,16 +225,41 @@ func spec2ints(a *apl.Apl, spec apl.IdxSpec, shape []int) ([][]int, error) {
 // objindex returns a dictionary with only the given keys.
 // Keys may be indexed by integers, or strings.
 func objindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	/*
-		spec := L.(apl.IdxSpec)
-		obj := R.(apl.Object)
+	obj := R.(apl.Object)
+	spec := L.(apl.IdxSpec)
+	if len(spec) != 1 {
+		// TODO: this could be extended to index into an array value.
+		return nil, fmt.Errorf("object index: index spec must be a single scalar or vector")
+	}
 
-		keys := obj.Fields()
-		if len(spec) != 1 {
-			return nil, fmt.Errorf("object index: index spec must be a single scalar or vector")
+	// If the spec is a single value, return the value for the key.
+	sv, ok := spec[0].(apl.Array)
+	if ok == false {
+		v := obj.At(a, spec[0])
+		if v == nil {
+			return nil, fmt.Errorf("key does not exist")
 		}
-		toidx := ToIndexArray(nil)
-		tostr := ToStringArray(nil)
-	*/
-	return nil, fmt.Errorf("TODO objindex")
+		return v, nil
+	}
+
+	// If the spec is a vector, create a dict with these keys.
+	ls := sv.Shape()
+	if len(ls) != 1 {
+		return nil, fmt.Errorf("object index must be a vector")
+	}
+	k := make([]apl.Value, ls[0])
+	m := make(map[apl.Value]apl.Value)
+	for i := 0; i < ls[0]; i++ {
+		key, err := sv.At(i)
+		if err != nil {
+			return nil, err
+		}
+		v := obj.At(a, key)
+		if v == nil {
+			return nil, fmt.Errorf("key does not exist: %s", key.String(a))
+		}
+		k[i] = key // TODO: copy?
+		m[key] = v // TODO: copy?
+	}
+	return &apl.Dict{K: k, M: m}, nil
 }

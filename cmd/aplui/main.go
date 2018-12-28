@@ -27,6 +27,7 @@ import (
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
 	aplstrings "github.com/ktye/iv/apl/strings"
+	"github.com/ktye/iv/apl/xgo"
 
 	"github.com/ktye/iv/aplextra/help"
 	ivduit "github.com/ktye/iv/duit"
@@ -54,6 +55,7 @@ func main() {
 	primitives.Register(a)
 	operators.Register(a)
 	aplstrings.Register(a)
+	xgo.Register(a)
 
 	/* TODO
 	if extra {

@@ -27,25 +27,6 @@ func (a *Apl) Assign(name string, v Value) error {
 
 // AssignEnv assigns a variable in the given environment.
 func (a *Apl) AssignEnv(name string, v Value, env *env) error {
-	if idx := strings.Index(name, "→"); idx != -1 {
-		objname := name[:idx]
-		field := name[idx+len("→"):]
-		ov := a.Lookup(objname)
-		if ov == nil {
-			// If the object does not exist, create a new dictionary
-			// and assign it.
-			d := new(Dict)
-			if err := d.Set(a, field, v); err != nil {
-				return err
-			}
-			return a.AssignEnv(objname, d, env)
-		} else if o, ok := ov.(Object); ok == false {
-			return fmt.Errorf("variable %s is not an object", objname)
-		} else {
-			return o.Set(a, field, v)
-		}
-	}
-
 	ok, isfunc := isVarname(name)
 	if ok == false {
 		return fmt.Errorf("variable name is not allowed: %s", name)
@@ -108,16 +89,7 @@ func (a *Apl) LookupEnv(name string) (Value, *env) {
 		if strings.ToLower(prefix) == prefix {
 			return a.packageVar(name), nil
 		} else {
-			field := name[idx+len("→"):]
-			v, e := a.LookupEnv(prefix)
-			if v == nil {
-				return nil, nil
-			}
-			if o, ok := v.(Object); ok == false {
-				return nil, nil
-			} else {
-				return o.Field(a, field), e
-			}
+			return nil, nil
 		}
 	}
 
