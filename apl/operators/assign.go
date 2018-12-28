@@ -45,7 +45,7 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 	if v, ok := R.(apl.Array); ok {
 		ar = v
 	} else {
-		ar = apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{R}}
+		ar = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}
 	}
 
 	var scalar apl.Value
@@ -129,7 +129,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 
 	// Try to keep the original array type, upgrade only if needed.
 	upgrade := func() {
-		ga := apl.GeneralArray{Dims: apl.CopyShape(ar)}
+		ga := apl.MixedArray{Dims: apl.CopyShape(ar)}
 		ga.Values = make([]apl.Value, apl.ArraySize(ga))
 		for i := range ga.Values {
 			v, err := ar.At(i)

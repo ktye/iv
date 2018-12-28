@@ -45,7 +45,7 @@ func transpose(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Values: make([]apl.Value, len(idx)),
 		Dims:   shape,
 	}
@@ -134,7 +134,7 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 	}
 
 	// The index list of the result is for item i is: 1+(⍴R)⊥((shape)⊤i)[L]
-	flat := make([]int, apl.ArraySize(apl.GeneralArray{Dims: shape}))
+	flat := make([]int, apl.ArraySize(apl.MixedArray{Dims: shape}))
 	ics, sidx := apl.NewIdxConverter(shape)
 	icr, ridx := apl.NewIdxConverter(rs)
 	for i := range flat {

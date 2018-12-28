@@ -75,7 +75,7 @@ func reverse(a *apl.Apl, R apl.Value, axis int) (apl.Value, error) {
 		return nil, fmt.Errorf("reverse: axis out of range: %d  (rank %d)", axis, len(shape))
 	}
 
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Dims: apl.CopyShape(ar),
 	}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
@@ -153,7 +153,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		n := int(nv.(apl.Index))
 		size := shape[0]
 
-		res := apl.GeneralArray{
+		res := apl.MixedArray{
 			Dims:   []int{shape[0]},
 			Values: make([]apl.Value, size),
 		}
@@ -202,7 +202,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		}
 	}
 
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Dims:   apl.CopyShape(ar),
 		Values: make([]apl.Value, apl.ArraySize(ar)),
 	}

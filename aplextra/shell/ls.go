@@ -38,7 +38,7 @@ func (_ ls) Call(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	ar := apl.GeneralArray{
+	ar := apl.MixedArray{
 		Dims:   []int{len(names), 1},
 		Values: make([]apl.Value, len(names)),
 	}
@@ -67,7 +67,7 @@ func walk() (apl.Value, error) {
 		return nil, err
 	}
 
-	ar := apl.GeneralArray{
+	ar := apl.MixedArray{
 		Dims:   []int{len(names), 1},
 		Values: make([]apl.Value, len(names)),
 	}

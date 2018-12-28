@@ -42,7 +42,7 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 		return f.Call(a, nil, R)
 	}
 
-	res := apl.GeneralArray{Dims: apl.CopyShape(ar)}
+	res := apl.MixedArray{Dims: apl.CopyShape(ar)}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 
 	for i := range res.Values {
@@ -107,7 +107,7 @@ func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 		lv = L
 	}
 
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	var err error
 	for i := range res.Values {

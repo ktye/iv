@@ -73,10 +73,10 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 		is = ai.Shape()
 
 		// The result has the same shape as R.
-		res := apl.GeneralArray{Dims: apl.CopyShape(ar), Values: make([]apl.Value, apl.ArraySize(ar))}
+		res := apl.MixedArray{Dims: apl.CopyShape(ar), Values: make([]apl.Value, apl.ArraySize(ar))}
 
 		// The temporary array has the requested stencil shape, the first row of RO.
-		tmp := apl.GeneralArray{Dims: ai.Ints[:len(ai.Ints)/2]}
+		tmp := apl.MixedArray{Dims: ai.Ints[:len(ai.Ints)/2]}
 		tmp.Values = make([]apl.Value, apl.ArraySize(tmp))
 		if apl.ArraySize(tmp) == 0 {
 			return nil, fmt.Errorf("stencil: stencil size is 0")

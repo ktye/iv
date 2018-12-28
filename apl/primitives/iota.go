@@ -71,7 +71,7 @@ func interval(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 func fieldnames(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	obj := R.(apl.Object)
 	fields := obj.Fields()
-	res := apl.GeneralArray{Dims: []int{len(fields)}}
+	res := apl.MixedArray{Dims: []int{len(fields)}}
 	res.Values = make([]apl.Value, len(fields))
 	for i := range res.Values {
 		res.Values[i] = apl.String(fields[i])
@@ -120,7 +120,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		ar = apl.GeneralArray{
+		ar = apl.MixedArray{
 			Dims:   []int{1},
 			Values: []apl.Value{R},
 		}
@@ -231,7 +231,7 @@ func intervalindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	rs := ar.Shape()
 	rn := 1
 	if len(rs) > 1 {
-		rn = apl.ArraySize(apl.GeneralArray{Dims: rs[1:]})
+		rn = apl.ArraySize(apl.MixedArray{Dims: rs[1:]})
 	}
 
 	al := L.(apl.Array)

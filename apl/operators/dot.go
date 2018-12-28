@@ -69,7 +69,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 			// TODO fill function?
 			return nil, fmt.Errorf("inner: empty rhs array")
 		}
-		u := apl.GeneralArray{Dims: []int{rs[0]}}
+		u := apl.MixedArray{Dims: []int{rs[0]}}
 		v := make([]apl.Value, rs[0])
 		for i := range v {
 			v[i] = l
@@ -81,7 +81,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 		if ls == nil || ls[0] == 0 {
 			return nil, fmt.Errorf("inner: empty lhs array")
 		}
-		u := apl.GeneralArray{Dims: []int{ls[len(ls)-1]}}
+		u := apl.MixedArray{Dims: []int{ls[len(ls)-1]}}
 		v := make([]apl.Value, ls[0])
 		for i := range v {
 			v[i] = r
@@ -131,7 +131,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	shape := make([]int, len(ls)+len(rs)-2)
 	copy(shape, ls[:len(ls)-1])
 	copy(shape[len(ls)-1:], rs[1:])
-	result := apl.GeneralArray{Dims: shape}
+	result := apl.MixedArray{Dims: shape}
 	result.Values = make([]apl.Value, apl.ArraySize(result))
 
 	// Iterate of all elements of the resulting array.
@@ -202,7 +202,7 @@ func outer(a *apl.Apl, L, R apl.Value, f, g apl.Function) (apl.Value, error) {
 	shape := make([]int, 0, len(ls)+len(rs))
 	shape = append(shape, apl.CopyShape(al)...)
 	shape = append(shape, apl.CopyShape(ar)...)
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 
 	lc, lidx := apl.NewIdxConverter(ls)

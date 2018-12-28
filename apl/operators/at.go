@@ -21,7 +21,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 		// g selects values from R.
 		ar, ok := R.(apl.Array)
 		if ok == false {
-			ar = apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{R}}
+			ar = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}
 		}
 		rs := ar.Shape()
 
@@ -56,7 +56,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			// g is an index array that selects major cells of R.
 			ag, ok := g.(apl.Array)
 			if ok == false {
-				ag = apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{g}}
+				ag = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{g}}
 			}
 			var gi apl.IndexArray
 			if v, ok := ToIndexArray(nil).To(a, ag); ok == false {
@@ -83,7 +83,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			replshape[0] = gi.Dims[0]
 		}
 
-		res := apl.GeneralArray{Dims: apl.CopyShape(ar)}
+		res := apl.MixedArray{Dims: apl.CopyShape(ar)}
 		res.Values = make([]apl.Value, apl.ArraySize(res))
 
 		// Number of replacements.
@@ -102,7 +102,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			if replshape == nil {
 				replshape = []int{n}
 			}
-			re := apl.GeneralArray{Dims: replshape, Values: repl}
+			re := apl.MixedArray{Dims: replshape, Values: repl}
 			n := 0
 			for i, m := range mask {
 				if m {
@@ -126,7 +126,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 
 		re, ok := vr.(apl.Array)
 		if ok == false {
-			re = apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{vr}}
+			re = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{vr}}
 		}
 		if n := apl.ArraySize(re); n == 1 {
 			for i := range repl {

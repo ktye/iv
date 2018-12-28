@@ -30,7 +30,7 @@ func TestIdx(t *testing.T) {
 
 	// Test ArraySize and IncArrayIndex
 	for _, tc := range testCases {
-		ar := GeneralArray{Dims: tc.shape}
+		ar := MixedArray{Dims: tc.shape}
 		ic, idx := NewIdxConverter(tc.shape)
 		for i := 0; i < ArraySize(ar); i++ {
 			n := ic.Index(idx)

@@ -117,7 +117,7 @@ func array1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 	efn := arith1(symbol, fn)
 	return func(a *apl.Apl, _ apl.Value, R apl.Value) (apl.Value, error) {
 		ar := R.(apl.Array)
-		res := apl.GeneralArray{
+		res := apl.MixedArray{
 			Values: make([]apl.Value, apl.ArraySize(ar)),
 			Dims:   apl.CopyShape(ar),
 		}
@@ -160,7 +160,7 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 		} else {
 			shape = apl.CopyShape(al)
 		}
-		res := apl.GeneralArray{Dims: shape}
+		res := apl.MixedArray{Dims: shape}
 		res.Values = make([]apl.Value, apl.ArraySize(res))
 		var err error
 		for i := range res.Values {
@@ -261,7 +261,7 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 
 		var err error
 		var lv, rv, v apl.Value
-		res := apl.GeneralArray{Dims: apl.CopyShape(al)}
+		res := apl.MixedArray{Dims: apl.CopyShape(al)}
 		res.Values = make([]apl.Value, apl.ArraySize(res))
 		idx := make([]int, len(res.Dims))
 		ic, rdx := apl.NewIdxConverter(rightShape)

@@ -45,7 +45,7 @@ func unique(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 			values = append(values, v) // TODO copy?
 		}
 	}
-	return apl.GeneralArray{Values: values, Dims: []int{len(values)}}, nil
+	return apl.MixedArray{Values: values, Dims: []int{len(values)}}, nil
 }
 
 // union of L and R, both are vectors.
@@ -85,5 +85,5 @@ func union(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if err := appendvec(ar); err != nil {
 		return nil, err
 	}
-	return apl.GeneralArray{Dims: []int{len(values)}, Values: values}, nil
+	return apl.MixedArray{Dims: []int{len(values)}, Values: values}, nil
 }

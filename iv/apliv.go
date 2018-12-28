@@ -85,7 +85,7 @@ func (α *AplIv) ParseScalar(s string) (Scalar, error) {
 
 func (α *AplIv) Execute(dims []int, array []Scalar, term int, eof bool) error {
 	// Assign the current array to _.
-	ar := apl.GeneralArray{
+	ar := apl.MixedArray{
 		Values: make([]apl.Value, len(array)),
 		Dims:   dims,
 	}

@@ -77,7 +77,7 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 	// If R is a scalar, set it's shape to (⍴,L)⍴1.
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		r := apl.GeneralArray{Values: []apl.Value{R}} // TODO copy?
+		r := apl.MixedArray{Values: []apl.Value{R}} // TODO copy?
 		r.Dims = make([]int, len(ai.Ints))
 		for i := range r.Dims {
 			r.Dims[i] = 1

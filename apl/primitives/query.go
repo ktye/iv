@@ -42,7 +42,7 @@ func roll(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	if apl.ArraySize(ar) == 0 {
 		return apl.EmptyArray{}, nil
 	}
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Values: make([]apl.Value, apl.ArraySize(ar)),
 		Dims:   apl.CopyShape(ar),
 	}

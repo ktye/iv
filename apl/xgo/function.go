@@ -85,7 +85,7 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	} else if len(out) == 1 {
 		return convert(a, out[0])
 	} else {
-		res := apl.GeneralArray{Dims: []int{len(out)}, Values: make([]apl.Value, len(out))}
+		res := apl.MixedArray{Dims: []int{len(out)}, Values: make([]apl.Value, len(out))}
 		for i := range out {
 			if v, err := convert(a, out[i]); err != nil {
 				return nil, err

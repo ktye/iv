@@ -119,7 +119,7 @@ func convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
 
 	case reflect.Slice:
 		n := v.Len()
-		ar := apl.GeneralArray{Dims: []int{n}, Values: make([]apl.Value, n)}
+		ar := apl.MixedArray{Dims: []int{n}, Values: make([]apl.Value, n)}
 		for i := range ar.Values {
 			if e, err := convert(a, v.Index(i)); err != nil {
 				return nil, err

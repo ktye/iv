@@ -56,7 +56,7 @@ func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 	ar, _ := r.(apl.Array)
 	n := apl.ArraySize(ar)
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Dims:   []int{n},
 		Values: make([]apl.Value, n),
 	}
@@ -100,7 +100,7 @@ func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
 		R = r
 		ar, ok := R.(apl.Array)
 		if ok == false {
-			return apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
+			return apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
 		}
 
 		rs := ar.Shape()
@@ -137,7 +137,7 @@ func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
 	// APL2: if the axis is empty, a new last axis of length 1 is appended.
 	if len(x) == 0 {
 		if Rarray == false {
-			return apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
+			return apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
 		}
 		shape := apl.CopyShape(ar)
 		shape = append(shape, 1)
@@ -204,7 +204,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// Catenate two scalars.
 	if isLarray == false && isRarray == false {
-		return apl.GeneralArray{
+		return apl.MixedArray{
 			Values: []apl.Value{L, R}, // TODO: copy?
 			Dims:   []int{2},
 		}, nil
@@ -212,7 +212,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	reshapeScalar := func(scalar apl.Value, othershape []int) apl.Array {
 		othershape[x] = 1
-		ary := apl.GeneralArray{
+		ary := apl.MixedArray{
 			Dims: othershape,
 		}
 		ary.Values = make([]apl.Value, apl.ArraySize(ary))
@@ -273,7 +273,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return nil, fmt.Errorf("catenate: all axis lengths except for the catenation axis must match")
 		}
 	}
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Dims: newshape,
 	}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
@@ -305,11 +305,11 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 		if x != 0 {
 			return nil, fmt.Errorf("cannot laminate two scalar for given axis")
 		}
-		return apl.GeneralArray{Dims: []int{2}, Values: []apl.Value{L, R}}, nil
+		return apl.MixedArray{Dims: []int{2}, Values: []apl.Value{L, R}}, nil
 	}
 
 	reshape := func(scalar apl.Value, shape []int) apl.Array {
-		ary := apl.GeneralArray{
+		ary := apl.MixedArray{
 			Dims: shape,
 		}
 		ary.Values = make([]apl.Value, apl.ArraySize(ary))
@@ -352,7 +352,7 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 	// Iterate over the result and copy values from L or R depending,
 	// if the the index at axis x is 0 or 1.
 	var err error
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	dst := make([]int, len(shape))
 	ic, src := apl.NewIdxConverter(ls)
@@ -384,7 +384,7 @@ func catenateFirst(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 func table(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		return apl.GeneralArray{Dims: []int{1, 1}, Values: []apl.Value{R}}, nil
+		return apl.MixedArray{Dims: []int{1, 1}, Values: []apl.Value{R}}, nil
 	}
 	rs := ar.Shape()
 

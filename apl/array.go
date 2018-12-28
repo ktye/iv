@@ -70,7 +70,7 @@ func (ar array) Eval(a *Apl) (Value, error) {
 			}
 		}
 	}
-	return GeneralArray{Values: v, Dims: []int{len(ar)}}, nil
+	return MixedArray{Values: v, Dims: []int{len(ar)}}, nil
 }
 
 func (ar array) String(a *Apl) string {
@@ -134,7 +134,7 @@ func MakeArray(prototype Array, shape []int) ArraySetter {
 	}
 
 	if am == nil {
-		g := GeneralArray{Dims: shape}
+		g := MixedArray{Dims: shape}
 		g.Values = make([]Value, ArraySize(g))
 		return g
 	} else {
@@ -259,24 +259,24 @@ func ArrayString(a *Apl, v Array) string {
 	return s
 }
 
-// GeneralArray is an n-dimensional array that can hold any Value.
-type GeneralArray struct {
+// MixedArray is an n-dimensional array that can hold any Value.
+type MixedArray struct {
 	Values []Value
 	Dims   []int
 }
 
-func (v GeneralArray) String(a *Apl) string {
+func (v MixedArray) String(a *Apl) string {
 	return ArrayString(a, v)
 }
 
-func (v GeneralArray) At(i int) (Value, error) {
+func (v MixedArray) At(i int) (Value, error) {
 	if i >= 0 && i < len(v.Values) {
 		return v.Values[i], nil
 	}
 	return nil, fmt.Errorf("array index out of range")
 }
 
-func (v GeneralArray) Set(i int, e Value) error {
+func (v MixedArray) Set(i int, e Value) error {
 	if i < 0 || i >= len(v.Values) {
 		return fmt.Errorf("index out of range")
 	}
@@ -284,16 +284,16 @@ func (v GeneralArray) Set(i int, e Value) error {
 	return nil
 }
 
-func (v GeneralArray) Shape() []int {
+func (v MixedArray) Shape() []int {
 	return v.Dims
 }
 
-func (v GeneralArray) Size() int {
+func (v MixedArray) Size() int {
 	return len(v.Values)
 }
 
-func (v GeneralArray) Reshape(shape []int) Value {
-	res := GeneralArray{Dims: shape}
+func (v MixedArray) Reshape(shape []int) Value {
+	res := MixedArray{Dims: shape}
 	res.Values = make([]Value, ArraySize(res))
 	k := 0
 	for i := range res.Values {

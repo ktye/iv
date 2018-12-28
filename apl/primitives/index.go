@@ -62,7 +62,7 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Dims:   apl.CopyShape(idx),
 		Values: make([]apl.Value, apl.ArraySize(idx)),
 	}

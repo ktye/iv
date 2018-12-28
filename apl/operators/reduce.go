@@ -170,7 +170,7 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 			if id := identityItem(f); id == nil {
 				return nil, fmt.Errorf("reduce empty axis: cannot get identify item for %T", d)
 			} else {
-				ida := apl.GeneralArray{Dims: []int{1}, Values: []apl.Value{id}}
+				ida := apl.MixedArray{Dims: []int{1}, Values: []apl.Value{id}}
 				return ida.Reshape(dims), nil
 			}
 		}
@@ -190,8 +190,8 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 		}
 
 		// Create a new array with the given axis removed.
-		values := make([]apl.Value, apl.ArraySize(apl.GeneralArray{Dims: dims}))
-		v := apl.GeneralArray{
+		values := make([]apl.Value, apl.ArraySize(apl.MixedArray{Dims: dims}))
+		v := apl.MixedArray{
 			Dims:   dims,
 			Values: values,
 		}
@@ -258,7 +258,7 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 
 		// The result has the same shape as R.
 		dims := apl.CopyShape(ar)
-		res := apl.GeneralArray{
+		res := apl.MixedArray{
 			Values: make([]apl.Value, apl.ArraySize(ar)),
 			Dims:   dims,
 		}
@@ -288,7 +288,7 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 			if err != nil {
 				return nil, err
 			}
-			return apl.GeneralArray{
+			return apl.MixedArray{
 				Values: vec,
 				Dims:   []int{len(vec)},
 			}, nil
@@ -299,7 +299,7 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 		lidx[axis] = 1
 		ic, idx := apl.NewIdxConverter(dims)
 		vec := make([]apl.Value, dims[axis])
-		for i := 0; i < apl.ArraySize(apl.GeneralArray{Dims: lidx}); i++ {
+		for i := 0; i < apl.ArraySize(apl.MixedArray{Dims: lidx}); i++ {
 			// Build the scan vector, by iterating over the axis.
 			for k := range vec {
 				idx[axis] = k
@@ -396,7 +396,7 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		}
 	}
 	shape[axis] = count
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	ic, idx := apl.NewIdxConverter(rs)
 	dst := make([]int, len(shape))
@@ -487,7 +487,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	}
 	shape[axis] = sum
 
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	n := apl.ArraySize(res)
 	res.Values = make([]apl.Value, n)
 
@@ -554,7 +554,7 @@ func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IndexArray, apl.Ar
 	// If R is a scalar, convert it to a single element array.
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		r := apl.GeneralArray{
+		r := apl.MixedArray{
 			Dims:   []int{1},
 			Values: []apl.Value{R},
 		}
@@ -577,7 +577,7 @@ func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IndexArray, apl.Ar
 	if rs[axis] == 1 && len(ai.Ints) > 1 {
 		shape := apl.CopyShape(ar)
 		shape[axis] = len(ai.Ints)
-		r := apl.GeneralArray{
+		r := apl.MixedArray{
 			Dims: shape,
 		}
 		r.Values = make([]apl.Value, apl.ArraySize(r))
@@ -617,7 +617,7 @@ func compress(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	}
 	shape[axis] = count
 
-	res := apl.GeneralArray{
+	res := apl.MixedArray{
 		Dims: shape,
 	}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
@@ -710,7 +710,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 		return nil, fmt.Errorf("n-wise reduction: length error")
 	}
 
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	if len(res.Values) == 0 {
 		return res, nil
@@ -745,7 +745,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 	vec := make([]apl.Value, axlen)
 	xs := apl.CopyShape(ar)
 	xs[axis] = 1
-	outer := apl.ArraySize(apl.GeneralArray{Dims: xs})
+	outer := apl.ArraySize(apl.MixedArray{Dims: xs})
 	ic, idx := apl.NewIdxConverter(rs)
 	dc, dst := apl.NewIdxConverter(res.Dims)
 	var err error
@@ -879,7 +879,7 @@ func (first reduceTack) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	inner := shape[len(shape)-1]
 	newshape := apl.CopyShape(ar)
 	newshape = newshape[:len(newshape)-1]
-	ret := apl.GeneralArray{Dims: newshape}
+	ret := apl.MixedArray{Dims: newshape}
 	ret.Values = make([]apl.Value, apl.ArraySize(ret))
 	i := 0
 	n := 0 // index over inner axis.

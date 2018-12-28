@@ -66,7 +66,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 
 			subshape := apl.CopyShape(x)
 			subshape = subshape[len(subshape)-rank:]
-			cell := apl.GeneralArray{Dims: subshape}
+			cell := apl.MixedArray{Dims: subshape}
 			cell.Values = make([]apl.Value, apl.ArraySize(cell))
 			m := len(cell.Values)
 			for i := range cell.Values {
@@ -83,7 +83,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		subcells := func(x apl.Array, rank int) int {
 			s := x.Shape()
 			// The number is the product of the frame of x with respect to rank.
-			return apl.ArraySize(apl.GeneralArray{Dims: s[:len(s)-rank]})
+			return apl.ArraySize(apl.MixedArray{Dims: s[:len(s)-rank]})
 		}
 
 		var err error
@@ -192,7 +192,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			if vr, ok := results[n].(apl.Array); ok == false {
 				if len(common) > 0 {
 					// Reshape scalar to common shape.
-					ga := apl.GeneralArray{Dims: common}
+					ga := apl.MixedArray{Dims: common}
 					ga.Values = make([]apl.Value, apl.ArraySize(ga))
 					for i := range ga.Values {
 						ga.Values[i] = results[n] // TODO copy?
@@ -237,7 +237,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		}
 
 		// The result has the shape: frame, conform
-		res := apl.GeneralArray{}
+		res := apl.MixedArray{}
 		res.Dims = append(res.Dims, frame...)
 		res.Dims = append(res.Dims, common...)
 		res.Values = make([]apl.Value, apl.ArraySize(res))
@@ -248,7 +248,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			res.Values = results
 			return res, nil
 		}
-		commonsize := apl.ArraySize(apl.GeneralArray{Dims: common})
+		commonsize := apl.ArraySize(apl.MixedArray{Dims: common})
 		off := 0
 		for i := range results {
 			if len(common) == 0 {
@@ -308,7 +308,7 @@ func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array, x []int) (apl.Array, erro
 		}
 	}
 
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	idx := make([]int, len(shape))
 	ic, src := apl.NewIdxConverter(ar.Shape())

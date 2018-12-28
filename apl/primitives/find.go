@@ -50,7 +50,7 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				shape[i] = ls[i-d]
 			}
 		}
-		l := apl.GeneralArray{Dims: shape, Values: make([]apl.Value, apl.ArraySize(al))}
+		l := apl.MixedArray{Dims: shape, Values: make([]apl.Value, apl.ArraySize(al))}
 		for i := range l.Values {
 			v, err := al.At(i)
 			if err != nil {

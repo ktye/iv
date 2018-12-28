@@ -28,7 +28,7 @@ func (v array) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	// Convert scalars to arrays.
-	ga := apl.GeneralArray{
+	ga := apl.MixedArray{
 		Values: []apl.Value{V},
 		Dims:   []int{1},
 	}
@@ -73,7 +73,7 @@ func (v vector) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 
 	// Convert scalars.
 	if ok == false {
-		ga := apl.GeneralArray{
+		ga := apl.MixedArray{
 			Values: []apl.Value{V},
 			Dims:   []int{1},
 		}
@@ -103,7 +103,7 @@ func (v vector) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	// Create a new general array.
-	ret := apl.GeneralArray{
+	ret := apl.MixedArray{
 		Values: make([]apl.Value, as),
 		Dims:   []int{as},
 	}

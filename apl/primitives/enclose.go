@@ -32,7 +32,7 @@ func (s strvec) To(a *apl.Apl, v apl.Value) (apl.Value, bool) {
 		return v, false
 	}
 	n := apl.ArraySize(ar)
-	vec := apl.GeneralArray{Dims: []int{n}, Values: make([]apl.Value, n)}
+	vec := apl.MixedArray{Dims: []int{n}, Values: make([]apl.Value, n)}
 	for i := 0; i < n; i++ {
 		if vi, err := ar.At(i); err != nil {
 			return v, false
@@ -47,7 +47,7 @@ func (s strvec) String(a *apl.Apl) string {
 }
 
 func strcat(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	ar := R.(apl.GeneralArray)
+	ar := R.(apl.MixedArray)
 	var b strings.Builder
 	for _, s := range ar.Values {
 		b.WriteString(string(s.(apl.String)))
@@ -56,7 +56,7 @@ func strcat(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 }
 
 func strjoin(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	ar := R.(apl.GeneralArray)
+	ar := R.(apl.MixedArray)
 	v := make([]string, len(ar.Values))
 	for i, s := range ar.Values {
 		v[i] = string(s.(apl.String))

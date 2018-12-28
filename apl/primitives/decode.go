@@ -44,7 +44,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// The result of decode is a scalar product between a power matrix and R.
 	// The power matrix multiplies L along the last axis recursively from right to left,
 	// similar as the Index method of apl.IdxConverter.
-	p := apl.GeneralArray{
+	p := apl.MixedArray{
 		Values: make([]apl.Value, apl.ArraySize(al)),
 		Dims:   apl.CopyShape(al),
 	}
@@ -79,7 +79,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 // extendAxis extends the axis of length 1 to n
 func extendAxis(ar apl.Array, axis, n int) (apl.Array, []int) {
-	res := apl.GeneralArray{Dims: apl.CopyShape(ar)}
+	res := apl.MixedArray{Dims: apl.CopyShape(ar)}
 	res.Dims[axis] = n
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	ridx := make([]int, len(res.Dims))
@@ -186,7 +186,7 @@ func encodeVecScalar(a *apl.Apl, L []apl.Value, R apl.Value) (apl.Value, error) 
 			C[i] = d
 		}
 	}
-	return apl.GeneralArray{Dims: []int{len(Z)}, Values: Z}, nil
+	return apl.MixedArray{Dims: []int{len(Z)}, Values: Z}, nil
 }
 
 func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
@@ -208,7 +208,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	shape := make([]int, len(ls)+len(rs))
 	copy(shape[:len(ls)], ls)
 	copy(shape[len(ls):], rs)
-	res := apl.GeneralArray{Dims: shape}
+	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 
 	// enc represents r in the given radix power vector and sets the result to vec.
@@ -284,7 +284,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	// Number of iterations over L omitting the first axis
 	NL := 1
 	if len(ls) > 1 {
-		NL = apl.ArraySize(apl.GeneralArray{Dims: ls[1:]})
+		NL = apl.ArraySize(apl.MixedArray{Dims: ls[1:]})
 	}
 	// Number of iterations over R
 	NR := 0
@@ -294,7 +294,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	// Number of result elements divided by length of first axis
 	NN := 1
 	if len(shape) > 1 {
-		NN = apl.ArraySize(apl.GeneralArray{Dims: shape[1:]})
+		NN = apl.ArraySize(apl.MixedArray{Dims: shape[1:]})
 	}
 	rad := make([]apl.Value, shape[0])
 	off := 0

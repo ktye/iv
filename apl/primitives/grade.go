@@ -76,7 +76,7 @@ func gradeSetup(a *apl.Apl, R apl.Value) (sortIndexes, error) {
 			b[i] = []apl.Value{v}
 		}
 	} else {
-		subsize := apl.ArraySize(apl.GeneralArray{Dims: shape[1:]})
+		subsize := apl.ArraySize(apl.MixedArray{Dims: shape[1:]})
 		off := 0
 		for i := range b {
 			b[i] = make([]apl.Value, subsize)
