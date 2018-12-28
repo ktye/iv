@@ -87,7 +87,7 @@ func (s StringArray) Reshape(shape []int) Value {
 		Strings: make([]string, prod(shape)),
 	}
 	k := 0
-	for i := range s.Strings {
+	for i := range res.Strings {
 		res.Strings[i] = s.Strings[k]
 		k++
 		if k == len(s.Strings) {

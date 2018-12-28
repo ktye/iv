@@ -63,7 +63,7 @@ func (f FloatArray) Reshape(shape []int) apl.Value {
 		Floats: make([]float64, prod(shape)),
 	}
 	k := 0
-	for i := range f.Floats {
+	for i := range res.Floats {
 		res.Floats[i] = f.Floats[k]
 		k++
 		if k == len(f.Floats) {

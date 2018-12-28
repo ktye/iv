@@ -85,7 +85,7 @@ func (b BoolArray) Reshape(shape []int) Value {
 		Bools: make([]bool, prod(shape)),
 	}
 	k := 0
-	for i := range b.Bools {
+	for i := range res.Bools {
 		res.Bools[i] = b.Bools[k]
 		k++
 		if k == len(b.Bools) {

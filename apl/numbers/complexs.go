@@ -63,7 +63,7 @@ func (f ComplexArray) Reshape(shape []int) apl.Value {
 		Cmplx: make([]complex128, prod(shape)),
 	}
 	k := 0
-	for i := range f.Cmplx {
+	for i := range res.Cmplx {
 		res.Cmplx[i] = f.Cmplx[k]
 		k++
 		if k == len(f.Cmplx) {
