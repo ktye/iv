@@ -214,6 +214,17 @@ func ArrayString(a *Apl, v Array) string {
 	shape := v.Shape()
 	if len(shape) == 0 {
 		return ""
+	} else if len(shape) == 1 {
+		s := make([]string, shape[0])
+		for i := 0; i < shape[0]; i++ {
+			e, err := v.At(i)
+			if err != nil {
+				s[i] = "?"
+			} else {
+				s[i] = e.String(a)
+			}
+		}
+		return strings.Join(s, " ")
 	}
 	size := 1
 	for _, n := range shape {

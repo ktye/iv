@@ -47,6 +47,9 @@ func (d *derived) String(a *Apl) string {
 	if ok == false {
 		return "<unknown operator>"
 	}
+	if d.lo == nil && d.ro == nil {
+		return d.op
+	}
 	right := ""
 	if ops[0].DyadicOp() {
 		right = fmt.Sprintf(" %s", d.ro.String(a))

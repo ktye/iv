@@ -266,11 +266,9 @@ rev:
 
 	switch left {
 	case scan.LeftParen:
-		/*
-			if tokens[len(tokens)-1].T == scan.Semicolon {
-				return q.parseList()
-			}
-		*/
+		if tokens[len(tokens)-1].T == scan.Semicolon {
+			return q.parseList()
+		}
 		return q.parseStatement()
 	case scan.LeftBrack:
 		return q.parseBrackets()
@@ -281,10 +279,8 @@ rev:
 	}
 }
 
-/*
 // parseList parses a list expression, that always evaluates as a noun.
 func (p *parser) parseList() (item, error) {
-	fmt.Printf("parseList: %+v\n", p.tokens)
 	l := p.splitTokens(scan.Semicolon, scan.LeftParen, scan.RightParen)
 	if len(l) > 0 {
 		// Remove empty tail caused by trailing semicolon
@@ -301,7 +297,6 @@ func (p *parser) parseList() (item, error) {
 	}
 	return item{e: lst, class: noun}, nil
 }
-*/
 
 // ParseBrackets parses the expression within brackets [...].
 // This may be an index or axis specification.
