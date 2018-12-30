@@ -20,9 +20,16 @@ func init() {
 	})
 	register(primitive{
 		symbol: "⌷",
+		doc:    "index list, []",
+		Domain: Dyadic(Split(indexSpec{}, IsList(nil))),
+		fn:     listIndex,
+		//sel:    listSelection,
+	})
+	register(primitive{
+		symbol: "⌷",
 		doc:    "object index, []",
 		Domain: Dyadic(Split(indexSpec{}, IsObject(nil))),
-		fn:     objindex,
+		fn:     objIndex,
 		sel:    objSelection,
 	})
 }
@@ -222,9 +229,9 @@ func spec2ints(a *apl.Apl, spec apl.IdxSpec, shape []int) ([][]int, error) {
 	return idx, nil
 }
 
-// objindex returns a dictionary with only the given keys.
+// listIndex returns a dictionary with only the given keys.
 // Keys may be indexed by integers, or strings.
-func objindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	obj := R.(apl.Object)
 	spec := L.(apl.IdxSpec)
 	if len(spec) != 1 {
@@ -262,4 +269,53 @@ func objindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		m[key] = v // TODO: copy?
 	}
 	return &apl.Dict{K: k, M: m}, nil
+}
+
+// listIndexing indexes a list at depth.
+// indexes may be negative.
+func listIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	lst := R.(apl.List)
+	spec := L.(apl.IdxSpec)
+
+	if len(spec) == 1 {
+		if _, ok := spec[0].(apl.List); ok {
+			// See: code.kx.com/q4m3/3_Lists/#39-indexing-with-lists
+			return nil, fmt.Errorf("TODO: indexing with a list")
+		}
+	}
+
+	// Convert spec to ints.
+	to := ToIndexArray(nil)
+	idx := make([]int, len(spec))
+	for i := range spec {
+		v, ok := to.To(a, spec[i])
+		if ok == false {
+			return nil, fmt.Errorf("list index is no integer")
+		}
+		ai := v.(apl.IndexArray)
+		if s := ai.Shape(); len(s) != 1 || s[0] != 1 {
+			return nil, fmt.Errorf("list index is no integer: %T", v)
+		}
+		idx[i] = ai.Ints[0] - a.Origin
+	}
+
+	// Index at depth.
+	// Indexes may be negative (count from the end).
+	for i, k := range idx {
+		if k < 0 {
+			k = len(lst) + k
+		}
+		if k < 0 || k >= len(lst) {
+			return nil, fmt.Errorf("list index out of range")
+		}
+		v := lst[k]
+		if i == len(idx)-1 {
+			return v, nil // TODO: copy?
+		} else if l, ok := v.(apl.List); ok {
+			lst = l
+		} else {
+			return nil, fmt.Errorf("list index is too deep")
+		}
+	}
+	return lst, nil // TODO: copy?
 }
