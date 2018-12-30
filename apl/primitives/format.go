@@ -24,12 +24,6 @@ func init() {
 		Domain: Monadic(IsString(nil)),
 		fn:     execute,
 	})
-	register(primitive{
-		symbol: "⍎",
-		doc:    "evaluate list",
-		Domain: Monadic(IsList(nil)),
-		fn:     evallist,
-	})
 	// TODO: dyadic ⍎: execute with namespace.
 }
 
@@ -52,9 +46,4 @@ func execute(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		fmt.Fprintln(a.GetOutput(), v.String(a))
 	}
 	return values[len(values)-1], nil
-}
-
-func evallist(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	l := R.(apl.List)
-	return l.Evaluate(a)
 }
