@@ -7,13 +7,17 @@ import (
 
 // List is a collection of items, possibly nested.
 // It also acts as a vector (a rank 1 array) but cannot be reshaped.
-type List []Value
+// The vector view sees the list as a flat list with all elements.
+type List struct {
+	N int     // total count
+	L []Value // children
+}
 
 func (l List) String(a *Apl) string {
 	var buf strings.Builder
 	buf.WriteRune('(')
-	for i := range l {
-		buf.WriteString(l[i].String(a))
+	for i := range l.L {
+		buf.WriteString(l.L[i].String(a))
 		buf.WriteRune(';')
 	}
 	buf.WriteRune(')')
@@ -21,31 +25,38 @@ func (l List) String(a *Apl) string {
 }
 
 func (l List) At(i int) (Value, error) {
-	if i < 0 || i >= len(l) {
+	if i < 0 || i >= len(l.L) {
 		return nil, fmt.Errorf("index out of range")
 	}
-	return l[i], nil
+	return l.L[i], nil
 }
 
 func (l List) Shape() []int {
-	return []int{len(l)}
+	return []int{l.N}
 }
 
 func (l List) Size() int {
-	return len(l)
+	return l.N
 }
 
 type list []expr
 
 func (l list) Eval(a *Apl) (Value, error) {
-	lst := make(List, len(l))
+	var lst List
+	L := make([]Value, len(l))
 	var err error
-	for i := range lst {
-		lst[i], err = l[i].Eval(a)
+	for i := range L {
+		L[i], err = l[i].Eval(a)
 		if err != nil {
 			return nil, err
 		}
+		if v, ok := L[i].(List); ok {
+			lst.N += v.N
+		} else {
+			lst.N += 1
+		}
 	}
+	lst.L = L
 	return lst, nil
 }
 
