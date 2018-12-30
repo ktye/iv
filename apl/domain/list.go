@@ -25,7 +25,7 @@ func (v list) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	// enlist
-	return propagate(a, apl.List{N: 1, L: []apl.Value{V}}, v.child)
+	return propagate(a, apl.List{V}, v.child)
 }
 func (v list) String(a *apl.Apl) string {
 	name := "list"
