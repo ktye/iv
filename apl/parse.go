@@ -489,18 +489,18 @@ func (p *parser) resolveBrackets() error {
 			d := derived{
 				lo: l.e,
 				ro: spec[0],
-				op: "[]",
+				op: "⍂",
 			}
 			p.setLeft(1, item{e: &d, class: verb})
 			p.removeLeft(0)
 		} else if _, ok := l.e.(*derived); ok {
 			// The axis specification following an operator is rewritten as a dyadic operator.
-			// The operator is called "[]" and as the left operand the axis spec is inserted.
+			// The operator is called "⍂" and as the left operand the axis spec is inserted.
 			if len(spec) != 1 {
 				return fmt.Errorf("axis must hold a single expression, not %d", len(spec))
 			}
 			d := derived{
-				op: "[]",
+				op: "⍂",
 			}
 			p.setLeft(1, item{e: &d, class: conjunction})
 			p.insertLeft(1, item{e: spec[0], class: noun})

@@ -9,7 +9,7 @@ import (
 
 func init() {
 	register(operator{
-		symbol:    "[]",
+		symbol:    "⍂",
 		Domain:    DyadicOp(nil),
 		doc:       "axis specification",
 		derived:   axis,

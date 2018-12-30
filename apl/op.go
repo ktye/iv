@@ -124,7 +124,7 @@ func (d *derived) Select(a *Apl, L, R Value) (Value, error) {
 		return nil, fmt.Errorf("operator %s does not exist", d.op)
 	}
 
-	if ops[0].DyadicOp() && d.op != "[]" {
+	if ops[0].DyadicOp() && d.op != "⍂" {
 		// Scan and reduce are monadic, indexing can be used.
 		return nil, fmt.Errorf("dyadic operators cannot be used in selective assignments")
 	}
