@@ -35,6 +35,40 @@ func (l List) Size() int {
 	return len(l)
 }
 
+func (l List) GetDeep(idx []int) (Value, error) {
+	return l.getset(idx, nil)
+}
+
+func (l List) SetDeep(idx []int, v Value) error {
+	_, err := l.getset(idx, v)
+	return err
+}
+
+func (l List) getset(idx []int, v Value) (Value, error) {
+	if len(idx) == 0 {
+		return nil, fmt.Errorf("empty index")
+	}
+	for i, k := range idx {
+		if k < 0 || k >= len(l) {
+			return nil, fmt.Errorf("index out of range")
+		}
+		if i == len(idx)-1 {
+			if v != nil {
+				l[k] = v
+				return nil, nil
+			} else {
+				return l[k], nil
+			}
+		}
+		if lst, ok := l[k].(List); ok == false {
+			return nil, fmt.Errorf("index is too deep")
+		} else {
+			l = lst
+		}
+	}
+	return nil, fmt.Errorf("not reached")
+}
+
 type list []expr
 
 func (l list) Eval(a *Apl) (Value, error) {

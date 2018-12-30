@@ -126,6 +126,10 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		return assignObject(a, obj, idx, f, R)
 	}
 
+	if lst, ok := w.(apl.List); ok {
+		return assignList(a, lst, idx, f, R)
+	}
+
 	ar, ok := w.(apl.ArraySetter)
 	if ok == false {
 		return fmt.Errorf("variable %s is no settable array: %T", name, w)
@@ -273,4 +277,20 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IndexArray, f apl.Function
 		}
 	}
 	return nil
+}
+
+// assignList assigns R to the depth index of a list.
+func assignList(a *apl.Apl, l apl.List, idx apl.IndexArray, f apl.Function, R apl.Value) error {
+	if f != nil {
+		v, err := l.GetDeep(idx.Ints)
+		if err != nil {
+			return err
+		}
+		v, err = f.Call(a, v, R)
+		if err != nil {
+			return err
+		}
+		R = v
+	}
+	return l.SetDeep(idx.Ints, R)
 }

@@ -23,7 +23,7 @@ func init() {
 		doc:    "index list, []",
 		Domain: Dyadic(Split(indexSpec{}, IsList(nil))),
 		fn:     listIndex,
-		//sel:    listSelection,
+		sel:    listSelection,
 	})
 	register(primitive{
 		symbol: "⌷",
@@ -275,12 +275,36 @@ func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // indexes may be negative.
 func listIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	lst := R.(apl.List)
+	ai, err := listSelection(a, L, R)
+	if err != nil {
+		return nil, err
+	}
+
+	// Index at depth.
+	// Indexes may be negative (count from the end).
+	idx := ai.Ints
+	for i, k := range idx {
+		v := lst[k]
+		if i == len(idx)-1 {
+			return v, nil // TODO: copy?
+		} else {
+			lst = v.(apl.List)
+		}
+	}
+	return lst, nil // TODO: copy?
+}
+
+// listSelection returns the index for selective assignment.
+// The returned array is a single depth-index, not multiple indexes.
+// This is different from array indexing.
+func listSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+	lst := R.(apl.List)
 	spec := L.(apl.IdxSpec)
 
+	var ai apl.IndexArray
 	if len(spec) == 1 {
 		if _, ok := spec[0].(apl.List); ok {
-			// See: code.kx.com/q4m3/3_Lists/#39-indexing-with-lists
-			return nil, fmt.Errorf("TODO: indexing with a list")
+			return ai, fmt.Errorf("indexing with a list is not supported")
 		}
 	}
 
@@ -290,11 +314,11 @@ func listIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	for i := range spec {
 		v, ok := to.To(a, spec[i])
 		if ok == false {
-			return nil, fmt.Errorf("list index is no integer")
+			return ai, fmt.Errorf("list index is no integer")
 		}
 		ai := v.(apl.IndexArray)
 		if s := ai.Shape(); len(s) != 1 || s[0] != 1 {
-			return nil, fmt.Errorf("list index is no integer: %T", v)
+			return ai, fmt.Errorf("list index is no integer: %T", v)
 		}
 		idx[i] = ai.Ints[0] - a.Origin
 	}
@@ -306,16 +330,17 @@ func listIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			k = len(lst) + k
 		}
 		if k < 0 || k >= len(lst) {
-			return nil, fmt.Errorf("list index out of range")
+			return ai, fmt.Errorf("list index out of range")
 		}
+		idx[i] = k
 		v := lst[k]
-		if i == len(idx)-1 {
-			return v, nil // TODO: copy?
-		} else if l, ok := v.(apl.List); ok {
-			lst = l
-		} else {
-			return nil, fmt.Errorf("list index is too deep")
+		if i < len(idx)-1 {
+			if l, ok := v.(apl.List); ok {
+				lst = l
+			} else {
+				return ai, fmt.Errorf("list index is too deep")
+			}
 		}
 	}
-	return lst, nil // TODO: copy?
+	return apl.IndexArray{Dims: []int{len(idx)}, Ints: idx}, nil
 }
