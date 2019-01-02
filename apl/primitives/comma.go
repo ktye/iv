@@ -17,9 +17,9 @@ func init() {
 	})
 	register(primitive{
 		symbol: "∊",
-		doc:    "enlist, create simple vector",
-		Domain: Monadic(ToArray(nil)),
-		fn:     ravel, // for simple arrays ravel and enlist is the same
+		doc:    "enlist",
+		Domain: Monadic(nil),
+		fn:     enlist,
 	})
 	register(primitive{
 		symbol: ",",
@@ -399,4 +399,27 @@ func table(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	} else {
 		return rs.Reshape(shape), nil
 	}
+}
+
+// enlist creates a flat list from a nested list catenating all elements by depth first.
+func enlist(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	r, ok := R.(apl.List)
+	if ok == false {
+		return apl.List{R}, nil // TODO: copy
+	}
+
+	var f func(l apl.List) apl.List
+	f = func(l apl.List) apl.List {
+		var res apl.List
+		for _, e := range l {
+			if v, ok := e.(apl.List); ok {
+				v = f(v)
+				res = append(res, v...) // TODO: copy
+			} else {
+				res = append(res, e) // TODO: copy
+			}
+		}
+		return res
+	}
+	return f(r), nil
 }
