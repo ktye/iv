@@ -14,7 +14,7 @@ type Program []expr
 func (a *Apl) Eval(p Program) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("%s", string(debug.Stack()))
+			err = fmt.Errorf("panic: %s\n%s", r, string(debug.Stack()))
 		}
 	}()
 	v := make([]string, len(p))
