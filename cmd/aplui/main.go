@@ -26,6 +26,7 @@ import (
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
+	"github.com/ktye/iv/apl/rpc"
 	aplstrings "github.com/ktye/iv/apl/strings"
 	"github.com/ktye/iv/apl/xgo"
 
@@ -56,6 +57,7 @@ func main() {
 	operators.Register(a)
 	aplstrings.Register(a)
 	xgo.Register(a)
+	rpc.Register(a)
 
 	/* TODO
 	if extra {

@@ -2,6 +2,10 @@
 //
 // Usage
 //	apl < INPUT
+// Server mode
+//	apl ADDR < INPUT
+// Example
+//	apl ":1966"
 package main
 
 import (
@@ -13,6 +17,7 @@ import (
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
+	"github.com/ktye/iv/apl/rpc"
 )
 
 func main() {
@@ -20,6 +25,7 @@ func main() {
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
+	rpc.Register(a)
 
 	line := 0
 	scanner := bufio.NewScanner(os.Stdin)
@@ -31,6 +37,10 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%d: %s\n", line, err)
 			os.Exit(1)
 		}
+	}
+
+	if len(os.Args) > 1 {
+		rpc.ListenAndServe(a, os.Args[1])
 	}
 	return
 }
