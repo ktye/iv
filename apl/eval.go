@@ -2,6 +2,7 @@ package apl
 
 import (
 	"fmt"
+	"runtime/debug"
 	"strings"
 )
 
@@ -10,7 +11,12 @@ type Program []expr
 
 // Eval executes an apl program.
 // It can be called in a loop for every line of input.
-func (a *Apl) Eval(p Program) error {
+func (a *Apl) Eval(p Program) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", string(debug.Stack()))
+		}
+	}()
 	v := make([]string, len(p))
 	if a.debug {
 		for i, e := range p {
@@ -19,17 +25,18 @@ func (a *Apl) Eval(p Program) error {
 		fmt.Fprintln(a.stdout, strings.Join(v, " ⋄ "))
 	}
 
+	var val Value
 	for _, expr := range p {
-		v, err := expr.Eval(a)
+		val, err = expr.Eval(a)
 		if err != nil {
 			return err
 		}
 
 		if a.debug {
-			fmt.Fprintf(a.stdout, "%T\n", v)
+			fmt.Fprintf(a.stdout, "%T\n", val)
 		}
 		if isAssignment(expr) == false {
-			fmt.Fprintln(a.stdout, v.String(a))
+			fmt.Fprintln(a.stdout, val.String(a))
 		}
 	}
 	return nil
