@@ -1,5 +1,10 @@
 package apl
 
+import (
+	"bufio"
+	"io"
+)
+
 // Channel is a pair of read and write channels.
 // Channel operations:
 //	↑C	take one: read one value
@@ -27,4 +32,25 @@ func (c Channel) Close() {
 	close(c[1])
 	for range c[0] {
 	}
+}
+
+// LineReader wraps a ReadCloser with a Channel.
+func LineReader(rc io.ReadCloser) Channel {
+	scn := bufio.NewScanner(rc)
+	c := NewChannel()
+	go func(c Channel) {
+		for scn.Scan() {
+			line := scn.Text()
+			select {
+			case _, ok := <-c[1]:
+				if ok == false {
+					break
+				}
+			case c[0] <- String(line):
+			}
+		}
+		close(c[0])
+		rc.Close()
+	}(c)
+	return c
 }
