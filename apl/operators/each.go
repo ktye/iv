@@ -29,6 +29,10 @@ func each(a *apl.Apl, LO, RO apl.Value) apl.Function {
 }
 
 func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
+	if lst, ok := R.(apl.List); ok {
+		return eachList(a, lst, f)
+	}
+
 	ar, ok := R.(apl.Array)
 	if ok {
 		if apl.ArraySize(ar) == 0 {
@@ -62,7 +66,25 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 	return res, nil
 }
 
+func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
+	res := make(apl.List, len(l))
+	for i := range res {
+		v, err := f.Call(a, nil, l[i])
+		if err != nil {
+			return nil, err
+		}
+		res[i] = v
+	}
+	return res, nil
+}
+
 func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
+	_, okl := L.(apl.List)
+	_, okr := R.(apl.List)
+	if okl || okr {
+		return eachList2(a, L, R, f)
+	}
+
 	ar, rok := R.(apl.Array)
 	al, lok := L.(apl.Array)
 	var rs, ls []int
@@ -131,6 +153,38 @@ func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 			return nil, fmt.Errorf("each: result must be a scalar")
 		}
 		res.Values[i] = v
+	}
+	return res, nil
+}
+
+func eachList2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
+	l, lok := L.(apl.List)
+	r, rok := R.(apl.List)
+	size := 0
+	if lok {
+		size = len(l)
+	}
+	if rok {
+		if len(r) != size {
+			return nil, fmt.Errorf("each list: different list sizes")
+		}
+	}
+
+	res := make(apl.List, size)
+	for i := range res {
+		lv := L
+		rv := R
+		if lok {
+			lv = l[i]
+		}
+		if rok {
+			rv = r[i]
+		}
+		v, err := f.Call(a, lv, rv)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = v
 	}
 	return res, nil
 }
