@@ -23,6 +23,7 @@ import (
 	"github.com/ktye/duit"
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/big"
+	"github.com/ktye/iv/apl/http"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
@@ -58,6 +59,7 @@ func main() {
 	aplstrings.Register(a)
 	xgo.Register(a)
 	rpc.Register(a)
+	http.Register(a)
 
 	/* TODO
 	if extra {
