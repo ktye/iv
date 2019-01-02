@@ -181,6 +181,12 @@ func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
 //	they differ in rank by 1
 // For arrays the length of all axis but the last must be the same.
 func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	_, lst := L.(apl.List)
+	_, rst := R.(apl.List)
+	if lst || rst {
+		return catenateLists(a, L, R)
+	}
+
 	var err error
 	var x int
 	var frac bool
@@ -295,6 +301,20 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		res.Values[i] = v // TODO: copy?
 		apl.IncArrayIndex(dst, newshape)
 	}
+	return res, nil
+}
+
+func catenateLists(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	l, lok := L.(apl.List)
+	r, rok := R.(apl.List)
+	if lok == false {
+		return append(apl.List{L}, r...), nil // TODO: copy
+	} else if rok == false {
+		return append(l, R), nil // TODO: copy
+	}
+	res := make(apl.List, len(l)+len(r))
+	copy(res, l)          // TODO: copy
+	copy(res[len(l):], r) // TODO: copy
 	return res, nil
 }
 
