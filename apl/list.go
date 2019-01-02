@@ -75,6 +75,10 @@ func (l list) Eval(a *Apl) (Value, error) {
 	lst := make(List, len(l))
 	var err error
 	for i := range lst {
+		if l[i] == nil {
+			lst[i] = EmptyArray{}
+			continue
+		}
 		lst[i], err = l[i].Eval(a)
 		if err != nil {
 			return nil, err
