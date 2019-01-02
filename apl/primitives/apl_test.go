@@ -919,6 +919,19 @@ var testCases = []struct {
 	{"X←xgo→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "4 a+b+c+d", small},
 	{"S←xgo→s 0⋄#[1]S", "sum", 0},
 
+	{"⍝ Channels: take, drop and close", "", 0},
+	{"C←xgo→source 6⋄2 3↑C", "0 1 2\n3 4 5", 0},
+	{"C←xgo→source 6⋄↑C⋄↑C⋄↓C", "0\n1\n1", 0},
+
+	{"⍝ Reduce, scan and each over channel", "", 0},
+	{"C←xgo→source 6⋄+/C", "15", 0},
+	{`C←xgo→source 6⋄+\C`, "0 1 3 6 10 15", 0},
+	{`C←xgo→source 6⋄+¨C`, "(0;1;2;3;4;5;)", 0},
+	{`C←xgo→source 4⋄5+¨C`, "(5;6;7;8;)", 0},
+
+	{"⍝ Communicate over a channel", "", 0},
+	{`C←xgo→echo"?"⋄C↓'a'⋄C↓'b'⋄2↑C⋄↓C`, "a\nb\n?a ?b\n1", 0},
+
 	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", 0},
 	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
 	{"f←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", 0},        // 01-primes

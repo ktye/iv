@@ -106,6 +106,11 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 
 	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
 		d := f.(apl.Function)
+
+		if c, ok := r.(apl.Channel); ok {
+			return reduceChannel(a, l, d, c)
+		}
+
 		if _, ok := r.(apl.Axis); ok {
 			if rr, n, err := splitAxis(a, r); err != nil {
 				return nil, err
@@ -247,14 +252,17 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 				axis = n[0]
 			}
 		}
+		d := f.(apl.Function)
+
+		if c, ok := R.(apl.Channel); ok {
+			return scanChannel(a, d, c)
+		}
 
 		ar, ok := R.(apl.Array)
 		if ok == false {
 			// If R is scalar, return unchanged.
 			return R, nil
 		}
-
-		d := f.(apl.Function)
 
 		// The result has the same shape as R.
 		dims := apl.CopyShape(ar)
@@ -327,6 +335,31 @@ func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
 		return res, nil
 	}
 	return function(derived)
+}
+
+func scanChannel(a *apl.Apl, f apl.Function, c apl.Channel) (apl.Value, error) {
+	var vec []apl.Value
+	var err error
+	var s apl.Value
+	for v := range c[0] {
+		if vec == nil {
+			vec = append(vec, v)
+		} else {
+			s, err = f.Call(a, vec[len(vec)-1], v)
+			if err != nil {
+				break
+			}
+			vec = append(vec, s)
+		}
+	}
+	c.Close()
+	if err != nil {
+		return nil, err
+	} else if vec == nil {
+		return apl.EmptyArray{}, nil
+	} else {
+		return apl.MixedArray{Dims: []int{len(vec)}, Values: vec}, nil
+	}
 }
 
 // replicate, compress
@@ -648,6 +681,32 @@ func reduce(a *apl.Apl, vec []apl.Value, d apl.Function) (apl.Value, error) {
 		}
 	}
 	return v, nil
+}
+
+func reduceChannel(a *apl.Apl, L apl.Value, f apl.Function, c apl.Channel) (apl.Value, error) {
+	if L != nil {
+		return nil, fmt.Errorf("TODO: n-wise channel reduction")
+	}
+	var res apl.Value
+	var err error
+	for v := range c[0] {
+		if res == nil {
+			res = v
+		} else {
+			res, err = f.Call(a, res, v)
+			if err != nil {
+				break
+			}
+		}
+	}
+	c.Close()
+	if err != nil {
+		return nil, err
+	} else if res == nil {
+		return apl.EmptyArray{}, nil
+	} else {
+		return res, nil
+	}
 }
 
 func scan(a *apl.Apl, vec []apl.Value, d apl.Function) ([]apl.Value, error) {

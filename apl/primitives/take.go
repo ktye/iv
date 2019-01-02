@@ -18,11 +18,35 @@ func init() {
 		sel:    takeSelection,
 	})
 	register(primitive{
+		symbol: "↑",
+		doc:    "take from channel",
+		Domain: Dyadic(Split(ToIndexArray(nil), IsChannel(nil))),
+		fn:     takeChannel2,
+	})
+	register(primitive{
+		symbol: "↑",
+		doc:    "take one from channel",
+		Domain: Monadic(IsChannel(nil)),
+		fn:     takeChannel1,
+	})
+	register(primitive{
 		symbol: "↓",
 		doc:    "drop",
 		Domain: Dyadic(Split(ToIndexArray(nil), nil)),
 		fn:     drop,
 		sel:    dropSelection,
+	})
+	register(primitive{
+		symbol: "↓",
+		doc:    "drop to channel",
+		Domain: Dyadic(Split(IsChannel(nil), nil)),
+		fn:     sendChannel,
+	})
+	register(primitive{
+		symbol: "↓",
+		doc:    "close channel",
+		Domain: Monadic(IsChannel(nil)),
+		fn:     closeChannel,
 	})
 	register(primitive{
 		symbol: "↓",
@@ -241,4 +265,53 @@ func cut(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		res[i] = r[idx[i]:stp] // TODO: copy
 	}
 	return res, nil
+}
+
+func takeChannel1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	c := R.(apl.Channel)
+	v, ok := <-c[0]
+	if ok == false {
+		return nil, fmt.Errorf("channel is closed")
+	}
+	return v, nil
+}
+
+// takeChannel2 takes multiple values from channel R and reshapes according to L.
+func takeChannel2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	ai := L.(apl.IndexArray)
+	if len(ai.Shape()) != 1 {
+		return nil, fmt.Errorf("take channel: L must be an index vector")
+	}
+	for _, n := range ai.Ints {
+		if n <= 0 {
+			return nil, fmt.Errorf("take channel: values in L must be positive")
+		}
+	}
+	shape := make([]int, len(ai.Ints))
+	copy(shape, ai.Ints)
+	res := apl.MixedArray{Dims: shape}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
+
+	c := R.(apl.Channel)
+	for i := range res.Values {
+		v, ok := <-c[0]
+		if ok == false {
+			return nil, fmt.Errorf("not enough data in channel")
+		}
+		res.Values[i] = v
+	}
+	return res, nil
+}
+
+// sendChannel sends the value R to the channel L and returns R.
+func sendChannel(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	c := L.(apl.Channel)
+	c[1] <- R // TODO: copy?
+	return R, nil
+}
+
+// closeChannel closes the channel R and returns 1.
+func closeChannel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	R.(apl.Channel).Close()
+	return apl.Index(1), nil
 }

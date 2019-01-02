@@ -32,6 +32,9 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 	if lst, ok := R.(apl.List); ok {
 		return eachList(a, lst, f)
 	}
+	if c, ok := R.(apl.Channel); ok {
+		return eachChannel(a, nil, c, f)
+	}
 
 	ar, ok := R.(apl.Array)
 	if ok {
@@ -78,7 +81,25 @@ func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
 	return res, nil
 }
 
+func eachChannel(a *apl.Apl, L apl.Value, c apl.Channel, f apl.Function) (apl.Value, error) {
+	var res apl.List
+	for v := range c[0] {
+		v, err := f.Call(a, L, v)
+		if err != nil {
+			c.Close()
+			return nil, err
+		}
+		res = append(res, v)
+	}
+	c.Close()
+	return res, nil
+}
+
 func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
+	if c, ok := R.(apl.Channel); ok {
+		return eachChannel(a, L, c, f)
+	}
+
 	_, okl := L.(apl.List)
 	_, okr := R.(apl.List)
 	if okl || okr {
