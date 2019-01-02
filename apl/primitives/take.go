@@ -24,6 +24,12 @@ func init() {
 		fn:     drop,
 		sel:    dropSelection,
 	})
+	register(primitive{
+		symbol: "↓",
+		doc:    "cut",
+		Domain: Dyadic(Split(ToIndexArray(nil), IsList(nil))),
+		fn:     cut,
+	})
 }
 
 func take(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
@@ -199,4 +205,40 @@ func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IndexArray, e
 		}
 	}
 	return ai, nil
+}
+
+// Cut list R at indexes L.
+// This is similar to _ in q.
+// Indexes may be negative.
+func cut(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	ai := L.(apl.IndexArray)
+	r := R.(apl.List)
+	if len(ai.Shape()) != 1 {
+		return nil, fmt.Errorf("cut: left argument must be an index vector")
+	}
+	idx := make([]int, len(ai.Ints))
+	for i := range idx {
+		idx[i] = ai.Ints[i] - a.Origin
+		if idx[i] < 0 {
+			idx[i] = len(r) + idx[i]
+		}
+		if i > 0 && idx[i] <= idx[i-1] {
+			return nil, fmt.Errorf("cut: indexes may not decrease")
+		}
+		if idx[i] < 0 || idx[i] >= len(r) {
+			return nil, fmt.Errorf("cut: indexes out of range")
+		}
+	}
+	if len(idx) == 1 {
+		return r[idx[0]:], nil // TODO: copy
+	}
+	res := make(apl.List, len(idx))
+	for i := range res {
+		stp := len(r)
+		if i < len(idx)-1 {
+			stp = idx[i+1]
+		}
+		res[i] = r[idx[i]:stp] // TODO: copy
+	}
+	return res, nil
 }
