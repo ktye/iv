@@ -2,6 +2,7 @@ package primitives
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
@@ -14,6 +15,18 @@ func init() {
 		Domain: Monadic(IsArray(nil)),
 		fn:     transpose,
 		sel:    selection(transpose),
+	})
+	register(primitive{
+		symbol: "⍉",
+		doc:    "table from object",
+		Domain: Monadic(IsObject(nil)),
+		fn:     transposeObject,
+	})
+	register(primitive{
+		symbol: "⍉",
+		doc:    "dict from table",
+		Domain: Monadic(IsTable(nil)),
+		fn:     transposeTable,
 	})
 	register(primitive{
 		symbol: "⍉",
@@ -145,4 +158,69 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 		flat[i] = icr.Index(ridx) // 1+(⍴R)⊥((shape)⊤i)[L]
 	}
 	return flat, shape, nil
+}
+
+// transposeObject returns a Table by transposing an object.
+func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	o := R.(apl.Object)
+	uniform := func(v apl.Value) (bool, int) {
+		ar, ok := v.(apl.Array)
+		if ok == false {
+			return true, 1
+		}
+		shape := ar.Shape()
+		if len(shape) != 1 {
+			return false, 0
+		}
+		if _, ok := v.(apl.Uniform); ok {
+			return true, shape[0]
+		}
+		if shape[0] < 2 {
+			return true, shape[0]
+		}
+		v, _ = ar.At(0)
+		t := reflect.TypeOf(v)
+		for i := 1; i < shape[0]; i++ {
+			if v, err := ar.At(i); err != nil {
+				return false, 0
+			} else if reflect.TypeOf(v) != t {
+				return false, 0
+			}
+		}
+		return true, shape[0]
+	}
+	tab := apl.Table{Dict: &apl.Dict{}}
+	keys := o.Keys()
+	n := 0
+	for i, k := range keys {
+		col := o.At(a, k)
+		if col == nil {
+			return nil, fmt.Errorf("table: column %s does not exist", k.String(a))
+		}
+		ok, size := uniform(col)
+		if ok == false {
+			return nil, fmt.Errorf("table: column %s has mixed types", k.String(a))
+		}
+		if size == -1 {
+			size = 1
+			col = apl.List{col}
+		}
+		if i == 0 {
+			n = size
+		} else if size != n {
+			return nil, fmt.Errorf("table: columns have different sizes")
+		}
+		tab.K = append(tab.K, k) // TODO: copy k
+		if tab.Dict.M == nil {
+			tab.Dict.M = make(map[apl.Value]apl.Value)
+		}
+		tab.M[k] = col // TODO: copy
+	}
+	tab.Rows = n
+	return tab, nil
+}
+
+// transposeTable returns a Dict by transposing a table.
+func transposeTable(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	return R.(apl.Table).Dict, nil // TODO: copy
 }

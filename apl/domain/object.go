@@ -21,3 +21,23 @@ func (s objtype) String(a *apl.Apl) string {
 	}
 	return "object" + " " + s.child.String(a)
 }
+
+// IsTable accepts objects
+func IsTable(child SingleDomain) SingleDomain {
+	return table{child}
+}
+
+type table struct{ child SingleDomain }
+
+func (s table) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
+	if _, ok := V.(apl.Table); ok {
+		return propagate(a, V, s.child)
+	}
+	return V, false
+}
+func (s table) String(a *apl.Apl) string {
+	if s.child == nil {
+		return "table"
+	}
+	return "table" + " " + s.child.String(a)
+}

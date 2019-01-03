@@ -10,6 +10,7 @@ import (
 //
 // Values are accessed by indexing with keys.
 //	Object[Key]
+// Keys are usually strings, but dont have to be.
 // To set a key, use indexed assignment:
 //	Object[Name]←X
 // This also works for vectors
@@ -34,6 +35,14 @@ type Object interface {
 }
 
 // Dict is a dictionary object.
+// A Dict is created with the L#R, where
+// L is a key or a vector of keys and R conforming values.
+// Dicts can be indexed with their keys.
+// Example:
+//	D←`alpha#1 2 3   ⍝ Single key
+//	D←`a`b`c#1 2 3   ⍝ 3 Keys
+//	D[`a]            ⍝ returns value 1
+//	D[`a`c]          ⍝ returns a dict with 2 keys
 type Dict struct {
 	K []Value
 	M map[Value]Value
