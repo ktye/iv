@@ -30,6 +30,7 @@ import (
 	"github.com/ktye/iv/apl/rpc"
 	aplstrings "github.com/ktye/iv/apl/strings"
 	"github.com/ktye/iv/apl/xgo"
+	"github.com/ktye/iv/aplextra/q"
 
 	"github.com/ktye/iv/aplextra/help"
 	ivduit "github.com/ktye/iv/duit"
@@ -60,6 +61,7 @@ func main() {
 	xgo.Register(a)
 	rpc.Register(a)
 	http.Register(a)
+	q.Register(a)
 
 	/* TODO
 	if extra {
