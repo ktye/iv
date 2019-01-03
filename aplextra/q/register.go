@@ -22,7 +22,7 @@
 //	c: 3
 //
 //		T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)
-//		q→call (C; "sum"; T;)   ⍝ pass a dictionary
+//		q→call (C; "sum"; T;)   ⍝ pass a table
 //	a: 6
 //	b: 15
 //	c: 24
