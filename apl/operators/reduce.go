@@ -103,238 +103,257 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 			return reduceTack(false)
 		}
 	}
+	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		return reduct(a, f.(apl.Function), L, R, axis)
+	}
+	return function(derived)
+}
 
-	derived := func(a *apl.Apl, l, r apl.Value) (apl.Value, error) {
-		d := f.(apl.Function)
+func reduct(a *apl.Apl, f apl.Function, l, r apl.Value, axis int) (apl.Value, error) {
 
-		if c, ok := r.(apl.Channel); ok {
-			return reduceChannel(a, l, d, c)
-		}
-
-		if _, ok := r.(apl.Axis); ok {
-			if rr, n, err := splitAxis(a, r); err != nil {
-				return nil, err
-			} else {
-				r = rr
-				if len(n) != 1 {
-					return nil, fmt.Errorf("reduce with axis: axis must be a scalar")
-				}
-				axis = n[0]
-			}
-		}
-		if l != nil {
-			return nwise(a, d, l, r, axis)
-		}
-
-		// If R is a scalar, the operation is not applied and Z←R
-		ar, ok := r.(apl.Array)
-		if ok == false {
-			return r, nil
-		}
-
-		shape := ar.Shape()
-		if len(shape) == 0 {
-			if id := identityItem(f); id == nil {
-				return nil, fmt.Errorf("no identity item for reduce over empty array")
-			} else {
-				return id, nil
-			}
-		}
-
-		if axis < 0 {
-			axis = len(shape) + axis
-		}
-		if axis < 0 || axis >= len(shape) {
-			return nil, fmt.Errorf("reduce: axis rank is %d but axis %d", len(shape), axis)
-		}
-
-		// n is the number of values being reduced (the length if the reduction axis).
-		n := shape[axis]
-
-		// Dims is the shape of the result.
-		dims := make([]int, len(shape)-1)
-		k := 0
-		for i := range shape {
-			if i != axis {
-				dims[k] = shape[i]
-				k++
-			}
-		}
-
-		// If the length of the axis is 1, the result is a reshape.
-		// TODO: if the length of any other axis is 0, this should be triggered as well.
-		if n == 1 {
-			if rs, ok := ar.(apl.Reshaper); ok {
-				return rs.Reshape(dims), nil
-			} else {
-				return nil, fmt.Errorf("reduce with axis length 1: cannot reshape %T", ar)
-			}
-		}
-		if n == 0 {
-			// If the axis is 0, apply an identity function, DyaRef p 169
-			if id := identityItem(f); id == nil {
-				return nil, fmt.Errorf("reduce empty axis: cannot get identify item for %T", d)
-			} else {
-				ida := apl.MixedArray{Dims: []int{1}, Values: []apl.Value{id}}
-				return ida.Reshape(dims), nil
-			}
-		}
-
-		// Reduce directly, if R is a vector.
-		if len(shape) == 1 {
-			vec := make([]apl.Value, shape[0])
-			var err error
-			for i := range vec {
-				vec[i], err = ar.At(i)
-				if err != nil {
-					return nil, err
-				}
-			}
-			v, err := reduce(a, vec, d)
-			return v, err
-		}
-
-		// Create a new array with the given axis removed.
-		values := make([]apl.Value, apl.ArraySize(apl.MixedArray{Dims: dims}))
-		v := apl.MixedArray{
-			Dims:   dims,
-			Values: values,
-		}
-
-		vec := make([]apl.Value, n)
-		ic, sidx := apl.NewIdxConverter(shape)
-		tidx := make([]int, len(dims))
-		for k := range v.Values {
-			// Copy target index over the source index,
-			// leaving the reduced axis unset.
-			copy(sidx, tidx[:axis])
-			copy(sidx[axis+1:], tidx[axis:])
-			// Iterate over the reduced axis
-			for i := range vec {
-				sidx[axis] = i
-				// TODO: maybe this could be done more efficiently
-				// e.g. by iteration with a fixed increase.
-				if val, err := ar.At(ic.Index(sidx)); err != nil {
-					return nil, err
-				} else {
-					vec[i] = val
-				}
-			}
-			apl.IncArrayIndex(tidx, dims)
-
-			if res, err := reduce(a, vec, d); err != nil {
-				return nil, fmt.Errorf("cannot reduce: %s", err)
-			} else {
-				v.Values[k] = res
-			}
-		}
-		return v, nil
+	if c, ok := r.(apl.Channel); ok {
+		return reduceChannel(a, l, f, c)
 	}
 
-	return function(derived)
+	if _, ok := r.(apl.Axis); ok {
+		if rr, n, err := splitAxis(a, r); err != nil {
+			return nil, err
+		} else {
+			r = rr
+			if len(n) != 1 {
+				return nil, fmt.Errorf("reduce with axis: axis must be a scalar")
+			}
+			axis = n[0]
+		}
+	}
+
+	if _, ok := r.(apl.Table); ok {
+		return reduceTable(a, f, l, r, false) // axis is ignored.
+	} else if _, ok := r.(apl.Object); ok {
+		return reduceTable(a, f, l, r, false)
+	}
+
+	if l != nil {
+		return nwise(a, f, l, r, axis)
+	}
+
+	// If R is a scalar, the operation is not applied and Z←R
+	// Single element arrays return the element.
+	ar, ok := r.(apl.Array)
+	if ok == false {
+		return r, nil
+	}
+	shape := ar.Shape()
+	if len(shape) == 1 && shape[0] == 1 {
+		return ar.At(0) // higher rank single element arrays are reduced.
+	}
+
+	if len(shape) == 0 {
+		if id := identityItem(f.(apl.Value)); id == nil {
+			return nil, fmt.Errorf("no identity item for reduce over empty array")
+		} else {
+			return id, nil
+		}
+	}
+
+	if axis < 0 {
+		axis = len(shape) + axis
+	}
+	if axis < 0 || axis >= len(shape) {
+		return nil, fmt.Errorf("reduce: axis rank is %d but axis %d", len(shape), axis)
+	}
+
+	// n is the number of values being reduced (the length if the reduction axis).
+	n := shape[axis]
+
+	// Dims is the shape of the result.
+	dims := make([]int, len(shape)-1)
+	k := 0
+	for i := range shape {
+		if i != axis {
+			dims[k] = shape[i]
+			k++
+		}
+	}
+
+	// If the length of the axis is 1, the result is a reshape.
+	// TODO: if the length of any other axis is 0, this should be triggered as well.
+	if n == 1 {
+		if rs, ok := ar.(apl.Reshaper); ok {
+			return rs.Reshape(dims), nil
+		} else {
+			return nil, fmt.Errorf("reduce with axis length 1: cannot reshape %T", ar)
+		}
+	}
+	if n == 0 {
+		// If the axis is 0, apply an identity function, DyaRef p 169
+		if id := identityItem(f.(apl.Value)); id == nil {
+			return nil, fmt.Errorf("reduce empty axis: cannot get identify item for %T", f)
+		} else {
+			ida := apl.MixedArray{Dims: []int{1}, Values: []apl.Value{id}}
+			return ida.Reshape(dims), nil
+		}
+	}
+
+	// Reduce directly, if R is a vector.
+	if len(shape) == 1 {
+		vec := make([]apl.Value, shape[0])
+		var err error
+		for i := range vec {
+			vec[i], err = ar.At(i)
+			if err != nil {
+				return nil, err
+			}
+		}
+		v, err := reduce(a, vec, f)
+		return v, err
+	}
+
+	// Create a new array with the given axis removed.
+	values := make([]apl.Value, apl.ArraySize(apl.MixedArray{Dims: dims}))
+	v := apl.MixedArray{
+		Dims:   dims,
+		Values: values,
+	}
+
+	vec := make([]apl.Value, n)
+	ic, sidx := apl.NewIdxConverter(shape)
+	tidx := make([]int, len(dims))
+	for k := range v.Values {
+		// Copy target index over the source index,
+		// leaving the reduced axis unset.
+		copy(sidx, tidx[:axis])
+		copy(sidx[axis+1:], tidx[axis:])
+		// Iterate over the reduced axis
+		for i := range vec {
+			sidx[axis] = i
+			// TODO: maybe this could be done more efficiently
+			// e.g. by iteration with a fixed increase.
+			if val, err := ar.At(ic.Index(sidx)); err != nil {
+				return nil, err
+			} else {
+				vec[i] = val
+			}
+		}
+		apl.IncArrayIndex(tidx, dims)
+
+		if res, err := reduce(a, vec, f); err != nil {
+			return nil, fmt.Errorf("cannot reduce: %s", err)
+		} else {
+			v.Values[k] = res
+		}
+	}
+	return v, nil
 }
 
 // ScanArray is the derived function f\ .
 func scanArray(a *apl.Apl, f apl.Value, axis int) apl.Function {
-	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-		if L != nil {
-			return nil, fmt.Errorf("scan: derived function is not defined for dyadic context")
-		}
+	return function(func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		return scanfunc(a, f.(apl.Function), L, R, axis)
+	})
+}
 
-		if _, ok := R.(apl.Axis); ok {
-			if r, n, err := splitAxis(a, R); err != nil {
+func scanfunc(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, error) {
+	if L != nil {
+		return nil, fmt.Errorf("scan: derived function is not defined for dyadic context")
+	}
+
+	if _, ok := R.(apl.Axis); ok {
+		if r, n, err := splitAxis(a, R); err != nil {
+			return nil, err
+		} else {
+			R = r
+			if len(n) != 1 {
+				return nil, fmt.Errorf("scan with axis: axis must be a scalar")
+			}
+			axis = n[0]
+		}
+	}
+
+	if _, ok := R.(apl.Table); ok {
+		return reduceTable(a, f, L, R, true) // axis is ignored.
+	} else if _, ok := R.(apl.Object); ok {
+		return reduceTable(a, f, L, R, true)
+	}
+	if c, ok := R.(apl.Channel); ok {
+		return scanChannel(a, f, c)
+	}
+
+	ar, ok := R.(apl.Array)
+	if ok == false {
+		// If R is scalar, return unchanged.
+		return R, nil
+	}
+
+	// The result has the same shape as R.
+	dims := apl.CopyShape(ar)
+	res := apl.MixedArray{
+		Values: make([]apl.Value, apl.ArraySize(ar)),
+		Dims:   dims,
+	}
+
+	if len(dims) == 0 {
+		return apl.EmptyArray{}, nil
+	}
+
+	if axis < 0 {
+		axis = len(dims) + axis
+	}
+	if axis < 0 || axis >= len(dims) {
+		return nil, fmt.Errorf("scan: axis rank is %d but axis %d", len(dims), axis)
+	}
+
+	// Shortcut, if R is a vector
+	if len(dims) == 1 {
+		vec := make([]apl.Value, dims[0])
+		for i := range vec {
+			if v, err := ar.At(i); err != nil {
 				return nil, err
 			} else {
-				R = r
-				if len(n) != 1 {
-					return nil, fmt.Errorf("scan with axis: axis must be a scalar")
-				}
-				axis = n[0]
+				vec[i] = v
 			}
 		}
-		d := f.(apl.Function)
-
-		if c, ok := R.(apl.Channel); ok {
-			return scanChannel(a, d, c)
+		vec, err := scan(a, vec, f)
+		if err != nil {
+			return nil, err
 		}
-
-		ar, ok := R.(apl.Array)
-		if ok == false {
-			// If R is scalar, return unchanged.
-			return R, nil
-		}
-
-		// The result has the same shape as R.
-		dims := apl.CopyShape(ar)
-		res := apl.MixedArray{
-			Values: make([]apl.Value, apl.ArraySize(ar)),
-			Dims:   dims,
-		}
-
-		if len(dims) == 0 {
-			return apl.EmptyArray{}, nil
-		}
-
-		if axis < 0 {
-			axis = len(dims) + axis
-		}
-		if axis < 0 || axis >= len(dims) {
-			return nil, fmt.Errorf("scan: axis rank is %d but axis %d", len(dims), axis)
-		}
-
-		// Shortcut, if R is a vector
-		if len(dims) == 1 {
-			vec := make([]apl.Value, dims[0])
-			for i := range vec {
-				if v, err := ar.At(i); err != nil {
-					return nil, err
-				} else {
-					vec[i] = v
-				}
-			}
-			vec, err := scan(a, vec, d)
-			if err != nil {
-				return nil, err
-			}
-			return apl.MixedArray{
-				Values: vec,
-				Dims:   []int{len(vec)},
-			}, nil
-		}
-
-		// Loop over the indexes, with the scan axis length set to 1.
-		lidx := apl.CopyShape(ar)
-		lidx[axis] = 1
-		ic, idx := apl.NewIdxConverter(dims)
-		vec := make([]apl.Value, dims[axis])
-		for i := 0; i < apl.ArraySize(apl.MixedArray{Dims: lidx}); i++ {
-			// Build the scan vector, by iterating over the axis.
-			for k := range vec {
-				idx[axis] = k
-				val, err := ar.At(ic.Index(idx))
-				if err != nil {
-					return nil, err
-				}
-				vec[k] = val
-			}
-			vals, err := scan(a, vec, d)
-			if err != nil {
-				return nil, err
-			}
-
-			// Assign the values to the destination indexes.
-			for k := range vals {
-				idx[axis] = k
-				res.Values[ic.Index(idx)] = vals[k]
-			}
-
-			// Reset the index vector and increment.
-			idx[axis] = 0
-			apl.IncArrayIndex(idx, lidx)
-		}
-		return res, nil
+		return apl.MixedArray{
+			Values: vec,
+			Dims:   []int{len(vec)},
+		}, nil
 	}
-	return function(derived)
+
+	// Loop over the indexes, with the scan axis length set to 1.
+	lidx := apl.CopyShape(ar)
+	lidx[axis] = 1
+	ic, idx := apl.NewIdxConverter(dims)
+	vec := make([]apl.Value, dims[axis])
+	for i := 0; i < apl.ArraySize(apl.MixedArray{Dims: lidx}); i++ {
+		// Build the scan vector, by iterating over the axis.
+		for k := range vec {
+			idx[axis] = k
+			val, err := ar.At(ic.Index(idx))
+			if err != nil {
+				return nil, err
+			}
+			vec[k] = val
+		}
+		vals, err := scan(a, vec, f)
+		if err != nil {
+			return nil, err
+		}
+
+		// Assign the values to the destination indexes.
+		for k := range vals {
+			idx[axis] = k
+			res.Values[ic.Index(idx)] = vals[k]
+		}
+
+		// Reset the index vector and increment.
+		idx[axis] = 0
+		apl.IncArrayIndex(idx, lidx)
+	}
+	return res, nil
 }
 
 func scanChannel(a *apl.Apl, f apl.Function, c apl.Channel) (apl.Value, error) {
@@ -709,6 +728,66 @@ func reduceChannel(a *apl.Apl, L apl.Value, f apl.Function, c apl.Channel) (apl.
 	}
 }
 
+// reduceTable applies to tables or objects/dicts.
+// It always uses the same axis.
+// It is used from both reduce and scan.
+func reduceTable(a *apl.Apl, f apl.Function, L, R apl.Value, scan bool) (apl.Value, error) {
+	var o apl.Object
+	istable := false
+	if t, ok := R.(apl.Table); ok {
+		istable = true
+		o = t.Dict
+	} else {
+		o = R.(apl.Object)
+	}
+	keys := o.Keys()
+	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
+	var err error
+	for i, k := range keys {
+		col := o.At(a, k)
+		var ar apl.Array
+		if v, ok := col.(apl.Array); ok {
+			ar = v
+		} else {
+			ar = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{col}} // TODO: copy?
+		}
+		var v apl.Value
+		if scan {
+			v, err = scanfunc(a, f, L, ar, -1)
+		} else {
+			v, err = reduct(a, f, L, ar, -1)
+		}
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := v.(apl.Array); ok == false && istable {
+			// Tables never contain scalars. Values must be enlisted.
+			v = apl.List{v}
+		}
+		d.K[i] = k
+		d.M[k] = v
+	}
+	if istable {
+		return dict2table(a, &d)
+	}
+	return &d, nil
+}
+
+// copy from primitives/table.go
+func dict2table(a *apl.Apl, d *apl.Dict) (apl.Table, error) {
+	rows := 0
+	if len(d.K) > 0 {
+		v := d.At(a, d.K[0])
+		if ar, ok := v.(apl.Array); ok {
+			shape := ar.Shape()
+			if len(shape) == 1 {
+				rows = shape[0]
+			}
+		}
+	}
+	return apl.Table{Dict: d, Rows: rows}, nil
+}
+
 func scan(a *apl.Apl, vec []apl.Value, d apl.Function) ([]apl.Value, error) {
 	// The ith element of the result is: d/I↑V
 	res := make([]apl.Value, len(vec))
@@ -738,6 +817,13 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 			n = -n
 			neg = true
 		}
+	}
+
+	if _, ok := R.(apl.Table); ok {
+		return nil, fmt.Errorf("n-wise reduction over table should not happen")
+	}
+	if _, ok := R.(apl.Object); ok {
+		return nil, fmt.Errorf("n-wise reduction over object should not happen")
 	}
 
 	ar, ok := R.(apl.Array)
