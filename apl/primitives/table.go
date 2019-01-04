@@ -203,9 +203,9 @@ func isTableCat(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool, bool) {
 	} else if l, ok := L.(apl.Object); ok {
 		return l, r, first, true
 	} else if rr, ok := r.(apl.Table); ok {
-		return l, rr, first, true
+		return L, rr, first, true
 	} else if rr, ok := r.(apl.Object); ok {
-		return l, rr, first, true
+		return L, rr, first, true
 	}
 	return L, R, false, false
 }
@@ -213,20 +213,67 @@ func isTableCat(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool, bool) {
 // catenateTables catenates dicts or tables.
 // At least one argument is a dict or table, the other may be a scalar or an array.
 func catenateTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error) {
+	istable := false
+	leftarray := false
+	var o apl.Object
 	if l, ok := L.(apl.Table); ok {
+		istable = true
+		o = l.Dict
 		if r, ok := R.(apl.Table); ok {
 			return catenateTwoTables(a, l, r, first)
 		} else if _, ok = R.(apl.Object); ok {
 			return nil, fmt.Errorf("catenate: cannot mix object and table")
 		}
 	} else if l, ok := L.(apl.Object); ok {
+		o = l
 		if r, ok := R.(apl.Object); ok {
 			return catenateTwoTables(a, l, r, first)
 		} else if _, ok = R.(apl.Table); ok {
 			return nil, fmt.Errorf("catenate: cannot mix object and table")
 		}
 	}
-	return nil, fmt.Errorf("TODO: cat tables")
+
+	// Catenate a table or object with a normal array or scalar.
+	// The axis value is ignored.
+
+	if r, ok := R.(apl.Table); ok {
+		istable = true
+		leftarray = true
+		o = r.Dict
+	} else if r, ok := R.(apl.Object); ok {
+		leftarray = true
+		o = r
+	}
+
+	var lv, rv apl.Value
+	if leftarray {
+		lv = L
+	} else {
+		rv = R
+	}
+
+	keys := o.Keys()
+	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
+	var err error
+	for i, k := range keys {
+		d.K[i] = k // TODO: copy?
+		v := o.At(a, k)
+		if leftarray {
+			rv = v
+		} else {
+			lv = v
+		}
+		v, err = catenate(a, lv, rv)
+		if err != nil {
+			return nil, err
+		}
+		d.M[k] = v
+	}
+
+	if istable {
+		return dict2table(a, &d)
+	}
+	return &d, nil
 }
 
 // catenateTwoTables catenates dicts or tables.
