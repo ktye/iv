@@ -47,6 +47,12 @@ func depth(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 // tally returns the number of major cells of R.
 // It is equlivalent to {⍬⍴(⍴⍵),1}.
 func tally(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	if t, ok := R.(apl.Table); ok {
+		return apl.Index(t.Rows), nil
+	}
+	if o, ok := R.(apl.Object); ok {
+		return apl.Index(len(o.Keys())), nil
+	}
 	ar, ok := R.(apl.Array)
 	if ok == false {
 		return apl.Index(1), nil
