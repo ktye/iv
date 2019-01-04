@@ -180,3 +180,27 @@ func (n not) String(a *apl.Apl) string {
 	}
 	return "!" + n.child.String(a)
 }
+
+func Or(child1, child2 SingleDomain) SingleDomain {
+	return or{child1, child2}
+}
+
+type or struct {
+	child1, child2 SingleDomain
+}
+
+func (n or) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
+	if n.child1 == nil || n.child2 == nil {
+		return V, false
+	}
+	if v, ok := n.child1.To(a, V); ok {
+		return v, true
+	} else if v, ok := n.child2.To(a, V); ok {
+		return v, true
+	}
+	return V, false
+}
+
+func (n or) String(a *apl.Apl) string {
+	return n.child1.String(a) + " or " + n.child2.String(a)
+}

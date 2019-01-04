@@ -43,6 +43,12 @@ func init() {
 		})
 		register(primitive{
 			symbol: e.symbol,
+			doc:    e.doc,
+			Domain: Monadic(Or(IsObject(nil), IsTable(nil))),
+			fn:     table1(e.symbol, e.monadic),
+		})
+		register(primitive{
+			symbol: e.symbol,
 			doc:    e.doc2,
 			Domain: Dyadic(Split(IsScalar(nil), IsScalar(nil))),
 			fn:     arith2(e.symbol, e.dyadic),
