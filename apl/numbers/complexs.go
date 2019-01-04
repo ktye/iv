@@ -46,6 +46,13 @@ func (f ComplexArray) Set(i int, v apl.Value) error {
 	return fmt.Errorf("cannot assign %T to ComplexArray", v)
 }
 
+func (f ComplexArray) Make(shape []int) apl.Array {
+	return ComplexArray{
+		Dims:  shape,
+		Cmplx: make([]complex128, prod(shape)),
+	}
+}
+
 func makeComplexArray(v []apl.Value) ComplexArray {
 	f := make([]complex128, len(v))
 	for i, e := range v {

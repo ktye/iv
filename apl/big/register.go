@@ -34,6 +34,7 @@ func SetBigTower(a *apl.Apl) {
 		FromIndex: func(n int) apl.Number {
 			return Int{big.NewInt(int64(n))}
 		},
+		Uniform: func(v []apl.Value) (apl.Value, bool) { return nil, false },
 	}
 	if err := a.SetTower(t); err != nil {
 		panic(err)
@@ -58,6 +59,7 @@ func SetPreciseTower(a *apl.Apl, prec uint) {
 		FromIndex: func(n int) apl.Number {
 			return Float{big.NewFloat(float64(n)).SetPrec(prec)}
 		},
+		Uniform: func(v []apl.Value) (apl.Value, bool) { return nil, false },
 	}
 	if err := a.SetTower(t); err != nil {
 		panic(err)

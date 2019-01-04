@@ -101,6 +101,7 @@ type Array interface {
 type Uniform interface {
 	Array
 	Zero() Value
+	Make([]int) Array
 }
 
 // Reshaper is an array that can reshape itself.
@@ -399,6 +400,13 @@ func (ar IndexArray) Set(i int, v Value) error {
 		}
 	}
 	return fmt.Errorf("cannot set %T to IndexArray", v)
+}
+
+func (s IndexArray) Make(shape []int) Array {
+	return IndexArray{
+		Dims: shape,
+		Ints: make([]int, prod(shape)),
+	}
 }
 
 func makeIndexArray(v []Value) IndexArray {

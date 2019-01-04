@@ -62,3 +62,21 @@ func (t TimeArray) Reshape(shape []int) apl.Value {
 	}
 	return res
 }
+
+func (t TimeArray) Make(shape []int) apl.Array {
+	return TimeArray{
+		Dims:  shape,
+		Times: make([]time.Time, prod(shape)),
+	}
+}
+
+func makeTimeArray(v []apl.Value) TimeArray {
+	t := make([]time.Time, len(v))
+	for i, e := range v {
+		t[i] = time.Time(e.(Time))
+	}
+	return TimeArray{
+		Dims:  []int{len(v)},
+		Times: t,
+	}
+}

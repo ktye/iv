@@ -70,6 +70,13 @@ func (s StringArray) Set(i int, v Value) error {
 	return fmt.Errorf("cannot assign %T to StringArray", v)
 }
 
+func (s StringArray) Make(shape []int) Array {
+	return StringArray{
+		Dims:    shape,
+		Strings: make([]string, prod(shape)),
+	}
+}
+
 func makeStringArray(v []Value) StringArray {
 	str := make([]string, len(v))
 	for i, e := range v {

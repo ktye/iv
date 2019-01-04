@@ -214,10 +214,11 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// Catenate two scalars.
 	if isLarray == false && isRarray == false {
-		return apl.MixedArray{
+		v, _ := a.Unify(apl.MixedArray{
 			Values: []apl.Value{L, R}, // TODO: copy?
 			Dims:   []int{2},
-		}, nil
+		}, false)
+		return v, nil
 	}
 
 	reshapeScalar := func(scalar apl.Value, othershape []int) apl.Array {

@@ -69,6 +69,8 @@ func makeUniform(v []apl.Value) (apl.Value, bool) {
 		return makeFloatArray(v), true
 	} else if t == reflect.TypeOf(Complex(0)) {
 		return makeComplexArray(v), true
+	} else if t == reflect.TypeOf(y0) {
+		return makeTimeArray(v), true
 	}
 	return nil, false
 }
