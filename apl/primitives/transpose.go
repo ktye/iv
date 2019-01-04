@@ -18,13 +18,13 @@ func init() {
 	})
 	register(primitive{
 		symbol: "⍉",
-		doc:    "table from object",
+		doc:    "table from object, transpose, flip",
 		Domain: Monadic(IsObject(nil)),
 		fn:     transposeObject,
 	})
 	register(primitive{
 		symbol: "⍉",
-		doc:    "dict from table",
+		doc:    "dict from table, transpose, flip",
 		Domain: Monadic(IsTable(nil)),
 		fn:     transposeTable,
 	})
@@ -213,6 +213,9 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		tab.K = append(tab.K, k) // TODO: copy k
 		if tab.Dict.M == nil {
 			tab.Dict.M = make(map[apl.Value]apl.Value)
+		}
+		if _, ok := col.(apl.Array); ok == false {
+			col = apl.List{col} // enlist scalars
 		}
 		tab.M[k] = col // TODO: copy
 	}
