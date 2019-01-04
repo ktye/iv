@@ -22,6 +22,9 @@ var testCases = []struct {
 	in, exp string
 	flag    int
 }{
+	// TODO +/T
+	// T,+/T
+
 	{"⍝ Basic numbers and arithmetics", "", 0},
 	{"1", "1", 0},
 	{"1+1", "2", 0},
@@ -914,10 +917,26 @@ var testCases = []struct {
 	{"D←`a`b`c#1 2 3⋄G←D[`a`c]⋄G", "a: 1\nc: 3", 0},
 
 	{"⍝ Table, transpose a dict to create a table", "", 0},
+	{"⍉`a`b#1 2", "a b\n1 2", 0},
 	{"⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n2 5 8\n3 6 9", 0},
 	{"⍉⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a: 1 2 3\nb: 4 5 6\nc: 7 8 9", 0},
 	{"⍴`a`b#(1 2 3;4 5 6;)", "2", 0},
 	{"⍴⍉`a`b#(1 2 3;4 5 6;)", "3 2", 0},
+
+	{"⍝ Indexing tables", "", 0},
+	{"T←⍉`a`b#1 2⋄T[1]", "a b\n1 2", 0},
+	{"T←⍉`a`b#(1;3;)⋄T[1]", "a b\n1 3", 0},
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a b\n1 3", 0},             // single row as a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1;]", "(1;3;)", 0},              // single row as a list
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3]", "a b\n1 3\n3 5", 0},      // multiple rows as a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3;]", "a b\n1 3\n3 5", 0},     // multiple rows are always a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[0 1]", "a b\n3 5\n1 3", 0},      // 0 or negative indexes
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;`b]", "b\n4\n5\n6", 0}, // single column table
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", 0},    // single column table as a vector
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", 0}, // subtable if any index is multiple
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", 0},        // single value
+
+	{"⍝ TODO: Assignment on tables, updates", "", 0},
 
 	{"⍝ Elementary functions on dicts and tables", "", 0},
 	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", 0},

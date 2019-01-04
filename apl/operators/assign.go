@@ -117,6 +117,8 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		to := ToIndexArray(nil)
 		if v, ok := to.To(a, indexes); ok == false {
 			return fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
+		} else if _, ok := v.(apl.EmptyArray); ok {
+			return fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
 		} else {
 			idx = v.(apl.IndexArray)
 		}

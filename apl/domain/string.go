@@ -32,6 +32,10 @@ func IsStringArray(child SingleDomain) SingleDomain {
 	return stringstype{child, false}
 }
 
+func ToStringArray(child SingleDomain) SingleDomain {
+	return stringstype{child, true}
+}
+
 type stringstype struct {
 	child   SingleDomain
 	convert bool

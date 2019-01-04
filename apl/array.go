@@ -123,7 +123,7 @@ type ArraySetter interface {
 
 // MakeArray creates a new array.
 // It makes an array of the same type as the prototype, if it can.
-// Otherwise it returns a general array.
+// Otherwise it returns a mixed array.
 // The prototype may be nil.
 func MakeArray(prototype Array, shape []int) ArraySetter {
 	var am ArrayMaker
