@@ -916,6 +916,8 @@ var testCases = []struct {
 	{"⍝ Table, transpose a dict to create a table", "", 0},
 	{"⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n2 5 8\n3 6 9", 0},
 	{"⍉⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a: 1 2 3\nb: 4 5 6\nc: 7 8 9", 0},
+	{"⍴`a`b#(1 2 3;4 5 6;)", "2", 0},
+	{"⍴⍉`a`b#(1 2 3;4 5 6;)", "3 2", 0},
 
 	{"⍝ Elementary functions on dicts and tables", "", 0},
 	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", 0},

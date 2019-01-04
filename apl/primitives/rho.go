@@ -29,10 +29,19 @@ var reshape = primitive{
 
 // Rho1 returns the shape of R.
 func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	// Report a table as a two dimensional array.
+	if t, ok := R.(apl.Table); ok == true {
+		return apl.IndexArray{
+			Dims: []int{2},
+			Ints: []int{t.Rows, len(t.K)},
+		}, nil
+	}
+	// An object returns the number of keys.
 	if o, ok := R.(apl.Object); ok == true {
 		n := len(o.Keys())
 		return apl.IndexArray{Dims: []int{1}, Ints: []int{n}}, nil
 	}
+
 	if _, ok := R.(apl.Array); ok == false {
 		return apl.EmptyArray{}, nil
 	}
