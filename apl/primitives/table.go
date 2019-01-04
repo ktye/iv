@@ -189,6 +189,115 @@ func tableAny(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value,
 	}
 }
 
+// isTableCat tests if one of the arguments is a table or object.
+// It may be hidden in an axis on the right.
+func isTableCat(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool, bool) {
+	first := false
+	r := R
+	if ax, ok := R.(apl.Axis); ok {
+		r = ax.R
+		first = true // we assume it's non-default.
+	}
+	if l, ok := L.(apl.Table); ok {
+		return l, r, first, true
+	} else if l, ok := L.(apl.Object); ok {
+		return l, r, first, true
+	} else if rr, ok := r.(apl.Table); ok {
+		return l, rr, first, true
+	} else if rr, ok := r.(apl.Object); ok {
+		return l, rr, first, true
+	}
+	return L, R, false, false
+}
+
+// catenateTables catenates dicts or tables.
+// At least one argument is a dict or table, the other may be a scalar or an array.
+func catenateTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error) {
+	if l, ok := L.(apl.Table); ok {
+		if r, ok := R.(apl.Table); ok {
+			return catenateTwoTables(a, l, r, first)
+		} else if _, ok = R.(apl.Object); ok {
+			return nil, fmt.Errorf("catenate: cannot mix object and table")
+		}
+	} else if l, ok := L.(apl.Object); ok {
+		if r, ok := R.(apl.Object); ok {
+			return catenateTwoTables(a, l, r, first)
+		} else if _, ok = R.(apl.Table); ok {
+			return nil, fmt.Errorf("catenate: cannot mix object and table")
+		}
+	}
+	return nil, fmt.Errorf("TODO: cat tables")
+}
+
+// catenateTwoTables catenates dicts or tables.
+// Both arguments are the same type.
+func catenateTwoTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error) {
+	_, istable := L.(apl.Table)
+	var l, r apl.Object
+	if istable {
+		l = L.(apl.Table).Dict
+		r = R.(apl.Table).Dict
+	} else {
+		l = L.(apl.Object)
+		r = R.(apl.Object)
+	}
+
+	if istable {
+		first = !first
+	}
+
+	keys := l.Keys()
+	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
+	if first {
+		for i, k := range keys {
+			d.K[i] = k // TODO: Copy?
+			d.M[k] = l.At(a, k)
+		}
+		for _, k := range r.Keys() {
+			if _, ok := d.M[k]; !ok {
+				d.K = append(d.K, k)
+			}
+			d.M[k] = r.At(a, k)
+		}
+	} else {
+		rkeys := r.Keys()
+		if istable && len(keys) != len(rkeys) {
+			return nil, fmt.Errorf("catenate table on first axis: tables have different number of columns")
+		}
+		for i, k := range keys {
+			d.K[i] = k // TODO: Copy?
+			lv := l.At(a, k)
+			rv := r.At(a, k)
+			if rv == nil {
+				if istable {
+					return nil, fmt.Errorf("catenate table on first axis: tables have different columns")
+				}
+				d.M[k] = lv
+			} else {
+				v, err := catenate(a, lv, rv)
+				if err != nil {
+					return nil, err
+				}
+				d.M[k] = v
+			}
+		}
+		for _, k := range rkeys {
+			if d.M[k] == nil {
+				if istable {
+					return nil, fmt.Errorf("catenate table on first axis: tables have different columns")
+				}
+				d.K = append(d.K, k)
+				d.M[k] = r.At(a, k)
+			}
+		}
+	}
+
+	if istable {
+		return dict2table(a, &d)
+	}
+	return &d, nil
+}
+
 func dict2table(a *apl.Apl, d *apl.Dict) (apl.Table, error) {
 	rows := 0
 	if len(d.K) > 0 {

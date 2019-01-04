@@ -22,6 +22,14 @@ var testCases = []struct {
 	in, exp string
 	flag    int
 }{
+	{"⍝ Catenate tables or objects", "", 0},
+	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A,B", "a: 1 2 5 6\nb: 3 4 7 8", 0},
+	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(5 6;7 8;)⋄A,B", "a: 1 2\nb: 3 4 5 6\nc: 7 8", 0},
+	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A⍪B", "a: 5 6\nb: 7 8", 0},
+	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(5 6;7 8;)⋄A⍪B", "a: 1 2\nb: 5 6\nc: 7 8", 0},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A,B", "a b\n5 7\n6 8", 0},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`b`c#(5 6;7 8;)⋄A,B", "a b c\n1 5 7\n2 6 8", 0},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A⍪B", "a b\n1 3\n2 4\n5 7\n6 8", 0},
 
 	{"⍝ Basic numbers and arithmetics", "", 0},
 	{"1", "1", 0},

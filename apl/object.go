@@ -29,6 +29,7 @@ import (
 //	f←Object[`f] ⋄ f R
 //      Object[`f]⍨R
 type Object interface {
+	String(*Apl) string
 	Keys() []Value
 	At(*Apl, Value) Value
 	Set(*Apl, Value, Value) error

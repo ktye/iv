@@ -181,6 +181,10 @@ func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
 //	they differ in rank by 1
 // For arrays the length of all axis but the last must be the same.
 func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	if l, r, first, ok := isTableCat(a, L, R); ok {
+		return catenateTables(a, l, r, first)
+	}
+
 	_, lst := L.(apl.List)
 	_, rst := R.(apl.List)
 	if lst || rst {
