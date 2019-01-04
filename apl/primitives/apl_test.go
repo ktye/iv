@@ -22,9 +22,6 @@ var testCases = []struct {
 	in, exp string
 	flag    int
 }{
-	{"⍝ Table, transpose a dict to create a table", "", 0},
-	{"⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n2 5 8\n3 6 9", 0},
-	{"⍉⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a: 1 2 3\nb: 4 5 6\nc: 7 8 9", 0},
 
 	{"⍝ Basic numbers and arithmetics", "", 0},
 	{"1", "1", 0},
@@ -916,6 +913,20 @@ var testCases = []struct {
 	{"D←`alpha#1⋄D[`alpha`beta]←3 4⋄D", "alpha: 3\nbeta: 4", 0},
 	{"D←`a`b`c#1⋄D⋄#D", "a: 1\nb: 1\nc: 1\na b c", 0},
 	{"D←`a`b`c#1 2 3⋄G←D[`a`c]⋄G", "a: 1\nc: 3", 0},
+
+	{"⍝ Table, transpose a dict to create a table", "", 0},
+	{"⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n2 5 8\n3 6 9", 0},
+	{"⍉⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a: 1 2 3\nb: 4 5 6\nc: 7 8 9", 0},
+
+	{"⍝ Elementary functions on dicts and tables", "", 0},
+	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", 0},
+	{"A←⍉`a`b#(1 2;3 4;)⋄-A", "a b\n¯1 ¯3\n¯2 ¯4", 0},
+	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(9 8;7 6;)⋄B-A", "a: 8 6\nb: 4 2", 0},
+	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(9 8;7 6;)⋄B-A", "b: 6 4\nc: 7 6\na: ¯1 ¯2", 0},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`b`c#(9 8;7 6;)⋄B-A", "b c a\n6 7 ¯1\n4 6 ¯2", 0},
+	{"A←⍉`a`b#(1 2;3 4;)⋄A-3", "a b\n¯2 0\n¯1 1", 0},
+	{"A←`a`b#(1 2;3 4;)⋄A-5 7", "a: ¯4 ¯5\nb: ¯2 ¯3", 0},
+	{"A←`a`b#(1 2;3 4;)⋄3-A", "a: 2 1\nb: 0 ¯1", 0},
 
 	{"⍝ Object, xgo example", "", 0},
 	{"X←xgo→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},

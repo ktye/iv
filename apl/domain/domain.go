@@ -53,6 +53,30 @@ func (b both) String(a *apl.Apl) string {
 	return "both " + b.same.String(a)
 }
 
+// Any tests if either the left or the right arguments satisfy the child domain.
+func Any(child SingleDomain) apl.Domain {
+	return any{child}
+}
+
+type any struct {
+	child SingleDomain
+}
+
+func (b any) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
+	l, ok := b.child.To(a, L)
+	if ok == true {
+		return l, R, true
+	}
+	r, ok := b.child.To(a, R)
+	if ok == true {
+		return L, r, true
+	}
+	return L, R, false
+}
+func (b any) String(a *apl.Apl) string {
+	return "any " + b.child.String(a)
+}
+
 func Split(left, right SingleDomain) apl.Domain {
 	return split{left, right}
 }
@@ -202,5 +226,5 @@ func (n or) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 }
 
 func (n or) String(a *apl.Apl) string {
-	return n.child1.String(a) + " or " + n.child2.String(a)
+	return "(" + n.child1.String(a) + " or " + n.child2.String(a) + ")"
 }

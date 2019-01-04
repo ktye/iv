@@ -65,6 +65,18 @@ func init() {
 			Domain: arraysWithAxis{},
 			fn:     arrayAxis(e.symbol, e.dyadic),
 		})
+		register(primitive{
+			symbol: e.symbol,
+			doc:    e.doc2,
+			Domain: Dyadic(Any(Or(IsTable(nil), IsObject(nil)))),
+			fn:     tableAny(e.symbol, e.dyadic),
+		})
+		register(primitive{
+			symbol: e.symbol,
+			doc:    e.doc2,
+			Domain: Dyadic(Both(Or(IsTable(nil), IsObject(nil)))),
+			fn:     tableBoth(e.symbol, e.dyadic),
+		})
 	}
 }
 
