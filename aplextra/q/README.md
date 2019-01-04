@@ -38,3 +38,9 @@ a c				⍝ result is a table
 2 8
 3 8
 ```
+
+## Reference
+
+The package uses `github.com/sv/kdbgo` to interact with q.
+
+q is available from kx.com.
