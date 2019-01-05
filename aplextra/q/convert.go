@@ -88,11 +88,7 @@ func encodeArray(a *apl.Apl, v apl.Value) (*kdb.K, error) {
 
 	flat := make([]*kdb.K, ar.Size())
 	for i := range flat {
-		v, err := ar.At(i)
-		if err != nil {
-			return nil, err
-		}
-		k, err := FromAPL(a, v)
+		k, err := FromAPL(a, ar.At(i))
 		if err != nil {
 			return nil, err
 		}
@@ -171,11 +167,7 @@ func toList(v apl.Value) (apl.List, error) {
 	}
 	l := make(apl.List, ar.Size())
 	for i := range l {
-		if v, err := ar.At(i); err != nil {
-			return nil, err
-		} else {
-			l[i] = v
-		}
+		l[i] = ar.At(i)
 	}
 	return l, nil
 }
@@ -268,11 +260,7 @@ func decodeDict(k interface{}) (apl.Value, error) {
 		return nil, fmt.Errorf("decode dict: keys and values have differnt lengths")
 	}
 	for i := range d.K {
-		v, err := ar.At(i)
-		if err != nil {
-			return nil, err
-		}
-		d.M[d.K[i]] = v
+		d.M[d.K[i]] = ar.At(i)
 	}
 
 	return &d, nil
