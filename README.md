@@ -1,7 +1,6 @@
 # iv/APL interpreter and stream processor
 <p align="center" >
-  <img width="80" height="80" src="web/logo.svg"><br/>
-  <b> ⍟ iv/APL ←→ APL\iv ⍟ </b>
+  <!--img width="80" height="80" src="web/logo.svg"><br/-->
 </p>
 
 # content
