@@ -42,5 +42,4 @@ func main() {
 	if len(os.Args) > 1 {
 		rpc.ListenAndServe(a, os.Args[1])
 	}
-	return
 }
