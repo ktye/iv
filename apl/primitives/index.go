@@ -70,11 +70,10 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// Special case, if the result is a scalar.
 	if len(idx.Ints) == 1 && len(idx.Dims) == 0 {
-		if v, err := ar.At(idx.Ints[0]); err != nil {
+		if err := apl.ArrayBounds(ar, idx.Ints[0]); err != nil {
 			return nil, err
-		} else {
-			return v, err
 		}
+		return ar.At(idx.Ints[0]), nil
 	}
 
 	res := apl.MixedArray{
@@ -82,11 +81,10 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		Values: make([]apl.Value, apl.ArraySize(idx)),
 	}
 	for i, n := range idx.Ints {
-		v, err := ar.At(n)
-		if err != nil {
+		if err := apl.ArrayBounds(ar, n); err != nil {
 			return nil, err
 		}
-		res.Values[i] = v // TODO copy?
+		res.Values[i] = ar.At(n) // TODO copy?
 	}
 	return res, nil
 }
@@ -140,10 +138,7 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 
 	ai := apl.IndexArray{Dims: []int{as.Size()}, Ints: make([]int, as.Size())}
 	for i := 0; i < as.Size(); i++ {
-		key, err := as.At(i)
-		if err != nil {
-			return apl.IndexArray{}, err
-		}
+		key := as.At(i)
 		k, ok := keys[key]
 		if ok == false {
 			if isd {
@@ -264,10 +259,7 @@ func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	k := make([]apl.Value, ls[0])
 	m := make(map[apl.Value]apl.Value)
 	for i := 0; i < ls[0]; i++ {
-		key, err := sv.At(i)
-		if err != nil {
-			return nil, err
-		}
+		key := sv.At(i)
 		v := obj.At(a, key)
 		if v == nil {
 			return nil, fmt.Errorf("key does not exist: %s", key.String(a))
@@ -405,10 +397,7 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		res := make(apl.List, len(keys))
 		for i, k := range keys {
 			col := t.M[k].(apl.Array)
-			v, err := col.At(rows[0])
-			if err != nil {
-				return nil, err
-			}
+			v := col.At(rows[0])
 			res[i] = v
 		}
 		return res, nil
@@ -421,7 +410,7 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return nil, fmt.Errorf("table index: column does not exist")
 		}
 		ar := col.(apl.Array)
-		return ar.At(rows[0])
+		return ar.At(rows[0]), nil
 	}
 
 	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
@@ -439,21 +428,13 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		as := apl.MakeArray(ar, []int{nrows})
 		if rows == nil {
 			for i := 0; i < nrows; i++ {
-				v, err := ar.At(i)
-				if err != nil {
-					return nil, err
-				}
-				if err := as.Set(i, v); err != nil {
+				if err := as.Set(i, ar.At(i)); err != nil {
 					return nil, err
 				}
 			}
 		} else {
 			for i, j := range rows {
-				v, err := ar.At(j)
-				if err != nil {
-					return nil, err
-				}
-				if err := as.Set(i, v); err != nil {
+				if err := as.Set(i, ar.At(j)); err != nil {
 					return nil, err
 				}
 			}

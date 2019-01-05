@@ -49,11 +49,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		Dims:   apl.CopyShape(al),
 	}
 	for i := range p.Values {
-		v, err := al.At(i)
-		if err != nil {
-			return nil, err
-		}
-		p.Values[i] = v // TODO: copy?
+		p.Values[i] = al.At(i) // TODO: copy?
 	}
 	N := ls[len(ls)-1]
 
@@ -87,7 +83,7 @@ func extendAxis(ar apl.Array, axis, n int) (apl.Array, []int) {
 	for i := range res.Values {
 		copy(idx, ridx)
 		idx[axis] = 0
-		v, _ := ar.At(ic.Index(idx))
+		v := ar.At(ic.Index(idx))
 		res.Values[i] = v // TODO copy?
 		apl.IncArrayIndex(ridx, res.Dims)
 	}
@@ -139,7 +135,7 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if len(ls) == 1 && rok == false {
 		ravelL := make([]apl.Value, ls[0])
 		for i := range ravelL {
-			ravelL[i], _ = al.At(i)
+			ravelL[i] = al.At(i)
 		}
 		return encodeVecScalar(a, ravelL, R)
 	}
@@ -301,11 +297,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	for i := 0; i < NL; i++ {
 		// Build radix vec from the first axis of L
 		for k := 0; k < len(rad); k++ {
-			v, err := al.At(k*NL + i)
-			if err != nil {
-				return nil, err
-			}
-			rad[k] = v
+			rad[k] = al.At(k*NL + i)
 		}
 		powerradix(rad)
 
@@ -316,11 +308,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 			off++
 		}
 		for k := 0; k < NR; k++ {
-			r, err := ar.At(k)
-			if err != nil {
-				return nil, err
-			}
-			if err := apply(rad, r, NN, off); err != nil {
+			if err := apply(rad, ar.At(k), NN, off); err != nil {
 				return nil, err
 			}
 			off++

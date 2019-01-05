@@ -90,15 +90,8 @@ func dict(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	k := make([]apl.Value, al.Size())
 	m := make(map[apl.Value]apl.Value)
 	for i := 0; i < al.Size(); i++ {
-		l, err := al.At(i)
-		if err != nil {
-			return nil, err
-		}
-		r, err := ar.At(i)
-		if err != nil {
-			return nil, err
-		}
-		m[l] = r
+		l := al.At(i)
+		m[l] = ar.At(i)
 		k[i] = l
 	}
 	return &apl.Dict{

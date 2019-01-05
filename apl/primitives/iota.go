@@ -70,8 +70,7 @@ func indexof(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	notfound := nl + a.Origin
 	vals := make([]apl.Value, nl)
 	for i := range vals {
-		v, _ := al.At(i)
-		vals[i] = v
+		vals[i] = al.At(i)
 	}
 
 	index := func(x apl.Value) int {
@@ -88,11 +87,7 @@ func indexof(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		Dims: apl.CopyShape(ar),
 	}
 	for i := range ai.Ints {
-		v, err := ar.At(i)
-		if err != nil {
-			return nil, err
-		}
-		ai.Ints[i] = index(v)
+		ai.Ints[i] = index(ar.At(i))
 	}
 	return ai, nil
 }
@@ -113,11 +108,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if !ok {
 		// Scalar L: return a scalar boolean.
 		for i := 0; i < n; i++ {
-			v, err := ar.At(i)
-			if err != nil {
-				return nil, err
-			}
-			if isEqual(a, v, L) == true {
+			if isEqual(a, ar.At(i), L) == true {
 				return apl.Bool(true), nil
 			}
 		}
@@ -129,17 +120,10 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		Ints: make([]int, apl.ArraySize(al)),
 	}
 	for k := range res.Ints {
-		l, err := al.At(k)
-		if err != nil {
-			return nil, err
-		}
-
+		l := al.At(k)
 		ok = false
 		for i := 0; i < n; i++ {
-			r, err := ar.At(i)
-			if err != nil {
-				return nil, err
-			}
+			r := ar.At(i)
 			if isEqual(a, l, r) == true {
 				ok = true
 				break
@@ -227,16 +211,9 @@ func intervalindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		Ints: make([]int, rs[0]),
 	}
 	for i := 0; i < rs[0]; i++ {
-		r, err := ar.At(i * rn)
-		if err != nil {
-			return nil, err
-		}
+		r := ar.At(i * rn)
 		for k := 0; k < n; k++ {
-			l, err := al.At(k)
-			if err != nil {
-				return nil, err
-			}
-			ok, err := fless(a, r, l)
+			ok, err := fless(a, r, al.At(k))
 			if err != nil {
 				return nil, err
 			}

@@ -29,11 +29,7 @@ func unique(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 	var values []apl.Value
 	for i := 0; i < apl.ArraySize(ar); i++ {
-		v, err := ar.At(i)
-		if err != nil {
-			return nil, err
-		}
-
+		v := ar.At(i)
 		u := true
 		for k := range values {
 			if isEqual(a, v, values[k]) {
@@ -62,10 +58,7 @@ func union(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	var values []apl.Value
 	appendvec := func(vec apl.Array) error {
 		for i := 0; i < apl.ArraySize(vec); i++ {
-			v, err := vec.At(i)
-			if err != nil {
-				return err
-			}
+			v := vec.At(i)
 			u := true
 			for k := range values {
 				if isEqual(a, v, values[k]) == true {

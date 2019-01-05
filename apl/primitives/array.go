@@ -56,14 +56,10 @@ func (ars arrays) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 		}
 		// Convert single element arrays to scalars.
 		if apl.ArraySize(al) == 1 {
-			if v, err := al.At(0); err == nil {
-				return v, ar, true
-			}
+			return al.At(0), ar, true
 		}
 		if apl.ArraySize(ar) == 1 {
-			if v, err := ar.At(0); err == nil {
-				return al, v, true
-			}
+			return al, ar.At(0), true
 		}
 		return L, R, false
 	}
@@ -122,11 +118,7 @@ func array1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 			Dims:   apl.CopyShape(ar),
 		}
 		for i := range res.Values {
-			e, err := ar.At(i)
-			if err != nil {
-				return nil, err
-			}
-			val, err := efn(a, nil, e)
+			val, err := efn(a, nil, ar.At(i))
 			if err != nil {
 				return nil, err
 			}
@@ -162,21 +154,14 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 		}
 		res := apl.MixedArray{Dims: shape}
 		res.Values = make([]apl.Value, apl.ArraySize(res))
-		var err error
 		for i := range res.Values {
 			lv := L
 			if isLarray {
-				lv, err = al.At(i)
-				if err != nil {
-					return nil, err
-				}
+				lv = al.At(i)
 			}
 			rv := R
 			if isRarray {
-				rv, err = ar.At(i)
-				if err != nil {
-					return nil, err
-				}
+				rv = ar.At(i)
 			}
 			if val, err := efn(a, lv, rv); err != nil {
 				return nil, err
@@ -272,17 +257,8 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 					rdx[k] = 0
 				}
 			}
-
-			lv, err = al.At(i)
-			if err != nil {
-				return nil, err
-			}
-
-			rv, err = ar.At(ic.Index(rdx))
-			if err != nil {
-				return nil, err
-			}
-
+			lv = al.At(i)
+			rv = ar.At(ic.Index(rdx))
 			if flip {
 				lv, rv = rv, lv
 			}
@@ -291,7 +267,6 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 				return nil, err
 			}
 			res.Values[i] = v
-
 			apl.IncArrayIndex(idx, res.Dims)
 		}
 		return res, nil

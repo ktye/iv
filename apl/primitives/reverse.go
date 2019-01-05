@@ -85,13 +85,7 @@ func reverse(a *apl.Apl, R apl.Value, axis int) (apl.Value, error) {
 	for i := range res.Values {
 		copy(src, dst) // sic: copy dst over src
 		src[axis] = shape[axis] - src[axis] - 1
-
-		v, err := ar.At(ic.Index(src))
-		if err != nil {
-			return nil, err
-		}
-		res.Values[i] = v // TODO copy ?
-
+		res.Values[i] = ar.At(ic.Index(src)) // TODO copy ?
 		apl.IncArrayIndex(dst, shape)
 	}
 	return res, nil
@@ -146,11 +140,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		if len(lshape) != 1 || lshape[0] != 1 {
 			return nil, fmt.Errorf("rotate: wrong shape of L for vector R: %v", lshape)
 		}
-		nv, err := al.At(0)
-		if err != nil {
-			return nil, err
-		}
-		n := int(nv.(apl.Index))
+		n := int(al.At(0).(apl.Index))
 		size := shape[0]
 
 		res := apl.MixedArray{
@@ -158,11 +148,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			Values: make([]apl.Value, size),
 		}
 		for i := range res.Values {
-			v, err := ar.At(rot(i, n, size))
-			if err != nil {
-				return nil, err
-			}
-			res.Values[i] = v // TODO: copy?
+			res.Values[i] = ar.At(rot(i, n, size)) // TODO: copy?
 		}
 		return res, nil
 	}
@@ -215,23 +201,10 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		// Copy dst over idx, omitting axis
 		copy(idx, dst[:axis])
 		copy(idx[axis:], dst[axis+1:])
-
-		il := lic.Index(idx)
-		nl, err := al.At(il)
-		if err != nil {
-			return nil, err
-		}
-		n := int(nl.(apl.Index))
-
+		n := int(al.At(lic.Index(idx)).(apl.Index))
 		copy(src, dst)                        // sic: copy dst over src
 		src[axis] = rot(dst[axis], n, axsize) // replace the axis by it's rotation
-
-		v, err := ar.At(ric.Index(src))
-		if err != nil {
-			return nil, err
-		}
-		res.Values[i] = v // TODO copy ?
-
+		res.Values[i] = ar.At(ric.Index(src)) // TODO copy ?
 		apl.IncArrayIndex(dst, shape)
 	}
 	return res, nil

@@ -34,10 +34,10 @@ func (s strvec) To(a *apl.Apl, v apl.Value) (apl.Value, bool) {
 	n := apl.ArraySize(ar)
 	vec := apl.MixedArray{Dims: []int{n}, Values: make([]apl.Value, n)}
 	for i := 0; i < n; i++ {
-		if vi, err := ar.At(i); err != nil {
-			return v, false
-		} else if s, ok := vi.(apl.String); ok {
+		if s, ok := ar.At(i).(apl.String); ok {
 			vec.Values[i] = s
+		} else {
+			return v, false
 		}
 	}
 	return vec, true

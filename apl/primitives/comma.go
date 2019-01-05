@@ -61,11 +61,7 @@ func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		Values: make([]apl.Value, n),
 	}
 	for i := range res.Values {
-		v, err := ar.At(i)
-		if err != nil {
-			return nil, err
-		}
-		res.Values[i] = v
+		res.Values[i] = ar.At(i)
 	}
 	return res, nil
 }
@@ -299,9 +295,9 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		copy(src, dst)
 		if n := src[x]; n >= split {
 			src[x] -= split
-			v, err = ar.At(rc.Index(src))
+			v = ar.At(rc.Index(src))
 		} else {
-			v, err = al.At(lc.Index(src))
+			v = al.At(lc.Index(src))
 		}
 		res.Values[i] = v // TODO: copy?
 		apl.IncArrayIndex(dst, newshape)
@@ -376,7 +372,6 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 
 	// Iterate over the result and copy values from L or R depending,
 	// if the the index at axis x is 0 or 1.
-	var err error
 	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	dst := make([]int, len(shape))
@@ -386,12 +381,9 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 		copy(src[:x], dst[:x])
 		copy(src[x:], dst[x+1:])
 		if dst[x] == 0 {
-			v, err = al.At(ic.Index(src))
+			v = al.At(ic.Index(src))
 		} else {
-			v, err = ar.At(ic.Index(src))
-		}
-		if err != nil {
-			return nil, err
+			v = ar.At(ic.Index(src))
 		}
 		res.Values[i] = v // TODO: copy?
 		apl.IncArrayIndex(dst, shape)

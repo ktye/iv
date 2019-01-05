@@ -125,11 +125,7 @@ func domino2(a *apl.Apl, RHS, R apl.Value) (apl.Value, error) {
 	for i := range A {
 		A[i] = make([]apl.Value, n)
 		for k := range A[i] {
-			v, err := ar.At(i*n + k)
-			if err != nil {
-				return nil, err
-			}
-			A[i][k] = v
+			A[i][k] = ar.At(i*n + k)
 		}
 	}
 
@@ -145,11 +141,7 @@ func domino2(a *apl.Apl, RHS, R apl.Value) (apl.Value, error) {
 	for k := 0; k < ls[1]; k++ {
 		// Copy column k of RHS to b.
 		for i := 0; i < n; i++ {
-			v, err := al.At(i*ls[1] + k)
-			if err != nil {
-				return nil, err
-			}
-			b[i] = v
+			b[i] = al.At(i*ls[1] + k)
 		}
 
 		// Solve for x.

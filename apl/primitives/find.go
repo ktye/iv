@@ -52,11 +52,7 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 		l := apl.MixedArray{Dims: shape, Values: make([]apl.Value, apl.ArraySize(al))}
 		for i := range l.Values {
-			v, err := al.At(i)
-			if err != nil {
-				return nil, err
-			}
-			l.Values[i] = v
+			l.Values[i] = al.At(i)
 		}
 		al = l
 		ls = shape
@@ -74,15 +70,7 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				idx[k] = 0
 			}
 			for k := 0; k < nl; k++ {
-				r, err := ar.At(i + ic.Index(idx))
-				if err != nil {
-					return nil, err
-				}
-				l, err := al.At(k)
-				if err != nil {
-					return nil, err
-				}
-				eq, err := feq(a, l, r)
+				eq, err := feq(a, al.At(k), ar.At(i+ic.Index(idx)))
 				if err != nil {
 					return nil, err
 				}

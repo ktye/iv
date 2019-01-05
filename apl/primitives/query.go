@@ -47,9 +47,7 @@ func roll(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		Dims:   apl.CopyShape(ar),
 	}
 	for i := range res.Values {
-		if v, err := ar.At(i); err != nil {
-			return nil, err
-		} else if z, ok := v.(apl.Number); ok == false {
+		if z, ok := ar.At(i).(apl.Number); ok == false {
 			return nil, fmt.Errorf("roll: array value is not numeric")
 		} else {
 			if n, err := rollNumber(a, z); err != nil {

@@ -64,11 +64,7 @@ func transpose(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 	ar := R.(apl.Array)
 	for i, k := range idx {
-		v, err := ar.At(k)
-		if err != nil {
-			return nil, err
-		}
-		res.Values[i] = v
+		res.Values[i] = ar.At(k)
 	}
 	return res, nil
 }
@@ -178,12 +174,9 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		if shape[0] < 2 {
 			return true, shape[0]
 		}
-		v, _ = ar.At(0)
-		t := reflect.TypeOf(v)
+		t := reflect.TypeOf(ar.At(0))
 		for i := 1; i < shape[0]; i++ {
-			if v, err := ar.At(i); err != nil {
-				return false, 0
-			} else if reflect.TypeOf(v) != t {
+			if reflect.TypeOf(ar.At(i)) != t {
 				return false, 0
 			}
 		}
