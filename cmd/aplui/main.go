@@ -15,7 +15,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"strings"
@@ -32,24 +31,10 @@ import (
 	"github.com/ktye/iv/apl/xgo"
 	"github.com/ktye/iv/aplextra/q"
 
-	"github.com/ktye/iv/aplextra/help"
 	ivduit "github.com/ktye/iv/duit"
 )
 
 func main() {
-	var fontsize = 18
-	var quiet bool
-	var extra bool
-	var bignum bool
-	var prec uint
-	flag.IntVar(&fontsize, "fontsize", fontsize, "size of built-in font")
-	flag.BoolVar(&quiet, "quiet", false, "dont show welcome message")
-	flag.BoolVar(&extra, "extra", true, "register all packages in aplextra")
-	flag.Parse()
-
-	if bignum && prec != 0 {
-		fmt.Println("only one of -big and -prec>0 is allowed")
-	}
 
 	// Start APL.
 	a := apl.New(nil)
@@ -63,16 +48,8 @@ func main() {
 	http.Register(a)
 	q.Register(a)
 
-	/* TODO
-	if extra {
-		aplextra.RegisterAll(a)
-	} else {
-		primitives.Register(a)
-		operators.Register(a)
-	}
-	*/
-
 	// Build the gui.
+	fontsize := 18
 	registerFont(fontsize)
 	dui, err := duit.NewDUI("APL\\iv", &duit.DUIOpts{
 		FontName: fmt.Sprintf("APL385@%d", fontsize),
@@ -83,10 +60,7 @@ func main() {
 	dui.Display.KeyTranslator = ivduit.AplKeyboard{}
 
 	// Use a single apl widget as the only ui element.
-	content := `APL\iv` + help.Keyboard + "        "
-	if quiet {
-		content = "        "
-	}
+	content := `APL\iv` + Keyboard + "        "
 	ui, err := ivduit.NewAPL(strings.NewReader(content))
 	if err != nil {
 		log.Fatal(err)

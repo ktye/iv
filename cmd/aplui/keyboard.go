@@ -1,4 +1,4 @@
-package help
+package main
 
 // Keyboard is the APL keyboard.
 // It is taken from GNU-APL with some additional symbols.
