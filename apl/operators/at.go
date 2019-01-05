@@ -42,9 +42,11 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 				return nil, fmt.Errorf("at: array returned by function g has wrong size", v)
 			}
 			for i := range mask {
-				if v, err := av.At(i); err != nil {
-					return nil, err
-				} else if n, ok := v.(apl.Number); ok == false {
+				if err := apl.ArrayBounds(av, i); err != nil {
+					return nil, fmt.Errorf("at: %s", err)
+				}
+				v := av.At(i)
+				if n, ok := v.(apl.Number); ok == false {
 					return nil, fmt.Errorf("at: function g did not return a number: %T", v)
 				} else if b, ok := a.Tower.ToBool(n); ok == false {
 					return nil, fmt.Errorf("at: number returned by function g is not a boolean: %T", n)
@@ -106,11 +108,10 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			n := 0
 			for i, m := range mask {
 				if m {
-					if v, err := ar.At(i); err != nil {
+					if err := apl.ArrayBounds(ar, i); err != nil {
 						return nil, err
-					} else {
-						re.Values[n] = v
 					}
+					re.Values[n] = ar.At(i)
 					n++
 				}
 			}
@@ -130,31 +131,29 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 		}
 		if n := apl.ArraySize(re); n == 1 {
 			for i := range repl {
-				repl[i], _ = re.At(0) // TODO: copy?
+				repl[i] = re.At(0) // TODO: copy?
 			}
 		} else if n != len(repl) {
 			return nil, fmt.Errorf("at: number of replacements does not match selection")
 		} else {
-			var err error
 			for i := range repl {
-				repl[i], err = re.At(i)
-				if err != nil {
+				if err := apl.ArrayBounds(ar, i); err != nil {
 					return nil, err
 				}
+				repl[i] = re.At(i)
 			}
 		}
 
-		var err error
 		k := 0
 		for i := range res.Values {
 			if mask[i] {
 				res.Values[i] = repl[k]
 				k++
 			} else {
-				res.Values[i], err = ar.At(i)
-				if err != nil {
+				if err := apl.ArrayBounds(ar, i); err != nil {
 					return nil, err
 				}
+				res.Values[i] = ar.At(i)
 			}
 		}
 		return res, nil

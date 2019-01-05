@@ -54,7 +54,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		// subcell returns the rank-subcell number i of the array x.
 		subcell := func(x apl.Array, rank int, n int) (apl.Value, error) {
 			if rank == 0 {
-				return x.At(n)
+				return x.At(n), nil
 			}
 			shape := x.Shape()
 			if rank < 0 || rank > len(shape) {
@@ -70,11 +70,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			cell.Values = make([]apl.Value, apl.ArraySize(cell))
 			m := len(cell.Values)
 			for i := range cell.Values {
-				v, err := x.At(n*m + i)
-				if err != nil {
-					return nil, err
-				}
-				cell.Values[i] = v
+				cell.Values[i] = x.At(n*m + i)
 			}
 			return cell, nil
 		}
@@ -256,11 +252,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			} else {
 				vr := results[i].(apl.Array)
 				for n := 0; n < commonsize; n++ {
-					v, err := vr.At(n)
-					if err != nil {
-						return nil, err
-					}
-					res.Values[off+n] = v // TODO copy?
+					res.Values[off+n] = vr.At(n) // TODO copy?
 				}
 				off += commonsize
 			}
@@ -324,11 +316,7 @@ func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array, x []int) (apl.Array, erro
 		if zero {
 			res.Values[i] = apl.Index(0) // TODO: fill element of R?
 		} else {
-			v, err := ar.At(ic.Index(src))
-			if err != nil {
-				return nil, err
-			}
-			res.Values[i] = v // TODO: copy?
+			res.Values[i] = ar.At(ic.Index(src)) // TODO: copy?
 		}
 		apl.IncArrayIndex(idx, shape)
 	}

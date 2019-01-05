@@ -145,7 +145,7 @@ func reduct(a *apl.Apl, f apl.Function, l, r apl.Value, axis int) (apl.Value, er
 	}
 	shape := ar.Shape()
 	if len(shape) == 1 && shape[0] == 1 {
-		return ar.At(0) // higher rank single element arrays are reduced.
+		return ar.At(0), nil // higher rank single element arrays are reduced.
 	}
 
 	if len(shape) == 0 {
@@ -198,12 +198,8 @@ func reduct(a *apl.Apl, f apl.Function, l, r apl.Value, axis int) (apl.Value, er
 	// Reduce directly, if R is a vector.
 	if len(shape) == 1 {
 		vec := make([]apl.Value, shape[0])
-		var err error
 		for i := range vec {
-			vec[i], err = ar.At(i)
-			if err != nil {
-				return nil, err
-			}
+			vec[i] = ar.At(i)
 		}
 		v, err := reduce(a, vec, f)
 		return v, err
@@ -229,11 +225,7 @@ func reduct(a *apl.Apl, f apl.Function, l, r apl.Value, axis int) (apl.Value, er
 			sidx[axis] = i
 			// TODO: maybe this could be done more efficiently
 			// e.g. by iteration with a fixed increase.
-			if val, err := ar.At(ic.Index(sidx)); err != nil {
-				return nil, err
-			} else {
-				vec[i] = val
-			}
+			vec[i] = ar.At(ic.Index(sidx))
 		}
 		apl.IncArrayIndex(tidx, dims)
 
@@ -307,11 +299,7 @@ func scanfunc(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, 
 	if len(dims) == 1 {
 		vec := make([]apl.Value, dims[0])
 		for i := range vec {
-			if v, err := ar.At(i); err != nil {
-				return nil, err
-			} else {
-				vec[i] = v
-			}
+			vec[i] = ar.At(i)
 		}
 		vec, err := scan(a, vec, f)
 		if err != nil {
@@ -332,11 +320,7 @@ func scanfunc(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, 
 		// Build the scan vector, by iterating over the axis.
 		for k := range vec {
 			idx[axis] = k
-			val, err := ar.At(ic.Index(idx))
-			if err != nil {
-				return nil, err
-			}
-			vec[k] = val
+			vec[k] = ar.At(ic.Index(idx))
 		}
 		vals, err := scan(a, vec, f)
 		if err != nil {
@@ -459,11 +443,7 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		} else {
 			copy(idx, dst)
 			idx[axis] = n
-			v, err := ar.At(ic.Index(idx))
-			if err != nil {
-				return nil, err
-			}
-			res.Values[i] = v // TODO copy
+			res.Values[i] = ar.At(ic.Index(idx)) // TODO copy
 		}
 		apl.IncArrayIndex(dst, shape)
 	}
@@ -556,14 +536,10 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			if k > 0 {
 				idx[axis] = j
 				j++
-				v, err := ar.At(ic.Index(idx))
-				if err != nil {
-					return nil, err
-				}
 				for m := 0; m < k; m++ {
 					dst[axis] = d
 					d++
-					res.Values[dic.Index(dst)] = v // TODO copy
+					res.Values[dic.Index(dst)] = ar.At(ic.Index(idx)) // TODO copy
 				}
 			} else if k == 0 {
 				dst[axis] = d
@@ -638,11 +614,7 @@ func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IndexArray, apl.Ar
 		for i := range r.Values {
 			copy(idx, dst)
 			idx[axis] = 0
-			v, err := ar.At(ic.Index(idx))
-			if err != nil {
-				return ai, nil, axis, err
-			}
-			r.Values[i] = v // TODO copy
+			r.Values[i] = ar.At(ic.Index(idx)) // TODO copy
 			apl.IncArrayIndex(dst, shape)
 		}
 		ar = r
@@ -678,11 +650,7 @@ func compress(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	n := 0
 	for i := 0; i < apl.ArraySize(ar); i++ {
 		if b := ridx[axis]; ai.Ints[b] == 1 {
-			v, err := ar.At(i)
-			if err != nil {
-				return nil, err
-			}
-			res.Values[n] = v
+			res.Values[n] = ar.At(i)
 			n++
 		}
 		apl.IncArrayIndex(ridx, rs)
@@ -893,7 +861,6 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 	outer := apl.ArraySize(apl.MixedArray{Dims: xs})
 	ic, idx := apl.NewIdxConverter(rs)
 	dc, dst := apl.NewIdxConverter(res.Dims)
-	var err error
 	for i := 0; i < outer; i++ {
 		for k := range vec {
 			j := k
@@ -901,10 +868,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 				j = axlen - 1 - k
 			}
 			idx[axis] = j
-			vec[k], err = ar.At(ic.Index(idx))
-			if err != nil {
-				return nil, err
-			}
+			vec[k] = ar.At(ic.Index(idx))
 		}
 		if err := applyNwise(a, vec, n, f, inv); err != nil {
 			return nil, err
@@ -1008,14 +972,10 @@ func (first reduceTack) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return apl.EmptyArray{}, nil
 		}
 		var v apl.Value
-		var err error
 		if first {
-			v, err = ar.At(0)
+			v = ar.At(0)
 		} else {
-			v, err = ar.At(shape[0] - 1)
-		}
-		if err != nil {
-			return nil, err
+			v = ar.At(shape[0] - 1)
 		}
 		return v, nil
 	}
@@ -1030,19 +990,11 @@ func (first reduceTack) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	n := 0 // index over inner axis.
 	for k := 0; k < apl.ArraySize(ar); k++ {
 		if first && n == 0 {
-			if v, err := ar.At(k); err != nil {
-				return nil, err
-			} else {
-				ret.Values[i] = v
-				i++
-			}
+			ret.Values[i] = ar.At(k)
+			i++
 		} else if first == false && n == inner-1 {
-			if v, err := ar.At(k); err != nil {
-				return nil, err
-			} else {
-				ret.Values[i] = v
-				i++
-			}
+			ret.Values[i] = ar.At(k)
+			i++
 		}
 		n++
 		if n == inner {

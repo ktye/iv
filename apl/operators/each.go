@@ -53,11 +53,7 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 
 	for i := range res.Values {
-		r, err := ar.At(i)
-		if err != nil {
-			return nil, err
-		}
-		v, err := f.Call(a, nil, r)
+		v, err := f.Call(a, nil, ar.At(i))
 		if err != nil {
 			return nil, err
 		}
@@ -152,19 +148,12 @@ func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 
 	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
-	var err error
 	for i := range res.Values {
 		if rok == true {
-			rv, err = ar.At(i)
-			if err != nil {
-				return nil, err
-			}
+			rv = ar.At(i)
 		}
 		if lok == true {
-			lv, err = al.At(i)
-			if err != nil {
-				return nil, err
-			}
+			lv = al.At(i)
 		}
 		v, err := f.Call(a, lv, rv)
 		if err != nil {

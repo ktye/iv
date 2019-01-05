@@ -105,15 +105,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	if len(ls) == 1 && len(rs) == 1 {
 		var v apl.Value
 		for k := inner - 1; k >= 0; k-- {
-			lval, err := al.At(k)
-			if err != nil {
-				return nil, err
-			}
-			rval, err := ar.At(k)
-			if err != nil {
-				return nil, err
-			}
-			if u, err := g.Call(a, lval, rval); err != nil {
+			if u, err := g.Call(a, al.At(k), ar.At(k)); err != nil {
 				return nil, err
 			} else if k == inner-1 {
 				v = u
@@ -149,17 +141,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 		for k := inner - 1; k >= 0; k-- {
 			lidx[len(lidx)-1] = k
 			ridx[0] = k
-
-			lval, err := al.At(lic.Index(lidx))
-			if err != nil {
-				return nil, err
-			}
-			rval, err := ar.At(ric.Index(ridx))
-			if err != nil {
-				return nil, err
-			}
-
-			if u, err := g.Call(a, lval, rval); err != nil {
+			if u, err := g.Call(a, al.At(lic.Index(lidx)), ar.At(ric.Index(ridx))); err != nil {
 				return nil, err
 			} else if k == inner-1 {
 				v = u
@@ -211,17 +193,7 @@ func outer(a *apl.Apl, L, R apl.Value, f, g apl.Function) (apl.Value, error) {
 	for i := range res.Values {
 		copy(lidx, dst[:len(lidx)])
 		copy(ridx, dst[len(lidx):])
-
-		l, err := al.At(lc.Index(lidx))
-		if err != nil {
-			return nil, err
-		}
-		r, err := ar.At(rc.Index(ridx))
-		if err != nil {
-			return nil, err
-		}
-
-		v, err := g.Call(a, l, r)
+		v, err := g.Call(a, al.At(lc.Index(lidx)), ar.At(rc.Index(ridx)))
 		if err != nil {
 			return nil, err
 		}

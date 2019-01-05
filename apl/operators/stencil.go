@@ -61,12 +61,7 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 		}
 		ic, idx := apl.NewIdxConverter(is)
 		for i := 0; i < apl.ArraySize(ai); i++ {
-			v, err := ai.At(i)
-			if err != nil {
-				return nil, err
-			}
-			n := ic.Index(idx)
-			def.Ints[n] = int(v.(apl.Index))
+			def.Ints[ic.Index(idx)] = int(ai.At(i).(apl.Index))
 			apl.IncArrayIndex(idx, is)
 		}
 		ai = def
@@ -118,11 +113,7 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 				if out {
 					tmp.Values[k] = apl.Index(0)
 				} else {
-					v, err := ar.At(ic.Index(dst))
-					if err != nil {
-						return nil, err
-					}
-					tmp.Values[k] = v // TODO copy?
+					tmp.Values[k] = ar.At(ic.Index(dst)) // TODO copy?
 				}
 
 				apl.IncArrayIndex(sdx, tmp.Dims)

@@ -54,11 +54,10 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 	} else if s[0] != 1 && s[0] != len(names) {
 		return nil, fmt.Errorf("vector assignment is non-conformant")
 	} else if s[0] == 1 {
-		if v, err := ar.At(0); err != nil {
-			return nil, err
-		} else {
-			scalar = v
+		if ar.Size() < 1 {
+			return nil, fmt.Errorf("vector assignment: collapsed dimension")
 		}
+		scalar = ar.At(0)
 	}
 
 	var err error
@@ -67,10 +66,10 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 		if scalar != nil {
 			v = scalar
 		} else {
-			v, err = ar.At(i)
-			if err != nil {
+			if err := apl.ArrayBounds(ar, i); err != nil {
 				return nil, err
 			}
+			v = ar.At(i)
 		}
 		err = assignScalar(a, name, nil, mod, v)
 		if err != nil {
@@ -142,11 +141,10 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		ga := apl.MixedArray{Dims: apl.CopyShape(ar)}
 		ga.Values = make([]apl.Value, apl.ArraySize(ga))
 		for i := range ga.Values {
-			v, err := ar.At(i)
-			if err != nil {
+			if i >= ar.Size() {
 				return
 			}
-			ga.Values[i] = v
+			ga.Values[i] = ar.At(i)
 		}
 		ar = ga
 	}
@@ -165,15 +163,15 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 			upgrade()
 			return ar.Set(i, v)
 		}
-		u, err := ar.At(i)
+		var err error
+		if err = apl.ArrayBounds(ar, i); err != nil {
+			return err
+		}
+		v, err = f.Call(a, ar.At(i), v)
 		if err != nil {
 			return err
 		}
-		v, err = f.Call(a, u, v)
-		if err != nil {
-			return err
-		}
-		if err := ar.Set(i, v); err == nil {
+		if err = ar.Set(i, v); err == nil {
 			return nil
 		}
 		upgrade()
@@ -185,7 +183,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 	if av, ok := R.(apl.Array); ok {
 		src = av
 		if apl.ArraySize(av) == 1 {
-			scalar, _ = av.At(0)
+			scalar = av.At(0)
 		}
 	} else {
 		scalar = R
@@ -231,12 +229,11 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 			}
 		}
 		for i, d := range idx.Ints {
-			if v, err := src.At(i); err != nil {
+			if err := apl.ArrayBounds(src, i); err != nil {
 				return err
-			} else {
-				if err := modAssign(d, v); err != nil {
-					return err
-				}
+			}
+			if err := modAssign(d, src.At(i)); err != nil {
+				return err
 			}
 		}
 	}
@@ -260,7 +257,6 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IndexArray, f apl.Function
 		}
 	}
 	keys := obj.Keys()
-	var err error
 	for i := 0; i < len(idx.Ints); i++ {
 		n := idx.Ints[i] - a.Origin
 		if n < 0 || n >= len(keys) {
@@ -269,10 +265,10 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IndexArray, f apl.Function
 		k := keys[n]
 		v := R // TODO: copy?
 		if vectorize == true {
-			v, err = ar.At(i)
-			if err != nil {
+			if err := apl.ArrayBounds(ar, i); err != nil {
 				return err
 			}
+			v = ar.At(i)
 		}
 		if err := obj.Set(a, k, v); err != nil {
 			return err
