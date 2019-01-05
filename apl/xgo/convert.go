@@ -77,15 +77,11 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 		n := apl.ArraySize(ar)
 		s := reflect.MakeSlice(t, n, n)
 		for i := 0; i < n; i++ {
-			if v, err := ar.At(i); err != nil {
+			if e, err := export(a, ar.At(i), et); err != nil {
 				return zero, err
 			} else {
-				if e, err := export(a, v, et); err != nil {
-					return zero, err
-				} else {
-					se := s.Index(i)
-					se.Set(e)
-				}
+				se := s.Index(i)
+				se.Set(e)
 			}
 		}
 		return s, nil

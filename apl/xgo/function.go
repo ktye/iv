@@ -56,11 +56,7 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return nil, fmt.Errorf("function %s requires %d arguments, R has size %d", f.Name, args, n)
 		} else {
 			for i := 0; i < args; i++ {
-				v, err := ar.At(i)
-				if err != nil {
-					return nil, err
-				}
-				in[i], err = export(a, v, t.In(i))
+				in[i], err = export(a, ar.At(i), t.In(i))
 				if err != nil {
 					return nil, errarg(i, err)
 				}
