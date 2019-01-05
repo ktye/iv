@@ -57,9 +57,7 @@ func (s stringstype) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		} else if ar, ok := V.(apl.Array); ok {
 			str := make([]string, ar.Size())
 			for i := range str {
-				if v, err := ar.At(i); err != nil {
-					return V, false
-				} else if sv, ok := v.(apl.String); ok {
+				if sv, ok := ar.At(i).(apl.String); ok {
 					str[i] = string(sv)
 				} else {
 					return V, false

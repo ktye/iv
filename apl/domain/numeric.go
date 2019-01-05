@@ -33,7 +33,7 @@ func (n number) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		if n := apl.ArraySize(ar); n != 1 {
 			return V, false
 		}
-		v, _ = ar.At(0)
+		v = ar.At(0)
 	}
 	if b, ok := V.(apl.Bool); ok {
 		return a.Tower.FromBool(b), true

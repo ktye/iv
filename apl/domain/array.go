@@ -108,7 +108,7 @@ func (v vector) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		Dims:   []int{as},
 	}
 	for i := 0; i < as; i++ {
-		s, _ := ar.At(i)
+		s := ar.At(i)
 		ret.Values[i] = s
 	}
 	return propagate(a, ret, v.child)
@@ -191,10 +191,7 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	for i := range res.Ints {
-		s, err := ar.At(i)
-		if err != nil {
-			return V, false
-		}
+		s := ar.At(i)
 		if n, ok := s.(apl.Number); ok {
 			if d, ok := n.ToIndex(); ok {
 				res.Ints[i] = d

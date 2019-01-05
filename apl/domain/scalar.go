@@ -26,7 +26,7 @@ func (s scalar) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		if n := apl.ArraySize(ar); n != 1 {
 			return V, false
 		}
-		v, _ = ar.At(0)
+		v = ar.At(0)
 	}
 	return propagate(a, v, s.child)
 }
