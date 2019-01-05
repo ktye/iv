@@ -147,6 +147,7 @@ var testCases = []struct {
 	{"⍴0 2⍴⍳0", "0 2", 0},        // reshape empty array
 	{"⍴3 0⍴⍳0", "3 0", 0},        // reshape empty array
 	{"⍴3 0⍴3", "3 0", 0},         // reshape empty array
+	{"⍳'a'", "fail: strings are not in the input domain of ⍳", 0},
 
 	{"⍝ Where, interval index", "", 0},
 	{"⍸1 0 1 0 0 0 0 1 0", "1 3 8", 0},
@@ -1108,14 +1109,22 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 			}
 		}
 
+		mustfail := strings.HasPrefix(tc.exp, "fail:")
 		lines := strings.Split(tc.in, "\n")
 		for k, s := range lines {
 			t.Logf("\t%s", s)
-
-			if err := a.ParseAndEval(s); err != nil {
+			err := a.ParseAndEval(s)
+			if err != nil && mustfail == false {
 				t.Fatalf("tc%d:%d: %s: %s\n", i+1, k+1, tc.in, err)
+			} else if err == nil && mustfail == true {
+				t.Fatalf("tc%d:%d: %s: should fail but did not", i+1, k+1, tc.in)
 			}
 		}
+		if mustfail {
+			t.Log("Must", tc.exp) // This prints: "Must fail: ..."
+			continue
+		}
+
 		got := buf.String()
 		t.Log(got)
 
