@@ -30,8 +30,7 @@ import (
 	aplstrings "github.com/ktye/iv/apl/strings"
 	"github.com/ktye/iv/apl/xgo"
 	"github.com/ktye/iv/aplextra/q"
-
-	ivduit "github.com/ktye/iv/duit"
+	"github.com/ktye/iv/cmd/aplui/widget"
 )
 
 func main() {
@@ -57,11 +56,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dui.Display.KeyTranslator = ivduit.AplKeyboard{}
+	dui.Display.KeyTranslator = widget.AplKeyboard{}
 
 	// Use a single apl widget as the only ui element.
 	content := `APL\iv` + Keyboard + "        "
-	ui, err := ivduit.NewAPL(strings.NewReader(content))
+	ui, err := widget.NewAPL(strings.NewReader(content))
 	if err != nil {
 		log.Fatal(err)
 	}

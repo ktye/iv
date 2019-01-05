@@ -1,5 +1,5 @@
 // Duit provides an APL widget for duit.
-package duit
+package widget
 
 import (
 	"bytes"
