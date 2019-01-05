@@ -49,11 +49,7 @@ func (t Table) String(a *Apl) string {
 			if col == nil {
 				return "???"
 			}
-			v, err := col.(Array).At(n)
-			if err != nil {
-				return "???"
-			}
-			fmt.Fprintf(tw, "%s%s", v.String(a), sep)
+			fmt.Fprintf(tw, "%s%s", col.(Array).At(n).String(a), sep)
 		}
 	}
 	tw.Flush()

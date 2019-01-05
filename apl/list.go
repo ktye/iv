@@ -20,11 +20,8 @@ func (l List) String(a *Apl) string {
 	return buf.String()
 }
 
-func (l List) At(i int) (Value, error) {
-	if i < 0 || i >= len(l) {
-		return nil, fmt.Errorf("index out of range")
-	}
-	return l[i], nil
+func (l List) At(i int) Value {
+	return l[i]
 }
 
 func (l List) Shape() []int {

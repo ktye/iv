@@ -91,7 +91,7 @@ func (ar array) String(a *Apl) string {
 // Arrays can be implemented externally.
 type Array interface {
 	String(*Apl) string
-	At(int) (Value, error)
+	At(int) Value
 	Shape() []int
 	Size() int
 }
@@ -141,6 +141,14 @@ func MakeArray(prototype Array, shape []int) ArraySetter {
 	} else {
 		return am.MakeArray(shape)
 	}
+}
+
+// ArrayBounds does bounds checking on an array given a flat index.
+func ArrayBounds(v Array, i int) error {
+	if i < 0 || i >= v.Size() {
+		return fmt.Errorf("index out of range")
+	}
+	return nil
 }
 
 // ArraySize returns the product of the array shape.
@@ -218,12 +226,7 @@ func ArrayString(a *Apl, v Array) string {
 	} else if len(shape) == 1 {
 		s := make([]string, shape[0])
 		for i := 0; i < shape[0]; i++ {
-			e, err := v.At(i)
-			if err != nil {
-				s[i] = "?"
-			} else {
-				s[i] = e.String(a)
-			}
+			s[i] = v.At(i).String(a)
 		}
 		return strings.Join(s, " ")
 	}
@@ -248,12 +251,7 @@ func ArrayString(a *Apl, v Array) string {
 	var buf strings.Builder
 	tw := tabwriter.NewWriter(&buf, 1, 0, 1, ' ', tabwriter.AlignRight) // tabwriter.AlignRight)
 	for i := 0; i < size; i++ {
-		e, err := v.At(i)
-		if err != nil {
-			fmt.Fprintf(tw, "?\t")
-		} else {
-			fmt.Fprintf(tw, "%s\t", e.String(a))
-		}
+		fmt.Fprintf(tw, "%s\t", v.At(i).String(a))
 		if term := inc(); term > 0 {
 			for k := 0; k < term; k++ {
 				fmt.Fprintln(tw)
@@ -281,11 +279,8 @@ func (v MixedArray) String(a *Apl) string {
 	return ArrayString(a, v)
 }
 
-func (v MixedArray) At(i int) (Value, error) {
-	if i >= 0 && i < len(v.Values) {
-		return v.Values[i], nil
-	}
-	return nil, fmt.Errorf("array index out of range")
+func (v MixedArray) At(i int) Value {
+	return v.Values[i]
 }
 
 func (v MixedArray) Set(i int, e Value) error {
@@ -322,7 +317,7 @@ type EmptyArray struct{}
 
 func (e EmptyArray) String(a *Apl) string       { return "" }
 func (e EmptyArray) Eval(a *Apl) (Value, error) { return e, nil }
-func (e EmptyArray) At(i int) (Value, error)    { return nil, fmt.Errorf("index out of range") }
+func (e EmptyArray) At(i int) Value             { return nil }
 func (e EmptyArray) Shape() []int               { return nil }
 func (e EmptyArray) Size() int                  { return 0 }
 func (e EmptyArray) Reshape(s []int) Value {
@@ -366,11 +361,8 @@ func (ar IndexArray) String(a *Apl) string {
 	return ArrayString(a, ar)
 }
 
-func (ar IndexArray) At(i int) (Value, error) {
-	if i < 0 || i >= len(ar.Ints) {
-		return nil, fmt.Errorf("index exceeds array dimensions")
-	}
-	return Index(ar.Ints[i]), nil
+func (ar IndexArray) At(i int) Value {
+	return Index(ar.Ints[i])
 }
 
 func (ar IndexArray) Zero() Value {

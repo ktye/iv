@@ -42,7 +42,7 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 	if size < 1 {
 		return A, true
 	}
-	v0, _ := A.At(0)
+	v0 := A.At(0)
 	t0 := reflect.TypeOf(v0)
 	max := class(t0)
 	var maxnumber Number
@@ -51,7 +51,7 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 	}
 	sametype := true
 	for i := 1; i < size; i++ {
-		v, _ := A.At(i)
+		v := A.At(i)
 		t := reflect.TypeOf(v)
 		if t != t0 {
 			sametype = false
@@ -94,21 +94,21 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 		if t0 == reflect.TypeOf(String("")) {
 			ar := StringArray{}.Make(CopyShape(A))
 			for i := 0; i < A.Size(); i++ {
-				v, _ := A.At(i)
+				v := A.At(i)
 				ar.(StringArray).Strings[i] = string(v.(String))
 			}
 			return ar, true
 		} else if t0 == reflect.TypeOf(Bool(false)) {
 			ar := BoolArray{}.Make(CopyShape(A))
 			for i := 0; i < A.Size(); i++ {
-				v, _ := A.At(i)
+				v := A.At(i)
 				ar.(BoolArray).Bools[i] = bool(v.(Bool))
 			}
 			return ar, true
 		} else if t0 == reflect.TypeOf(Index(0)) {
 			ar := IndexArray{}.Make(CopyShape(A))
 			for i := 0; i < A.Size(); i++ {
-				v, _ := A.At(i)
+				v := A.At(i)
 				ar.(IndexArray).Ints[i] = int(v.(Index))
 			}
 			return ar, true
@@ -125,7 +125,7 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 	values := make([]Value, size)
 	var err error
 	for i := 0; i < size; i++ {
-		v, _ := A.At(i)
+		v := A.At(i)
 		values[i], _, err = a.Tower.SameType(tonumber(v), maxnumber)
 		if err != nil {
 			fmt.Println(err)

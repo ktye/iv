@@ -40,11 +40,8 @@ func (s StringArray) String(a *Apl) string {
 	return ArrayString(a, s)
 }
 
-func (s StringArray) At(i int) (Value, error) {
-	if i < 0 || i >= len(s.Strings) {
-		return nil, fmt.Errorf("index out of range")
-	}
-	return String(s.Strings[i]), nil
+func (s StringArray) At(i int) Value {
+	return String(s.Strings[i])
 }
 
 func (s StringArray) Shape() []int {

@@ -38,11 +38,8 @@ func (b BoolArray) String(a *Apl) string {
 	return ArrayString(a, b)
 }
 
-func (b BoolArray) At(i int) (Value, error) {
-	if i < 0 || i >= len(b.Bools) {
-		return nil, fmt.Errorf("index out of range")
-	}
-	return Bool(b.Bools[i]), nil
+func (b BoolArray) At(i int) Value {
+	return Bool(b.Bools[i])
 }
 
 func (b BoolArray) Shape() []int {
