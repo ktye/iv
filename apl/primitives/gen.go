@@ -12,15 +12,16 @@ import (
 	"strings"
 )
 
-var prefix = regexp.MustCompile(`apl_test.go:[0-9]*:`)
-var tabs = regexp.MustCompile(`^\t*`)
+var prefix = regexp.MustCompile(` *apl_test.go:[0-9]*:`)
+var spaces = regexp.MustCompile(`^ *`)
 
 // This program is run by go generate.
-// It runs go test -v which includes calls to t.Log that show all APL in- and output.
+// It runs go test -v in short mode, which only includes
+// tests with the normal numeric tower.
 // The output of go test is filtered and written to Tests.md.
 func main() {
 
-	cmd := exec.Command("go", "test", "-v")
+	cmd := exec.Command("go", "test", "-v", "-short")
 	testout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -35,8 +36,6 @@ func main() {
 	}
 	defer w.Close()
 
-	fmt.Fprintf(w, "# Test results\n\n```apl\n")
-
 	scn := bufio.NewScanner(testout)
 	for scn.Scan() {
 		s := scn.Text()
@@ -46,17 +45,13 @@ func main() {
 		if strings.HasPrefix(s, "---") {
 			continue
 		}
-		if strings.HasPrefix(s, "ok") {
-			continue
-		}
 		s = prefix.ReplaceAllString(s, "")
-		s = tabs.ReplaceAllString(s, "")
+		s = spaces.ReplaceAllString(s, "")
 		fmt.Fprintf(w, "%s\n", s)
 	}
 
 	if err := cmd.Wait(); err != nil {
 		log.Fatal(err)
 	}
-
 	fmt.Fprintf(w, "```\n")
 }

@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/big"
@@ -24,15 +25,6 @@ var testCases = []struct {
 }{
 	// {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", 0}, // table with avg value.
 
-	{"⍝ Reduction over objects and tables", "", 0},
-	{"+/`a`b`c#(1 2 3;4 6;7;)", "a: 6\nb: 10\nc: 7", 0},
-	{"+\\`a`b`c#(1 2 3;4 6;7;)", "a: 1 3 6\nb: 4 10\nc: 7", 0},
-	{"+/⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n6 15 24", 0},
-	{"+\\⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n3 9 15\n6 15 24", 0},
-	{"2+/`a`b#(1 2 3;4 6 7;)", "a: 3 5\nb: 10 13", 0},
-	{"2+/⍉`a`b#(1 2 3;4 6 7;)", "a b\n3 10\n5 13", 0},
-	// TODO {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", 0}, // table with avg value.
-
 	{"⍝ Basic numbers and arithmetics", "", 0},
 	{"1", "1", 0},
 	{"1+1", "2", 0},
@@ -43,13 +35,13 @@ var testCases = []struct {
 	{"1a60+1a300", "1J0", cmplx},
 	{"1J1", "1J1", cmplx},
 
-	{"⍝ Vectors.", "", 0},
+	{"⍝ Vectors", "", 0},
 	{"1 2 3", "1 2 3", 0},
 	{"1+1 2 3", "2 3 4", 0},
 	{"1 2 3+¯1", "0 1 2", 0},
 	{"1 2 3+4 5 6", "5 7 9", 0},
 
-	{"⍝ Braces.", "", 0},
+	{"⍝ Braces", "apl/parse.go", 0},
 	{"1 2+3 4", "4 6", 0},
 	{"(1 2)+3 4", "4 6", 0},
 	{"1×2+3×4", "14", 0},
@@ -59,7 +51,7 @@ var testCases = []struct {
 	// {"1 (2+3) 4", "1 5 4", 0}, not supported
 	// {"1 2 (+/1 2 3) 4 5", "1 2 6 4 5", 0},
 
-	{"⍝ Comparison", "", 0},
+	{"⍝ Comparison", "apl/primitives/compare.go", 0},
 	{"1 2 3 4 5 > 2", "0 0 1 1 1", 0},         // greater than
 	{"1 2 3 4 5 ≥ 3", "0 0 1 1 1", 0},         // greater or equal
 	{"2 4 6 8 10<6", "1 1 0 0 0", 0},          // less than
@@ -72,7 +64,7 @@ var testCases = []struct {
 	{"-1 2 3=0 2 3", "0 ¯1 ¯1", 0},            // monadic array
 	{"⍝ TODO Comparison tolerance is not implemented.", "", 0},
 
-	{"⍝ Boolean, logical", "", 0},
+	{"⍝ Boolean, logical", "apl/primitives/boolean.go", 0},
 	{"0 1 0 1 ^ 0 0 1 1", "0 0 0 1", 0}, // and
 	{"0 1 0 1 ∧ 0 0 1 1", "0 0 0 1", 0}, // accept both ^ and ∧
 	{"0^0 0 1 1", "0 0 0 0", 0},         // or
@@ -84,7 +76,7 @@ var testCases = []struct {
 	{"~1.0", "0", 0},                    // scalar not
 	{"~0 1", "1 0", 0},                  // array not
 
-	{"⍝ Least common multiple, greatest common divisor", "", 0},
+	{"⍝ Least common multiple, greatest common divisor", "apl/primitives/boolean.go", 0},
 	{"30^36", "180", small},                     // lcm
 	{"0^3", "0", 0},                             // lcm with 0
 	{"3^0", "0", 0},                             // lcm with 0
@@ -101,21 +93,21 @@ var testCases = []struct {
 	//{"¯29J53∨¯1J107", "7J1", 0},                // gcm
 	{"⍝ TODO: lcm and gcm of float and complex", "", 0},
 
-	{"⍝ Multiple expressions.", "", 0},
+	{"⍝ Multiple expressions", "apl/parse.go", 0},
 	{"1⋄2⋄3", "1\n2\n3", 0},
 	{"1⋄2", "1\n2", 0},
 	{"1 2⋄3 4", "1 2\n3 4", 0},
 	{"X←3 ⋄ Y←4", "", 0},
 
-	{"⍝ Index origin.", "", 0},
+	{"⍝ Index origin", "apl/var.go", 0},
 	{"⎕IO←0 ⋄ ⍳3", "0 1 2", 0},
 	{"⎕IO", "1", 0},
 	{"⎕IO←0 ⋄ ⎕IO", "0", 0},
 
-	{"⍝ Type, typeof.", "", 0},
+	{"⍝ Type, typeof", "apl/primitives/type.go", 0},
 	{"⌶'a'", "apl.String", 0},
 
-	{"⍝ Bracket indexing.", "", 0},
+	{"⍝ Bracket indexing", "apl/primitives/index.go", 0},
 	{"A←⍳6 ⋄ A[1]", "1", 0},
 	{"A←2 3⍴⍳6 ⋄ A[1;] ⋄ ⍴A[1;]", "1 2 3\n3", 0},
 	{"A←2 3⍴⍳6 ⋄ A[2;3]", "6", 0},
@@ -129,14 +121,16 @@ var testCases = []struct {
 	{"A←1 2 3⋄A[3]+1", "4", 0},
 	{"A←1 2 3⋄1+A[3]", "4", 0},
 
-	{"⍝ Scalar primitives with axis", "", 0},
+	{"⍝ Scalar primitives with axis", "apl/primitives/array.go", 0},
 	{"(2 3⍴⍳6)+[2]1 2 3", "2 4 6\n5 7 9", 0},
 	{"1 2 3 +[2] 2 3⍴⍳6", "2 4 6\n5 7 9", 0},
 	{"K←2 3⍴.1×⍳6⋄J←2 3 4⍴⍳24⋄N←J+[1 2]K⋄⍴N⋄N[1;2;3]⋄N[2;3;4]", "2 3 4\n7.2\n24.6", 0},
 
-	{"⍝ Iota and reshape.", "", 0},
-	{"⍳5", "1 2 3 4 5", 0},       // index generation
-	{"⍳0", "", 0},                // empty array
+	{"⍝ Iota", "apl/primitives/iota.go", 0},
+	{"⍳5", "1 2 3 4 5", 0}, // index generation
+	{"⍳0", "", 0},          // empty array
+
+	{"⍝ Rho, reshape", "apl/primitives/rho.go", 0},
 	{"⍴⍳5", "5", 0},              // shape
 	{"⍴5", "", 0},                // shape of scalar is empty
 	{"⍴⍴5", "0", 0},              // shape of empty is 0
@@ -149,7 +143,7 @@ var testCases = []struct {
 	{"⍴3 0⍴3", "3 0", 0},         // reshape empty array
 	{"⍳'a'", "fail: strings are not in the input domain of ⍳", 0},
 
-	{"⍝ Where, interval index", "", 0},
+	{"⍝ Where, interval index", "apl/primitives/iota.go", 0},
 	{"⍸1 0 1 0 0 0 0 1 0", "1 3 8", 0},
 	{"⍸'e'='Pete'", "2 4", 0},
 	{"⍸1=1", "1", 0},
@@ -157,7 +151,7 @@ var testCases = []struct {
 	{"'AEIOU'⍸'DYALOG'", "1 5 1 3 4 2", 0},
 	{"0.8 2 3.3⍸1.3 1.9 0.7 4 .6 3.2", "1 1 0 3 0 2", 0},
 
-	{"⍝ Membership", "", 0},
+	{"⍝ Membership", "apl/primitives/iota.go", 0},
 	{"'BANANA'∊'AN'", "0 1 1 1 1 1", 0},
 	{"5 1 2∊6 5 4 1 9", "1 1 0", 0},
 	{"(2 3⍴8 3 5 8 4 8)∊1 8 9 3", "1 1 0\n1 0 1", 0},
@@ -169,7 +163,7 @@ var testCases = []struct {
 	{"(⌈/⍳0)∊⌊/⍳0", "0", 0},
 	{"5 10 15∊⍳10", "1 1 0", 0},
 
-	{"⍝ Without", "", 0},
+	{"⍝ Without", "apl/primitives/boolean.go", 0},
 	{"1 2 3 4 5~2 3 4", "1 5", 0},
 	{"'RHYME'~'MYTH'", "R E", 0},
 	{"1 2~⍳0", "1 2", 0},
@@ -179,7 +173,7 @@ var testCases = []struct {
 	{"5 10 15~⍳10", "15", 0},
 	{"3 1 4 1 5 5~3 1 4 1 5 5~4 2 5 2 6", "4 5 5", 0}, // intersection
 
-	{"⍝ Unique, union", "", 0},
+	{"⍝ Unique, union", "apl/primitives/unique.go", 0},
 	{"∪3", "3", 0},
 	{"⍴∪3", "1", 0},
 	{"∪ 22 10 22 22 21 10 5 10", "22 10 21 5", 0},
@@ -195,14 +189,14 @@ var testCases = []struct {
 	{"1 2 3∪5 3 2 1 4", "1 2 3 5 4", 0},
 	{"5 6 7∪1 2 3", "5 6 7 1 2 3", 0},
 
-	{"⍝ Find", "", 0},
+	{"⍝ Find", "apl/primitives/find.go", 0},
 	{"'AN'⍷'BANANA'", "0 1 0 1 0 0", 0},
 	{"'ANA'⍷'BANANA'", "0 1 0 1 0 0", 0},
 	{"(2 2⍴1)⍷1 2 3", "0 0 0", 0},
 	{"(2 2⍴5 6 8 9)⍷3 3⍴⍳9", "0 0 0\n0 1 0\n0 0 0", 0},
 	{"4 5 6⍷3 3⍴⍳9", "0 0 0\n1 0 0\n0 0 0", 0},
 
-	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "", 0},
+	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "apl/primitives/elementary.go", 0},
 	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", short | cmplx},      // magnitude
 	{"3 3 ¯3 ¯3|¯5 5 ¯4 4", "1 2 ¯1 ¯2", 0},                  // residue
 	{"0.5|3.12 ¯1 ¯0.6", "0.12 0 0.4", short},                // residue
@@ -229,7 +223,7 @@ var testCases = []struct {
 	{"3.3 0 ¯6.7⌈3.1 ¯4 ¯5", "3.3 0 ¯5", 0},                  // max
 	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", 0}, // max
 
-	{"⍝ Factorial, gamma, binomial.", "", 0},
+	{"⍝ Factorial, gamma, binomial", "apl/primitives/elementary.go", 0},
 	{"!4", "24", sfloat},                                         // factorial
 	{"!1 2 3 4 5", "1 2 6 24 120", sfloat},                       // factorial
 	{"!3J2", "¯3.0115J1.7702", cmplx | small},                    // complex gamma
@@ -243,7 +237,7 @@ var testCases = []struct {
 	{"0 1 2 3!3", "1 3 3 1", small},                              // binomial coefficients
 	{"2!3J2", "1J5", small | cmplx},                              // binomial complex
 
-	{"⍝ Match, Not match, tally, depth", "", 0},
+	{"⍝ Match, Not match, tally, depth", "apl/primitives/match.go", 0},
 	{"≡5", "0", 0},          // depth
 	{"≡⍳0", "1", 0},         // depth for empty array
 	{`≡"alpha"`, "0", 0},    // a string is a scalarin APLv.
@@ -260,7 +254,7 @@ var testCases = []struct {
 	{"3≢1⍴3", "1", 0},       // not match
 	{`""≢⍳0`, "1", 0},       // not match
 
-	{"⍝ Left tack, right tack. ⊢ ⊣", "", 0},
+	{"⍝ Left tack, right tack", "apl/primitives/tack.go", 0},
 	{"⊣1 2 3", "1 2 3", 0},      // monadic left: same
 	{"3 2 1⊣1 2 3", "3 2 1", 0}, // dyadic left
 	{"1 2 3⊢3 2 1", "3 2 1", 0}, // dyadic right
@@ -270,10 +264,10 @@ var testCases = []struct {
 	{"⊣/2 3⍴⍳6", "1 4", 0},      // ⊣ reduction over array
 	{"⊢/2 3⍴⍳6", "3 6", 0},      // ⊢ reduction over array
 
-	{"⍝ Array expressions.", "", 0},
+	{"⍝ Array expressions", "apl/primitives/array.go", 0},
 	{"-⍳3", "¯1 ¯2 ¯3", 0},
 
-	{"⍝ Ravel, enlist, catenate, join", "", 0},
+	{"⍝ Ravel, enlist, catenate, join", "apl/primitives/comma.go", 0},
 	{",2 3⍴⍳6", "1 2 3 4 5 6", 0},     // ravel
 	{"⍴,3", "1", 0},                   // scalar ravel
 	{"⍴,⍳0", "0", 0},                  // ravel empty array
@@ -289,7 +283,7 @@ var testCases = []struct {
 	{"⍴(3 5⍴⍳15),[1]3 3 5⍴-⍳45", "4 3 5", 0},
 	{"⍴(3 5⍴⍳15),[2]3 3 5⍴-⍳45", "3 4 5", 0},
 
-	{"⍝ Ravel with axis", "", 0},
+	{"⍝ Ravel with axis", "apl/primitives/comma.go", 0},
 	{",[0.5]1 2 3", "1 2 3", 0},
 	{"⍴,[0.5]1 2 3", "1 3", 0},
 	{",[1.5]1 2 3", "1\n2\n3", 0},
@@ -310,14 +304,14 @@ var testCases = []struct {
 	{"A←3 2 5⍴⍳30⋄⍴,[⍳⍴⍴A],[.5]A", "6 5", 0}, // Turn array into matrix
 	{"A←2 3 4⍴⍳24⋄(,[2 3]A)←2 12⍴-⍳24⋄⍴A⋄A[1;3;4]", "2 3 4\n¯12", 0},
 
-	{"⍝ Laminate", "", 0},
+	{"⍝ Laminate", "apl/primitives/comma.go", 0},
 	{"1 2 3,[0.5]4", "1 2 3\n4 4 4", 0},
 	{"1 2 3,[1.5]4", "1 4\n2 4\n3 4", 0},
 	{"⎕IO←0⋄1 2 3,[¯0.5]4", "1 2 3\n4 4 4", 0},
 	{"'FOR',[.5]'AXE'", "F O R\nA X E", 0},
 	{"'FOR',[1.1]'AXE'", "F A\nO X\nR E", 0},
 
-	{"⍝ Table, catenate first", "", 0},
+	{"⍝ Table, catenate first", "apl/primitives/comma.go", 0},
 	{"⍪0", "0", 0},
 	{"⍴⍪0", "1 1", 0},
 	{"⍪⍳4", "1\n2\n3\n4", 0},
@@ -325,7 +319,7 @@ var testCases = []struct {
 	{"⍪2 2 2⍴⍳8", "1 2 3 4\n5 6 7 8", 0},
 	{"10 20⍪2 2⍴⍳4", "10 20\n1 2\n3 4", 0},
 
-	{"⍝ Decode", "", 0},
+	{"⍝ Decode", "apl/primitives/decode.go", 0},
 	{"3⊥1 2 1", "16", 0},
 	{"3⊥4 3 2 1", "142", 0},
 	{"2⊥1 1 1 1", "15", 0},
@@ -334,7 +328,7 @@ var testCases = []struct {
 	{"24 60 60⊥2 23 12", "8592", 0},
 	{"(2 1⍴2 10)⊥3 2⍴ 1 4 0 3 1 2", "5 24\n101 432", 0},
 
-	{"⍝ Encode, representation", "", 0},
+	{"⍝ Encode, representation", "apl/primitives/decode.go", 0},
 	{"2 2 2 2⊤15", "1 1 1 1", 0},
 	{"10⊤5 15 125", "5 5 5", 0},
 	{"⍴10⊤5 15 125", "3", 0},
@@ -368,7 +362,7 @@ var testCases = []struct {
 	{"0 0⊤0", "0 0", 0},
 	{"1 0⊤234", "0 234", 0},
 
-	{"⍝ Reduce, reduce first, reduce with axis", "", 0},
+	{"⍝ Reduce, reduce first, reduce with axis", "apl/operators/reduce.go", 0},
 	{"+/1 2 3", "6", 0},
 	{"+⌿1 2 3", "6", 0},
 	{"+/2 3 1 ⍴⍳6", "1 2 3\n4 5 6", 0},
@@ -387,7 +381,7 @@ var testCases = []struct {
 	{"÷/[2]2 1 4⍴2×⍳8", "2 4 6 8\n10 12 14 16", 0},
 	{"÷/[2]2 0 3⍴0", "1 1 1\n1 1 1", 0},
 
-	{"⍝ N-wise reduction", "", 0},
+	{"⍝ N-wise reduction", "apl/operators/reduce.go", 0},
 	{"6+/⍳6", "21", 0},
 	{"4+/⍳6", "10 14 18", 0},
 	{"5+/⍳6", "15 20", 0},
@@ -411,7 +405,7 @@ var testCases = []struct {
 	{"1+/⍳6", "1 2 3 4 5 6", 0},
 	{`S←0.0 n→f "%.0f" ⋄ +/1000+/⍳10000`, "45009500500", 0},
 
-	{"⍝ Scan, scan first, scan with axis.", "", 0},
+	{"⍝ Scan, scan first, scan with axis", "apl/operators/reduce.go", 0},
 	{`+\1 2 3 4 5`, "1 3 6 10 15", 0},
 	{`+\2 3⍴⍳6`, "1 3 6\n4 9 15", 0},
 	{`+⍀2 3⍴⍳6`, "1 2 3\n5 7 9", 0},
@@ -421,7 +415,7 @@ var testCases = []struct {
 	{`+\1 2 3 4 5`, "1 3 6 10 15", 0},
 	{`+\[1]2 3⍴⍳6`, "1 2 3\n5 7 9", 0},
 
-	{"⍝ Replicate, compress", "", 0},
+	{"⍝ Replicate, compress", "apl/operators/reduce.go", 0},
 	{"1 1 0 0 1/'STRAY'", "S T Y", 0},
 	{"1 0 1 0/3 4⍴⍳12", "1 3\n5 7\n9 11", 0},
 	{"1 0 1/1 2 3", "1 3", 0},
@@ -447,7 +441,7 @@ var testCases = []struct {
 	{"0 1/[1]2 3⍴⍳6", "4 5 6", 0},
 	{"B←2 2⍴'ABCD'⋄A←3 2⍴⍳6⋄(1 0 1/[1]A)←B⋄A", "A B\n3 4\nC D", 0},
 
-	{"⍝ Expand, expand first", "", 0},
+	{"⍝ Expand, expand first", "apl/operators/reduce.go", 0},
 	{`1 0 1 0 0 1\1 2 3`, "1 0 2 0 0 3", 0},
 	{`1 0 0\5`, "5 0 0", 0},
 	{`0 1 0\3 1⍴7 8 9`, "0 7 0\n0 8 0\n0 9 0", 0},
@@ -471,7 +465,7 @@ var testCases = []struct {
 	{`1 0 1\[1]2 3⍴⍳6`, "1 2 3\n0 0 0\n4 5 6", 0},
 	{"⍝ TODO expand with selective specification", "", 0},
 
-	{"⍝ Pi times, circular, trigonometric", "", 0},
+	{"⍝ Pi times, circular, trigonometric", "apl/primitives/elementary.go", 0},
 	{"○0 1 2", "0 3.1416 6.2832", short | small},            // pi times
 	{"*○0J1", "¯1.00J0.00", cmplxf | small},                 // Euler identity
 	{"0 ¯1 ○ 1", "0 1.5708", short | small},                 //
@@ -494,7 +488,7 @@ var testCases = []struct {
 	{"¯5○1.175201194", "1", short | small},
 	{"¯6○1.543080635", "1", short | small},
 
-	{"⍝ Take, drop", "", 0}, // Monadic First and split are not implemented.
+	{"⍝ Take, drop", "apl/primitives/take.go", 0}, // Monadic First and split are not implemented.
 	{"5↑'ABCDEF'", "A B C D E", 0},
 	{"5↑1 2 3", "1 2 3 0 0", 0},
 	{"¯5↑1 2 3", "0 0 1 2 3", 0},
@@ -552,13 +546,13 @@ var testCases = []struct {
 	{"A←2 3 4⍴⍳24⋄2↓[3]A", "3 4\n7 8\n11 12\n\n15 16\n19 20\n23 24", 0},
 	{"A←2 3 4⍴⍳24⋄2 1↓[3 2]A", "7 8\n11 12\n\n19 20\n23 24", 0},
 
-	{"⍝ Format as a string, Execute", "", 0},
+	{"⍝ Format as a string, Execute", "apl/primitives/format.go", 0},
 	{"⍕10", "10", 0},   // format as string
 	{`⍎"1+1"`, "2", 0}, // evaluate expression
 	{"⍝ TODO: dyadic format with specification.", "", 0},
 	{"⍝ TODO: dyadic execute with namespace.", "", 0},
 
-	{"⍝ Grade up, grade down, sort.", "", 0},
+	{"⍝ Grade up, grade down, sort", "apl/primitives/grade.go", 0},
 	{"⍋23 11 13 31 12", "2 5 3 1 4", 0},                             // grade up
 	{"⍋23 14 23 12 14", "4 2 5 1 3", 0},                             // identical subarrays
 	{"⍋5 3⍴4 16 37 2 9 26 5 11 63 3 18 45 5 11 54", "2 4 1 5 3", 0}, // grade up rank 2
@@ -569,14 +563,13 @@ var testCases = []struct {
 	{"⍝ TODO dyadic grade up/down is only implemented for vector L", "", 0},
 	{"A←23 11 13 31 12⋄A[⍋A]", "11 12 13 23 31", 0}, // sort
 
-	{"⍝ Reverse, revere first", "", 0},
+	{"⍝ Reverse, revere first", "apl/primitives/reverse.go", 0},
 	{"⌽1 2 3 4 5", "5 4 3 2 1", 0}, // reverse vector
 	{"⌽2 3⍴⍳6", "3 2 1\n6 5 4", 0}, // reverse matrix
 	{"⊖2 3⍴⍳6", "4 5 6\n1 2 3", 0}, // reverse first
 	{"⌽[1]2 3⍴⍳6", "4 5 6\n1 2 3", 0},
 	{"⊖[2]2 3⍴⍳6", "3 2 1\n6 5 4", 0},
 	{"A←2 3⍴⍳12 ⋄ (⌽[1]A)←2 3⍴-⍳6⋄A", "¯4 ¯5 ¯6\n¯1 ¯2 ¯3", 0},
-
 	{"⌽'DESSERTS'", "S T R E S S E D", 0}, // reverse strings
 	{"⍝ Rotate", "", 0},
 	{"1⌽1 2 3 4", "2 3 4 1", 0},                                                     // rotate vector
@@ -589,7 +582,7 @@ var testCases = []struct {
 	{"(2 4⍴0 1 ¯1 0 0 3 2 1)⌽[2]2 2 4⍴⍳16", "1 6 7 4\n5 2 3 8\n\n9 14 11 16\n13 10 15 12", 0},
 	{"A←3 4⍴⍳12⋄(1 ¯1 2 ¯2⌽[1]A)←3 4⍴'ABCDEFGHIJKL'⋄A", "I F G L\nA J K D\nE B C H", 0},
 
-	{"⍝ Transpose", "", 0},
+	{"⍝ Transpose", "apl/primitives/transpose.go", 0},
 	{"1 2 1⍉2 3 4⍴⍳6", "1 5 3\n2 6 4", 0},
 	{"⍉3 1⍴1 2 3", "1 2 3", 0},
 	{"⍴⍉2 3⍴⍳6", "3 2", 0},
@@ -607,7 +600,7 @@ var testCases = []struct {
 	{"⎕IO←0⋄⍴1 0 2⍉3 2 4⍴⍳24", "2 3 4", 0},
 	{"A←3 3⍴⍳9⋄(1 1⍉A)←10 20 30⋄A", "10 2 3\n4 20 6\n7 8 30", 0},
 
-	{"⍝ Enclose, string catenation, join strings, newline", "", 0},
+	{"⍝ Enclose, string catenation, join strings, newline", "apl/primitives/enclose.go", 0},
 	{`⊂'alpha'`, "alpha", 0},
 	{`"+"⊂'alpha'`, "a+l+p+h+a", 0},
 	{`⎕NL⊂"alpha" "beta" "gamma"`, "alpha\nbeta\ngamma", 0},
@@ -615,7 +608,7 @@ var testCases = []struct {
 	{"(`alpha`beta`gamma)", "alpha beta gamma", 0},
 	{"`alpha`beta`gamma⋄", "alpha beta gamma", 0},
 
-	{"⍝ Domino, solve linear system", "", 0},
+	{"⍝ Domino, solve linear system", "apl/primitives/domino.go", 0},
 	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", short},
 	// TODO: this fails for big.Float. Remove sfloat and debug
 	{"(1 ¯2 0)⌹3 3⍴3 2 ¯1 2 ¯2 4 ¯1 .5 ¯1", "1\n¯2\n¯2", short | sfloat},
@@ -629,7 +622,7 @@ var testCases = []struct {
 	// B←3 3⍴9?100
 	// 0=⌈/⌈/|B-A+.×B⌹A
 
-	{"⍝ Dates, Times and durations", "", small},
+	{"⍝ Dates, Times and durations", "apl/numbers/time.go", small},
 	{"2018.12.23", "2018.12.23T00.00.00.000", small},       // Parse a time
 	{"2018.12.23+12s", "2018.12.23T00.00.12.000", small},   // Add a duration to a time
 	{"2018.12.24<2018.12.23", "0", small},                  // Times are comparable
@@ -648,7 +641,7 @@ var testCases = []struct {
 	{"⌈2018.12.23+3.5s", "2018.12.23T00.00.04.000", small}, // Ceil rounds to seconds
 	{"⌊3h÷42.195", "4m15s", small},                         // Floor truncates seconds.
 
-	{"⍝ Basic operators.", "", 0},
+	{"⍝ Basic operators", "apl/operators/", 0},
 	{"+/1 2 3", "6", 0},                            // plus reduce
 	{"1 2 3 +.× 4 3 2", "16", 0},                   // scalar product
 	{"(2 3⍴⍳6) +.× 3 2⍴5+⍳6", "52 58\n124 139", 0}, // matrix multiplication
@@ -658,7 +651,7 @@ var testCases = []struct {
 	{`S←0.0 n→f "%.0f"⋄ +.×.*/2 3 4`, "2417851639229258349412352", 0},
 	{`+.*.×/2 3 4`, "24", 0},
 
-	{"⍝ Identify item for reduction over empty array", "", 0},
+	{"⍝ Identify item for reduction over empty array", "apl/operators/identity.go", 0},
 	{"+/⍳0", "0", 0},
 	{"-/⍳0", "0", 0},
 	{"×/⍳0", "1", 0},
@@ -689,19 +682,19 @@ var testCases = []struct {
 	// {`\/⍳0`, "0", 0},
 	// {`⍀/⍳0`, "0", 0},
 
-	{"⍝ Outer product", "", 0},
+	{"⍝ Outer product", "apl/operators/dot.go", 0},
 	{"10 20 30∘.+1 2 3", "11 12 13\n21 22 23\n31 32 33", 0},
 	{"(⍳3)∘.=⍳3", "1 0 0\n0 1 0\n0 0 1", 0},
 	{"1 2 3∘.×4 5 6", "4 5 6\n8 10 12\n12 15 18", 0},
 
-	{"⍝ Each", "", 0},
+	{"⍝ Each", "apl/operators/each.go", 0},
 	{"-¨1 2 3", "¯1 ¯2 ¯3", 0},   // monadic each
 	{"1+¨1 2 3", "2 3 4", 0},     // dyadic each
 	{"1 2 3+¨1", "2 3 4", 0},     // dyadic each
 	{"1 2 3+¨4 5 6", "5 7 9", 0}, // dyadic each
 	{"1+¨1", "2", 0},             // dyadic each
 
-	{"⍝ Commute, duplicate", "", 0},
+	{"⍝ Commute, duplicate", "apl/operators/commute.go", 0},
 	{"∘.≤⍨1 2 3", "1 1 1\n0 1 1\n0 0 1", 0},
 	{"+/∘(÷∘⍴⍨)⍳10", "5.5", 0}, // mean value
 	{"⍴⍨3", "3 3 3", 0},
@@ -709,20 +702,20 @@ var testCases = []struct {
 	{"+/2*⍨2 2⍴4 7 1 8", "65 65", 0},
 	{"3-⍨4", "1", 0},
 
-	{"⍝ Composition", "", 0},
+	{"⍝ Composition", "apl/operators/jot.go", 0},
 	{"+/∘⍳¨2 4 6", "3 10 21", 0}, // Form I
 	{"1∘○ 10 20 30", "¯0.54402 0.91295 ¯0.98803", short | small},
 	{"+∘÷/40⍴1", "1.618", short},       // Form IV, golden ratio (continuous-fraction)
 	{"(*∘0.5)4 16 25", "2 4 5", float}, // Form III
 
-	{"⍝ Power operator", "", 0},
+	{"⍝ Power operator", "apl/operators/power.go", 0},
 	{"⍟⍣2 +2 3 4", "¯0.36651 0.094048 0.32663", short | float}, // log log
 	// TODO: 1+∘÷⍣=1 oscillates for big.Float.
 	// TODO: Add comparison tolerance and remove sfloat.
 	{"1+∘÷⍣=1", "1.618", short | small}, // fixed point iteration golden ratio
 	{"⍝ TODO: function inverse", "", 0},
 
-	{"⍝ Rank operator", "", 0},
+	{"⍝ Rank operator", "apl/operators/rank.go", 0},
 	{`+\⍤0 +2 3⍴1`, "1 1 1\n1 1 1", 0},
 	{`+\⍤1 +2 3⍴1`, "1 2 3\n1 2 3", 0},
 	{"⍴⍤1 +2 3⍴1", "3\n3", 0},
@@ -731,7 +724,7 @@ var testCases = []struct {
 	{"⍉2 2 2⊤⍤1 0 ⍳5", "0 0 0 1 1\n0 1 1 0 0\n1 0 1 0 1", 0},
 	{"⍳⍤1 +3 1⍴⍳3", "1 0 0\n1 2 0\n1 2 3", 0},
 
-	{"⍝ At", "", 0},
+	{"⍝ At", "apl/operators/at.go", 0},
 	{"(10 20@2 4)⍳5", "1 10 3 20 5", 0},
 	{"10 20@2 4⍳5", "1 10 3 20 5", 0},
 	{"((2 3⍴10 20)@2 4)4 3⍴⍳12", "1 2 3\n10 20 10\n7 8 9\n20 10 20", 0},
@@ -744,10 +737,10 @@ var testCases = []struct {
 	{"÷@(2∘|)⍳5", "1 2 0.33333 4 0.2", short},
 	{"⌽@(2∘|)⍳5", "5 2 3 4 1", 0},
 
-	{"⍝ Stencil", "", 0},
+	{"⍝ Stencil", "apl/operators/stencil.go", 0},
 	{"{⌈/⌈/⍵}⌺(3 3) ⊢3 3⍴⍳25", "5 6 6\n8 9 9\n8 9 9", 0},
 
-	{"⍝ Assignment, specification", "", 0},
+	{"⍝ Assignment, specification", "apl/operators/assign.go", 0},
 	{"X←3", "", 0},          // assign a number
 	{"-X←3", "¯3", 0},       // assign a value and use it
 	{"X←3⋄X←4", "", 0},      // assign and overwrite
@@ -757,22 +750,21 @@ var testCases = []struct {
 	{"X←4⋄⎕←÷X", "0.25", 0}, // assign and use it in another expr
 	{"A←2 3 ⋄ A", "2 3", 0}, // assign a vector
 
-	{"⍝ Indexed assignment", "", 0},
+	{"⍝ Indexed assignment", "apl/operators/assign.go", 0},
 	{"A←2 3 4 ⋄ A[1]←1 ⋄ A", "1 3 4", 0},
 	{"A←2 2⍴⍳4 ⋄ +A[1;1]←3 ⋄ A", "3\n3 2\n3 4", 0},
 	{"A←⍳5 ⋄ A[2 3]←10 ⋄ A", "1 10 10 4 5", 0},
 	{"A←2 3⍴⍳6 ⋄ A[;2 3]←2 2⍴⍳4 ⋄ A", "1 1 2\n4 3 4", 0},
-
 	{"⍝ TODO: choose/reach indexed assignment", "", 0},
 
-	{"⍝ Multiple assignment", "", 0},
+	{"⍝ Multiple assignment", "apl/operators/assign.go", 0},
 	{"A←B←C←D←1 ⋄ A B C D", "1 1 1 1", 0},
 
-	{"⍝ Vector assignment", "", 0},
+	{"⍝ Vector assignment", "apl/operators/assign.go", 0},
 	{"(A B C)←2 3 4 ⋄ A ⋄ B ⋄ C ", "2\n3\n4", 0},
 	{"-A B C←1 2 3 ⋄ A B C", "¯1 ¯2 ¯3\n1 2 3", 0},
 
-	{"⍝ Modified assignment", "", 0},
+	{"⍝ Modified assignment", "apl/operators/assign.go", 0},
 	{"A←1 ⋄ A+←1 ⋄ A", "2", 0},
 	{"A←1 2⋄ A+←1 ⋄ A", "2 3", 0},
 	{"A←1 2 ⋄ A+←3 4 ⋄ A", "4 6", 0},
@@ -780,7 +772,7 @@ var testCases = []struct {
 	{"A B C←1 2 3 ⋄ A B C +← 4 5 6 ⋄ A B C", "5 7 9", 0},
 
 	// Selective specification APL2 p.41, DyaRef p.21
-	{"⍝ Selective assignment/specification", "", 0},
+	{"⍝ Selective assignment/specification", "apl/operators/assign.go", 0},
 	{"A←10 20 30 40 ⋄ (2↑A)←100 200 ⋄ A", "100 200 30 40", 0},
 	{"A←'ABCD' ⋄ (3↑A)←1 2 3 ⋄ A", "1 2 3 D", 0},
 	{"A←1 2 3 ⋄ ((⍳0)↑A)←4 ⋄ A", "4 4 4", 0},
@@ -812,13 +804,9 @@ var testCases = []struct {
 	{"A←2 3⍴⍳6 ⋄ (¯2↑[2]A)←2 2⍴10×⍳4 ⋄ A", "1 10 20\n4 30 40", 0},
 	{"A←3 3⍴⍳9 ⋄ (1 1⍉A)←10 20 30 ⋄ A", "10 2 3\n4 20 6\n7 8 30", 0},
 	{"A←3 3⍴'STYPIEANT' ⋄ (⍉A)←3 3⍴⍳9 ⋄ A", "1 4 7\n2 5 8\n3 6 9", 0},
-	{"⍝ First (↓) and Pick (⊃) are not implemented", "", 0},
+	{"⍝ TODO: First (↓) and Pick (⊃) are not implemented", "", 0},
 
-	{"⍝ IBM APL Language, 3rd edition, June 1976.", "", 0},
-	{"1000×(1+.06÷1 4 12 365)*10×1 4 12 365", "1790.8 1814 1819.4 1822", short},
-	{"Area ← 3×4\nX←2+⎕←3×Y←4\nX\nY", "12\n14\n4", 0},
-
-	{"⍝ Lambda expressions.", "", 0},
+	{"⍝ Lambda expressions", "apl/lambda.go", 0},
 	{"{2×⍵}3", "6", 0},           // lambda in monadic context
 	{"2{⍺+3{⍺×⍵}⍵+2}2", "14", 0}, // nested lambas
 	{"2{(⍺+3){⍺×⍵}⍵+⍺{⍺+1+⍵}1+2}2", "40", 0},
@@ -827,12 +815,12 @@ var testCases = []struct {
 	{"{⍺×⍵}/2 3 4", "24", 0},
 	{`{1:1+2⋄{1:1+⍵}3}4`, "3", 0},
 
-	{"⍝ Evaluation order", "", 0},
+	{"⍝ Evaluation order", "apl/function.go", 0},
 	{"A←1⋄A+(A←2)", "4", 0},
 	{"A+A←3", "6", 0},
 	{"A←1⋄A{(⍺ ⍵)}A+←10", "11 10", 0},
 
-	{"⍝ Lexical scoping", "", 0},
+	{"⍝ Lexical scoping", "apl/lambda.go", 0},
 	{"A←1⋄{A←2⋄A}0⋄A", "2\n1", 0},
 	{"X←{A←3⋄B←4⋄0:ignored⋄42}0⋄X⋄A⋄B", "42\nA\nB", 0},
 	{"{A←1⋄{A←⍵}⍵+1}1", "2", 0},
@@ -842,17 +830,17 @@ var testCases = []struct {
 	{"A←1⋄{A+←1⋄A}0⋄A", "2\n2", 0},
 	{"+X←{A←3⋄B←4}0", "4", 0},
 
-	{"⍝ Default left argument", "", 0},
+	{"⍝ Default left argument", "apl/lambda.go", 0},
 	{"f←{⍺←3⋄⍺+⍵}⋄ f 4 ⋄ 1 f 4", "7\n5", 0},
 
-	{"⍝ Recursion", "", 0},
+	{"⍝ Recursion", "apl/lambda.go", 0},
 	{`S←0.0 n→f "%.0f" ⋄ f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10`, "3628800", 0},
 	{"S←0{⍺>20:⍺⋄⍵∇⎕←⍺+⍵}1", "1\n2\n3\n5\n8\n13\n21\n34", 0},
 
-	{"⍝ Tail call", "", 0},
+	{"⍝ Tail call", "apl/lambda.go", 0},
 	{"{⍵>1000:⍵⋄∇⍵+1}1", "1001", 0},
 
-	{"⍝ Trains, forks, atops", "", 0},
+	{"⍝ Trains, forks, atops", "apl/train.go", 0},
 	{"-,÷ 5", "¯0.2", 0},
 	{"(-,÷)5", "¯5 0.2", 0},
 	{"3(+×-)1", "8", 0},
@@ -872,19 +860,11 @@ var testCases = []struct {
 	{"(3+*)4", "57.598", short | float}, // Agh fork
 	//{"(⍳(/∘⊢)⍳)3", "1 2 2 3 3 3", 0}, // The hybrid token does not parse.
 
-	{"⍝ π", "", 0},
-	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", short | float},
-	{"4×-/÷¯1+2×⍳100", "3.1316", short},
-	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.1216", short},
-
-	{"⍝ Conways game of life", "", 0},
-	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", 0},
-
-	{"⍝ Go interface: package strings", "", 0},
+	{"⍝ Go interface package strings", "apl/strings/register.go", 0},
 	{`u←s→toupper ⋄ u "alpha"`, "ALPHA", 0},
 	{`";" s→join "alpha" "beta" `, "alpha;beta", 0},
 
-	{"⍝ Lists", "", 0},
+	{"⍝ Lists", "apl/list.go", 0},
 	{"(1;2;)", "(1;2;)", 0},
 	{"(1 5 9;(2;3+4;);)", "(1 5 9;(2;7;);)", 0},
 	{"(+;1;2;)", "(+;1;2;)", 0},
@@ -894,7 +874,7 @@ var testCases = []struct {
 	{"+/(1;2;3;)", "6", 0},
 	{"+/(1;2;(3;4;);)", "6 7", 0},
 
-	{"⍝ Lists: catenate, enlist, cut, each", "", 0},
+	{"⍝ Lists catenate, enlist, cut, each", "apl/primitives/comma.go", 0},
 	{"1,(2;3;)", "(1;2;3;)", 0},
 	{"(1;2;),3", "(1;2;3;)", 0},
 	{"(1;2;),(3;4;)", "(1;2;3;4;)", 0},
@@ -907,7 +887,7 @@ var testCases = []struct {
 	{"(1;2;(3;4;);)+¨(1;2;(3;4;);)", "(2;4;6 8;)", 0},
 	{"≢¨(1;2;(3;4;);)", "(1;1;2;)", 0},
 
-	{"⍝ List indexing ", "", 0},
+	{"⍝ List indexing", "apl/primitives/index.go", 0},
 	{"L←(1;2;)⋄L[2]", "2", 0},
 	{"L←(1;(2;3;);4;)⋄L[2;1]", "2", 0},
 	{"L←(1;(2;3;);4;)⋄L[0]", "4", 0},
@@ -916,26 +896,26 @@ var testCases = []struct {
 	{"L←(1;(2;3;);4;)⋄L[2][2]", "3", 0},
 	{"⍝ Indexing with lists is not supported", "", 0},
 
-	{"⍝ List indexed assignment", "", 0},
+	{"⍝ List indexed assignment", "apl/primitives/index.go", 0},
 	{"L←(1;2;)⋄L[1]←3⋄L", "(3;2;)", 0},
 	{"L←(1;(2;3;);4;)⋄L[2;1]←5⋄L", "(1;(5;3;);4;)", 0},
 	{"L←(1;(2;3;);4;)⋄L[2;0]←5⋄L", "(1;(2;5;);4;)", 0},
 	{"L←(1;(2;3;);4;)⋄L[2;¯1]×←5⋄L", "(1;(10;3;);4;)", 0},
 
-	{"⍝ Dictionaries", "", 0},
+	{"⍝ Dictionaries", "apl/object.go", 0},
 	{"D←`alpha#1 2 3⋄D[`alpha]←`xyz⋄D", "alpha: xyz", 0},
 	{"D←`alpha#1⋄D[`alpha`beta]←3 4⋄D", "alpha: 3\nbeta: 4", 0},
 	{"D←`a`b`c#1⋄D⋄#D", "a: 1\nb: 1\nc: 1\na b c", 0},
 	{"D←`a`b`c#1 2 3⋄G←D[`a`c]⋄G", "a: 1\nc: 3", 0},
 
-	{"⍝ Table, transpose a dict to create a table", "", 0},
+	{"⍝ Table, transpose a dict to create a table", "apl/primitives/transpose.go", 0},
 	{"⍉`a`b#1 2", "a b\n1 2", 0},
 	{"⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n2 5 8\n3 6 9", 0},
 	{"⍉⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a: 1 2 3\nb: 4 5 6\nc: 7 8 9", 0},
 	{"⍴`a`b#(1 2 3;4 5 6;)", "2", 0},
 	{"⍴⍉`a`b#(1 2 3;4 5 6;)", "3 2", 0},
 
-	{"⍝ Indexing tables", "", 0},
+	{"⍝ Indexing tables", "apl/primitives/index.go", 0},
 	{"T←⍉`a`b#1 2⋄T[1]", "a b\n1 2", 0},
 	{"T←⍉`a`b#(1;3;)⋄T[1]", "a b\n1 3", 0},
 	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a b\n1 3", 0},             // single row as a table
@@ -947,10 +927,9 @@ var testCases = []struct {
 	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", 0},    // single column table as a vector
 	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", 0}, // subtable if any index is multiple
 	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", 0},        // single value
-
 	{"⍝ TODO: Assignment on tables, updates", "", 0},
 
-	{"⍝ Elementary functions on dicts and tables", "", 0},
+	{"⍝ Elementary functions on dicts and tables", "apl/primitives/elementary.go", 0},
 	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", 0},
 	{"A←⍉`a`b#(1 2;3 4;)⋄-A", "a b\n¯1 ¯3\n¯2 ¯4", 0},
 	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(9 8;7 6;)⋄B-A", "a: 8 6\nb: 4 2", 0},
@@ -960,7 +939,7 @@ var testCases = []struct {
 	{"A←`a`b#(1 2;3 4;)⋄A-5 7", "a: ¯4 ¯5\nb: ¯2 ¯3", 0},
 	{"A←`a`b#(1 2;3 4;)⋄3-A", "a: 2 1\nb: 0 ¯1", 0},
 
-	{"⍝ Catenate tables or objects", "", 0},
+	{"⍝ Catenate tables or objects", "apl/primitives/comma.go", 0},
 	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A,B", "a: 1 2 5 6\nb: 3 4 7 8", 0},
 	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(5 6;7 8;)⋄A,B", "a: 1 2\nb: 3 4 5 6\nc: 7 8", 0},
 	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A⍪B", "a: 5 6\nb: 7 8", 0},
@@ -974,29 +953,49 @@ var testCases = []struct {
 	{"A←`a`b#(1 2;3 4;)⋄A,5", "a: 1 2 5\nb: 3 4 5", 0},
 	{"A←`a`b#(1 2;3 4;)⋄5 6⍪A", "a: 5 6 1 2\nb: 5 6 3 4", 0},
 
-	{"⍝ Object, xgo example", "", 0},
+	{"⍝ Reduction over objects and tables", "apl/operators/reduce.go", 0},
+	{"+/`a`b`c#(1 2 3;4 6;7;)", "a: 6\nb: 10\nc: 7", 0},
+	{"+\\`a`b`c#(1 2 3;4 6;7;)", "a: 1 3 6\nb: 4 10\nc: 7", 0},
+	{"+/⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n6 15 24", 0},
+	{"+\\⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n3 9 15\n6 15 24", 0},
+	{"2+/`a`b#(1 2 3;4 6 7;)", "a: 3 5\nb: 10 13", 0},
+	{"2+/⍉`a`b#(1 2 3;4 6 7;)", "a b\n3 10\n5 13", 0},
+	// TODO {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", 0}, // table with avg value.
+
+	{"⍝ Object, xgo example", "apl/xgo/register.go", 0},
 	{"X←xgo→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},
 	{"X←xgo→t 0⋄X[`I]←55⋄X[`inc]⍨0⋄X[`I]", "56", small},
 	{"X←xgo→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "4 a+b+c+d", small},
 	{"S←xgo→s 0⋄#[1]S", "sum", 0},
 
-	{"⍝ Channels: take, drop and close", "", 0},
+	{"⍝ Channels read, write and close", "apl/primitives/take.go", 0},
 	{"C←xgo→source 6⋄2 3↑C", "0 1 2\n3 4 5", 0},
 	{"C←xgo→source 6⋄↑C⋄↑C⋄↓C", "0\n1\n1", 0},
 
-	{"⍝ Reduce, scan and each over channel", "", 0},
+	{"⍝ Reduce, scan and each over channel", "apl/operators/reduce.go", 0},
 	{"C←xgo→source 6⋄+/C", "15", 0},
 	{`C←xgo→source 6⋄+\C`, "0 1 3 6 10 15", 0},
 	{`C←xgo→source 6⋄+¨C`, "(0;1;2;3;4;5;)", 0},
 	{`C←xgo→source 4⋄5+¨C`, "(5;6;7;8;)", 0},
 
-	{"⍝ Communicate over a channel", "", 0},
+	{"⍝ Communicate over a channel", "apl/channel.go", 0},
 	{`C←xgo→echo"?"⋄C↓'a'⋄C↓'b'⋄2↑C⋄↓C`, "a\nb\n?a ?b\n1", 0},
 
-	{"⍝ Examples from github.com/DhavalDalal/APL-For-FP-Programmers", "", 0},
-	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
+	{"⍝ Primes", "", 0},
 	{"f←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", 0},        // 01-primes
 	{"⎕IO←0 ⋄ f←{(~X∊X∘.×X)⌿X←2↓⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", 0}, // 01-primes
+
+	{"⍝ π", "", 0},
+	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", short | float},
+	{"4×-/÷¯1+2×⍳100", "3.1316", short},
+	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.1216", short},
+
+	{"⍝ Conway-completeness", "", 0},
+	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", 0},
+	// life2←{3=s-⍵∧4=s←{+/,⍵}⌺3 3⊢⍵} // Dya: works without braces.
+
+	// github.com/DhavalDalal/APL-For-FP-Programmers
+	// filter←{(⍺⍺¨⍵)⌿⍵} // 01-primes
 	// ⎕IO←0 ⋄ sieve ← {⍸⊃{~⍵[⍺]:⍵ ⋄ 0@(⍺×2↓⍳⌈(≢⍵)÷⍺)⊢⍵}/⌽(⊂0 0,(⍵-2)⍴1),⍳⍵} // 02-sieve
 	// ⎕IO←0 ⋄ triples←{{⍵/⍨(2⌷x)=+⌿2↑x←×⍨⍵}⍉↑,1+⍳⍵ ⍵ ⍵}// 03-pythagoreans
 	// ⎕IO←0 ⋄ '-:'⊣@(' '=⊢)¨(14⍴(4⍴1),0)(17⍴1 1 0)\¨⊂⍉(⎕D,6↑⎕A)[(12⍴16)⊤?10⍴2*48] // 04-MacAddress
@@ -1060,14 +1059,51 @@ func TestPrecise(t *testing.T) {
 }
 
 func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
+	log := func(v ...interface{}) {
+		if testing.Short() {
+			t.Log(v...)
+		}
+	}
+	logf := func(f string, v ...interface{}) {
+		if testing.Short() {
+			t.Logf(f, v...)
+		}
+	}
+
+	// Print table of contents
+	if testing.Short() {
+		log("# Test results")
+		logf("%s by `gen.go` on %s\n", `Autogenerated from [apl_test](../../../tree/master/apl/primitives/apl_test.go)`, time.Now().Format("2006-01-02 15:04:05"))
+		for _, tc := range testCases {
+			if strings.HasPrefix(tc.in, "⍝") {
+				if strings.HasPrefix(tc.in, "⍝ TODO") {
+					continue
+				}
+				s := strings.TrimPrefix(tc.in, "⍝ ")
+				a := strings.ToLower(s)
+				a = strings.Replace(a, " ", "-", -1)
+				logf("- [%s](#%s)\n", s, a)
+			}
+		}
+		logf("\n```apl\n")
+	}
+
 	// Compare result with expectation but ignores differences in whitespace.
 	for i, tc := range testCases {
 
 		if strings.HasPrefix(tc.in, "⍝") {
 			if strings.HasPrefix(tc.in, "⍝ TODO") {
-				t.Log(tc.in)
+				log(tc.in)
 			} else {
-				t.Log("\n" + tc.in)
+				s := strings.TrimPrefix(tc.in, "⍝ ")
+				log("```")
+				logf("## %s\n", s)
+				if tc.exp != "" {
+					label := tc.exp
+					dst := `../../../tree/master/` + tc.exp
+					logf("[→%s](%s)\n", label, dst)
+				}
+				logf("\n```apl\n")
 			}
 			continue
 		}
@@ -1112,7 +1148,7 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 		mustfail := strings.HasPrefix(tc.exp, "fail:")
 		lines := strings.Split(tc.in, "\n")
 		for k, s := range lines {
-			t.Logf("\t%s", s)
+			logf("\t%s", s)
 			err := a.ParseAndEval(s)
 			if err != nil && mustfail == false {
 				t.Fatalf("tc%d:%d: %s: %s\n", i+1, k+1, tc.in, err)
@@ -1121,12 +1157,12 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 			}
 		}
 		if mustfail {
-			t.Log("Must", tc.exp) // This prints: "Must fail: ..."
+			log("Must", tc.exp) // This prints: "Must fail: ..."
 			continue
 		}
 
 		got := buf.String()
-		t.Log(got)
+		log(got)
 
 		g := got
 		g = spaces.ReplaceAllString(g, " ")
