@@ -16,11 +16,8 @@ func (f ComplexArray) String(a *apl.Apl) string {
 	return apl.ArrayString(a, f)
 }
 
-func (f ComplexArray) At(i int) (apl.Value, error) {
-	if i < 0 || i >= len(f.Cmplx) {
-		return nil, fmt.Errorf("index out of range")
-	}
-	return Complex(f.Cmplx[i]), nil
+func (f ComplexArray) At(i int) apl.Value {
+	return Complex(f.Cmplx[i])
 }
 
 func (f ComplexArray) Shape() []int {

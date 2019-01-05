@@ -17,11 +17,8 @@ func (t TimeArray) String(a *apl.Apl) string {
 	return apl.ArrayString(a, t)
 }
 
-func (t TimeArray) At(i int) (apl.Value, error) {
-	if i < 0 || i >= len(t.Times) {
-		return nil, fmt.Errorf("index out of range")
-	}
-	return Time(t.Times[i]), nil
+func (t TimeArray) At(i int) apl.Value {
+	return Time(t.Times[i])
 }
 
 func (t TimeArray) Shape() []int {

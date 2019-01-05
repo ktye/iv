@@ -16,11 +16,8 @@ func (f FloatArray) String(a *apl.Apl) string {
 	return apl.ArrayString(a, f)
 }
 
-func (f FloatArray) At(i int) (apl.Value, error) {
-	if i < 0 || i >= len(f.Floats) {
-		return nil, fmt.Errorf("index out of range")
-	}
-	return Float(f.Floats[i]), nil
+func (f FloatArray) At(i int) apl.Value {
+	return Float(f.Floats[i])
 }
 
 func (f FloatArray) Shape() []int {
