@@ -79,6 +79,7 @@ func (a *Apl) Doc(w io.Writer) {
 	fmt.Fprintln(w, "```")
 
 	fmt.Fprintln(w, "## Operators")
+	fmt.Fprintln(w, "```")
 	{
 		s := make([]struct {
 			symbol string
