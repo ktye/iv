@@ -210,9 +210,9 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	return propagate(a, res, ia.child)
 }
 func (ia indexarray) String(a *apl.Apl) string {
-	name := "intdexarray"
+	name := "indexarray"
 	if ia.conv == true {
-		name = "tointdexarray"
+		name = "toindexarray"
 	}
 	if ia.child == nil {
 		return name

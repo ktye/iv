@@ -16,9 +16,7 @@ func init() {
 	})
 	register(primitive{
 		symbol: "⍳",
-		doc: `index of, first occurrence of L in items of R
-If an item is not found, the value is ⍴L+⎕IO.
-If an item recurs: the value is the index of the first occurence`,
+		doc:    `index of, first occurrence`,
 		Domain: Dyadic(Split(ToVector(nil), ToArray(nil))),
 		fn:     indexof,
 	})

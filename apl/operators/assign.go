@@ -11,7 +11,7 @@ func init() {
 	register(operator{
 		symbol:  "←",
 		Domain:  MonadicOp(nil),
-		doc:     "assign, variable assignment, specification, copula",
+		doc:     "assign, variable specification",
 		derived: assign,
 	})
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"reflect"
 
 	"github.com/ktye/iv/apl/scan"
 	// _ "github.com/ktye/iv/apl/funcs" // Register default funcs
@@ -24,8 +23,6 @@ func New(w io.Writer) *Apl {
 		operators:  make(map[string][]Operator),
 		symbols:    make(map[rune]string),
 		pkg:        make(map[string]*env),
-		importers:  make(map[reflect.Type]ImportFunc),
-		doc:        make(map[string]string),
 	}
 	a.parser.a = &a
 	return &a
@@ -35,17 +32,14 @@ func New(w io.Writer) *Apl {
 type Apl struct {
 	scan.Scanner
 	parser
-	stdout io.Writer
-	Tower  Tower
-	Origin int
-	env    *env
-	//vars       map[string]Value
+	stdout     io.Writer
+	Tower      Tower
+	Origin     int
+	env        *env
 	primitives map[Primitive][]PrimitiveHandler
 	operators  map[string][]Operator
 	symbols    map[rune]string
-	doc        map[string]string
 	pkg        map[string]*env
-	importers  map[reflect.Type]ImportFunc
 	initscan   bool
 	debug      bool
 }

@@ -2,7 +2,9 @@ package apl
 
 import (
 	"fmt"
-	"reflect"
+	"io"
+	"sort"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -28,16 +30,6 @@ func (a *Apl) RegisterOperator(s string, op Operator) error {
 	return nil
 }
 
-// RegisterDoc adds help text to a key in the documentation.
-// This should be called by packages, that add primitives or operators.
-func (a *Apl) RegisterDoc(key, help string) {
-	if s := a.doc[key]; s == "" {
-		a.doc[key] = help
-	} else {
-		a.doc[key] += "\n" + help
-	}
-}
-
 // registerSymbol adds single rune symbols for the parser.
 func (a *Apl) registerSymbol(s string) {
 	if r, w := utf8.DecodeRuneInString(s); w == len(s) {
@@ -45,19 +37,76 @@ func (a *Apl) registerSymbol(s string) {
 	}
 }
 
+// RegisterPackage adds an external package to apl.
 func (a *Apl) RegisterPackage(name string, m map[string]Value) {
 	a.pkg[name] = &env{parent: nil, vars: m}
 }
 
-func (a *Apl) RegisterImport(t reflect.Type, f ImportFunc) {
-	a.importers[t] = f
-}
+// Doc writes the documentation of all registered primitives and operators to the writer.
+func (a *Apl) Doc(w io.Writer) {
+	fmt.Fprintln(w, "## Primitive functions")
+	fmt.Fprintln(w, "```")
+	{
 
-type ImportFunc func(reflect.Value) Value
+		s := make([]struct {
+			symbol Primitive
+			doc    string
+		}, len(a.primitives))
+		i := 0
+		for symbol, handlers := range a.primitives {
+			h := handlers[0]
+			s[i].symbol = symbol
+			s[i].doc = h.Doc()
+			i++
+		}
+		sort.Slice(s, func(i, j int) bool { return s[i].doc < s[j].doc })
+		for _, k := range s {
+			symbol := k.symbol
+			handlers := a.primitives[k.symbol]
+			fmt.Fprintf(w, "%s\t\t\n", symbol)
+			for _, h := range handlers {
+				dom := h.String(a)
+				domain := fmt.Sprintf("L%sR  %s", symbol, dom)
+				if strings.Index(dom, "L") == -1 {
+					domain = fmt.Sprintf("%sR  %s", symbol, dom)
+				}
+				fmt.Fprintf(w, "\t%s\n\t%s\t\n", h.Doc(), domain)
+			}
+			fmt.Fprintf(w, "\t\t\n")
+		}
 
-func (a *Apl) Import(v reflect.Value) Value {
-	if f, ok := a.importers[v.Type()]; ok {
-		return f(v)
 	}
-	return nil
+	fmt.Fprintln(w, "```")
+
+	fmt.Fprintln(w, "## Operators")
+	{
+		s := make([]struct {
+			symbol string
+			doc    string
+		}, len(a.operators))
+		i := 0
+		for symbol, ops := range a.operators {
+			h := ops[0]
+			s[i].symbol = symbol
+			s[i].doc = h.Doc()
+			i++
+		}
+		sort.Slice(s, func(i, j int) bool { return s[i].doc < s[j].doc })
+		for _, k := range s {
+			symbol := k.symbol
+			handlers := a.operators[k.symbol]
+			fmt.Fprintf(w, "%s\t\t\n", symbol)
+			for _, h := range handlers {
+				dom := h.String(a)
+				domain := fmt.Sprintf("LO%sRO  %s", symbol, dom)
+				if strings.Index(dom, "LO") == -1 {
+					domain = fmt.Sprintf("%sRO  %s", symbol, dom)
+				}
+				fmt.Fprintf(w, "\t%s\n\t%s\t\n", h.Doc(), domain)
+			}
+			fmt.Fprintf(w, "\t\t\n")
+		}
+
+		fmt.Fprintln(w, "```")
+	}
 }

@@ -93,13 +93,7 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 
 // convert converts a go value to an apl value.
 func convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
-
-	if x := a.Import(v); x != nil {
-		return x, nil
-	}
-
 	switch v.Kind() {
-
 	case reflect.Int:
 		return apl.Index(int(v.Int())), nil
 

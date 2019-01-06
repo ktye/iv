@@ -10,7 +10,7 @@ import (
 func init() {
 	register(primitive{
 		symbol: ",",
-		doc:    "ravel, create row vector, ravel with axis",
+		doc:    "ravel, ravel with axis",
 		Domain: Monadic(nil),
 		fn:     ravel,
 		sel:    ravelSelection,

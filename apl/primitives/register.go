@@ -2,6 +2,8 @@ package primitives
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 
 	"github.com/ktye/iv/apl"
 )
@@ -15,6 +17,13 @@ func Register(a *apl.Apl) {
 var primitives []primitive
 
 func register(p primitive) {
+	// Add source path to documentation.
+	_, fn, line, _ := runtime.Caller(1)
+	if idx := strings.Index(fn, "apl/primitives"); idx != -1 {
+		fn = fn[idx:]
+	}
+	p.doc += fmt.Sprintf("\t%s:%d", fn, line)
+
 	primitives = append(primitives, p)
 }
 

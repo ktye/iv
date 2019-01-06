@@ -2,6 +2,8 @@ package operators
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 
 	"github.com/ktye/iv/apl"
 )
@@ -47,6 +49,13 @@ type arity interface {
 var operators []operator
 
 func register(op operator) {
+	// Add source path to documentation.
+	_, fn, line, _ := runtime.Caller(1)
+	if idx := strings.Index(fn, "apl/operators"); idx != -1 {
+		fn = fn[idx:]
+	}
+	op.doc += fmt.Sprintf("\t%s:%d", fn, line)
+
 	operators = append(operators, op)
 }
 
