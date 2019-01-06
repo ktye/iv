@@ -1099,9 +1099,7 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 				log("```")
 				logf("## %s\n", s)
 				if tc.exp != "" {
-					label := tc.exp
-					dst := `../../../tree/master/` + tc.exp
-					logf("[→%s](%s)\n", label, dst)
+					logf("[→%s](%s)\n", tc.exp, tc.exp)
 				}
 				logf("\n```apl\n")
 			}
