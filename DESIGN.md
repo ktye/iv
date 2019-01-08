@@ -211,6 +211,8 @@ Not all primitives do this.
 Sometimes it's better to implement a special case directly then to put everything in the general package.
 
 # Lambda functions
+Lambda expressions are the only form of user defined functions at runtime.
+Classic defined functions or branch statements do not exist.
 Lambda functions `apl/lambda.go` should be mostly compatible with Dyalog's dfns.
 ```apl
 {⍺×⍵}/2 3 4
