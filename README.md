@@ -10,7 +10,6 @@
   - [REF.md](REF.md) reference of all standard primitives and operators
   - [TESTS.md](TESTS.md) output of test coverage which gives an overview of the state of affairs
   - [GOALS.md](GOALS.md) describes the target of the project
-  - [COMPAT.md](COMPAT.md) compatibility and comparision to other APLs
   - [DESIGN.md](DESIGN.md) description of the go implementation and how to write extra packages
 
 # programs
