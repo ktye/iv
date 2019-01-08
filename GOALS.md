@@ -6,7 +6,7 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
 
 - extendable and embeddable
   - extend APL by implementing extensions in go
-  - embed APL by adding it to already existing go programs
+  - embed APL by spreading it over already existing go programs
   - *thats sounds too complicated and uses too many words* `(APL\iv÷Go)←→Lua÷C`
 - compatibility and portability: it runs everywhere go runs
   - cross compiling from x to y out of the box, e.g. `GOOS=linux GOARCH=mipsle go install` working on any host including windows is a matter of course
@@ -15,7 +15,7 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
 - #1: Build the smallest APL machine. Small with respect to m³
 
 # COMPATIBILITY
-- The goal is to be mostly compatible to APL2/Dyalog core language substracting nested arrays
+- The compatibility goal is to be mostly conforming to APL2/Dyalog core language substracting nested arrays
 - The parser adds some more restrictions
   - function variables have to be lowercase: `f←+/`, nouns are uppercase
   - lambdas (dfns) exist but no user defined operators directly in APL (go extension can define operators)
@@ -49,3 +49,10 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
   - package xgo `xgo.Register(a)` adds helpers to translate from go to apl types.
 - Streaming
   - the type `Channel` combines two go channels for sequential reading and writing of any `apl.Value` to a concurrent process, rpc call or go routine 
+  
+# SPEED AND SIZE
+Of course it should be fast and compact. However the primary goal is implementation speed. This is hard enough.
+  
+# DISCLAIMER
+The author has never used APL. It's a chicken and egg problem.
+Primary source for the implementation is the APL2 Language Reference, Dyalog 17 Language Reference guide and on some occasions the ISO spec. All testing has been done with tryapl.org. Thank you a lot, Dyalog for this.
