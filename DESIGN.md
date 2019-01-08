@@ -42,6 +42,8 @@ The parser is `apl/parse.go`.
 ```go
 func (p *parser) parse(tokens []scan.Token) (Program, error)
 ```
+called by the interpreter in `apl/apl.go: func (a *Apl) Parse(line string) (Program, error)`
+
 It reads tokens from the right side and pushes them on the stack.
 After each token it tries to *reduce* the expression by assembling a nested tree.
 
@@ -52,9 +54,79 @@ At the end of parsing a line, only a single item may be left. Hence the error me
 ```
 cannot reduce expression
 ```
-if it fails to do so.
+if it cannot.
 
 The *Reduction* step tries to reduce operator expressions from the left 
 and noun expressions from the right side of the partial list, plus some special handling for bracket indexing and assignments.
-I don't know if a real APL parser does it in a similar way.
+I'm not sure if a real APL parser does it in a similar way.
 I hope someone will enlighten me some day.
+
+The result of parsing is a *Program*. This is a bad name.
+It refers to a single line of APL input. Maybe *Phrase* would be better.
+
+I played around with the idea of parsing directly into an `apl.List` value, similarly to what I think K does.
+This would allow to do Lisp style manipulation at runtime.
+It's deferred for future work.
+
+## Evaluation
+Evaluation executes a *Program* by converting it into one or more *Values*.
+
+The interpreter `cmd/apl` does this by calling:
+```go
+func (a *Apl) ParseAndEval(line string) error {
+	if p, err := a.Parse(line); err != nil {
+		return err
+	} else {
+		return a.Eval(p)
+	}
+}
+```
+which also prints the result.
+Other interfaces exist in `apl/eval.go`
+
+# Types and Values
+An APL Value is implemented as an interface.
+Anything that can be printed into a string can act as an `apl.Value` (`apl/value.go`):
+```go
+type Value interface {
+	String(*Apl) string
+}
+```
+It's not yet decided if this is enough. Maybe a Copy method could be added later.
+
+APL is an array language:
+```go
+type Array interface {
+	String(*Apl) string
+	At(int) Value
+	Shape() []int
+	Size() int
+}
+```
+Also an array is implemented as an interface. This makes it possible add all kinds of special implementations later.
+The most prominent implementation of it is the `apl.MixedArray`
+```go
+type MixedArray struct {
+	Values []Value
+	Dims   []int
+}
+```
+Technically it's Values can be anyting, but the default implementation of primary functions and operators implies scalars / atoms.
+
+Functions are also implemented as an interface.
+```go
+type Function interface {
+	Call(a *Apl, L Value, R Value) (Value, error)
+}
+```
+If L is nil, it's a monadic call.
+
+Primitive functions and derived functions are examples of actual types that implement it.
+Another one could be a method of an external go type.
+
+
+# Numbers
+# Overloading primitive functions and operators
+# Lambda functions
+# Go interface
+# Streams and concurrency
