@@ -7,7 +7,7 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
 - extendable and embeddable
   - extend APL by implementing extensions in go
   - embed APL by spreading it over already existing go programs
-  - *thats sounds too complicated and uses too many words* `(APL\iv÷Go)←→Lua÷C`
+  - *If that sounds too complicated and uses too many words:* `(APL\iv÷Go)←→Lua÷C`
 - compatibility and portability: it runs everywhere go runs
   - cross compiling from x to y out of the box, e.g. `GOOS=linux GOARCH=mipsle go install` working on any host including windows is a matter of course
 
