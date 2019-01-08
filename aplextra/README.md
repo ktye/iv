@@ -25,5 +25,7 @@ To be included in the interpreter, each package needs to be compiled in:
 - q: rpc interface from APL to kdb (via `github.com/sv/kdbgo`)
 
 ### planned:
-- [ ] linear algebra package based on gonum
-- [ ] plot
+- [ ] mat: linear algebra package based on gonum
+- [ ] plot: 
+- [ ] stats: statistics package for data streams
+- [ ] images/animations should be possible with the std lib.
