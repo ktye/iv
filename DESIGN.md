@@ -206,6 +206,23 @@ up-to-date with a call to `go generate`. The part of `?` looks like that:
 ```
 It may not be the final version, but it's definetly better then having an out-dated hand written description.
 
+Using the domain package to build a domain function is optional.
+Not all primitives do this. 
+Sometimes it's better to implement a special case directly then to put everything in the general package.
+
 # Lambda functions
+Lambda functions `apl/lambda.go` should be mostly compatible with Dyalog's dfns.
+```apl
+{⍺×⍵}/2 3 4
+S←0{⍺>20:⍺⋄⍵∇⎕←⍺+⍵}1
+{⍵>1000:⍵⋄∇⍵+1}1
+```
+Guards are supported, recursion and tail calls (in contrast to the host language).
+But there is room for improvement:
+- currently everything has to fit on one line 
+- no error guards
+	- instead a simpler general method of error handling is planned:
+	- `EXPR :: TRAP` individually for any line without an exception stack
+
 # Go interface
 # Streams and concurrency
