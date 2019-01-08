@@ -20,7 +20,7 @@ type Type int
 const (
 	Endl       Type = iota
 	Symbol          // single rune APL symbol
-	Number          // 1 1.23 1.234E12 -1.234 1.234@156
+	Number          // 1 1.23 1.234E12 -1.234 1.234J2
 	String          // "quoted text", "escape "" with double quotes" `alpha
 	Chars           // 'rune vector' in single quotes
 	Identifier      // alpha_3
