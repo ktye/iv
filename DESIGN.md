@@ -126,6 +126,27 @@ Another one could be a method of an external go type.
 
 
 # Numbers
+Numbers are added to the type system by implementing a `apl.Tower`, see `apl/tower.go`.
+A tower is a linear escalation of numeric types.
+A dyadic call to an elementary function (`+×⍟⌊...`) implies that both values are on the same level.
+
+The default tower is implemented in `apl/numbers/` and contains Integer, Float, Complex and Time.
+
+Time is a little bit special here. It could have been implemented outside the number system.
+But this allows direct parsing amoung benefits.
+
+Two other tower implementations are provided in `apl/big`:
+A big tower with Int and Rat and a precise tower with Float and Complex containing any number of bits.
+
+The big tower is nice for playing with numbers.
+It's Rat type can be used in combination with ⌹ to solve linear equations loss-less.
+I have seen this from Bob Smith and wanted it too.
+
+The precise tower could come in handy when testing numerical algorithms.
+
+The towers are only available if they are registered at compile time, so it's possible to use only a single one.
+If multiple tower are present, they can be switched but not mixed at runtime.
+
 # Overloading primitive functions and operators
 # Lambda functions
 # Go interface
