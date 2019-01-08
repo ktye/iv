@@ -11,10 +11,10 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
 - compatibility and portability: it runs everywhere go runs
   - cross compiling from x to y out of the box, e.g. `GOOS=linux GOARCH=mipsle go install` working on any host including windows is a matter of course
 
-# GOALS
+# Goals
 - #1: Build the smallest APL machine. Small with respect to m³
 
-# COMPATIBILITY
+# Compatibility
 - The compatibility goal is to be mostly conforming to APL2/Dyalog core language substracting nested arrays
 - The parser adds some more restrictions
   - function variables have to be lowercase: `f←+/`, nouns are uppercase
@@ -23,8 +23,9 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
     - `/\ etc` are implemented as operators. These are really nasty.
     - assignment is also implemented as an operator. But `{indexed, modified, selective}` assignment should work.
 
-# NON-COMPATIBILITY
-- Workspace, Namespace, Quadfunctions, I-Beams. All this does not exist or is or will be done differently.
+# Non-compatibility
+- Workspace, Namespace, Quadfunctions, I-Beams, user functions others than lambdas.
+All this does not exist, is or will be done differently.
 
 # ADDITIONS
 - Replaceable numeric tower
@@ -50,9 +51,9 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
 - Streaming
   - the type `Channel` combines two go channels for sequential reading and writing of any `apl.Value` to a concurrent process, rpc call or go routine 
   
-# SPEED AND SIZE
+# Speed and size
 Of course it should be fast and compact. However the primary goal is implementation speed. This is hard enough.
   
-# DISCLAIMER
+# Disclaimer
 The author has never used APL. It's a chicken and egg problem.
 Primary source for the implementation is the APL2 Language Reference, Dyalog 17 Language Reference guide and on some occasions the ISO spec. All testing has been done with tryapl.org. Thank you a lot, Dyalog for this.
