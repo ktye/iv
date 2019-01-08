@@ -27,7 +27,7 @@ This may be as small as `cmd/apl` or a huge application where APL simply acts as
 - Workspace, Namespace, Quadfunctions, I-Beams, user functions others than lambdas.
 All this does not exist, is or will be done differently.
 
-# ADDITIONS
+# Additions
 - Replaceable numeric tower
   - bool and int (index) is always there as `apl.Bool` and `apl.Index`
   - the default tower is compiled in with `numbers.Register(a)` and provides `int64, float64, complex128, time (time.Time + time.Duration)`
