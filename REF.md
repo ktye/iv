@@ -36,9 +36,9 @@
                                                
 ,                                              
    catenate, join along last axis              apl/primitives/comma.go:24
-   ,R  any                                     
+   L,R  L any, R any                           
    ravel, ravel with axis                      apl/primitives/comma.go:11
-   ,R  any                                     
+   ,R  R any                                   
                                                
 ○                                              
    circular, trigonometric                     apl/primitives/elementary.go:74
@@ -72,7 +72,7 @@
    deal                                        apl/primitives/query.go:19
    L?R  L toscalar index R toscalar index      
    roll                                        apl/primitives/query.go:13
-   ?R  any                                     
+   ?R  R any                                   
                                                
 ⊥                                              
    decode, polynom, base value                 apl/primitives/decode.go:12
@@ -80,9 +80,9 @@
                                                
 #                                              
    dict                                        apl/primitives/dict.go:18
-   #R  any                                     
+   L#R  L any, R any                           
    keys, methods                               apl/primitives/dict.go:12
-   #R  any                                     
+   #R  R any                                   
                                                
 ÷                                              
    div, division, divide                       apl/primitives/elementary.go:74
@@ -104,7 +104,7 @@
                                                
 ⊤                                              
    encode, representation                      apl/primitives/decode.go:18
-   ⊤R  any                                     
+   L⊤R  L any, R any                           
                                                
 =                                              
    equality                                    apl/primitives/compare.go:26
@@ -122,7 +122,7 @@
                                                
 ⍕                                              
    format, convert to string                   apl/primitives/format.go:11
-   ⍕R  any                                     
+   ⍕R  R any                                   
                                                
 ⍒                                              
    grade down with collating sequence          apl/primitives/grade.go:31
@@ -178,9 +178,9 @@
                                                
 ⊣                                              
    left tack, left argument                    apl/primitives/tack.go:21
-   ⊣R  any                                     
+   L⊣R  L any, R any                           
    left tack, same                             apl/primitives/tack.go:9
-   ⊣R  any                                     
+   ⊣R  R any                                   
                                                
 ≤                                              
    less or equal                               apl/primitives/compare.go:26
@@ -212,17 +212,17 @@
    natural logarithm                           apl/primitives/elementary.go:32
    ⍟R  scalar                                  
                                                
-^                                              
-   logical and                                 apl/primitives/boolean.go:31
-   ^R  arithmetic arrays                       
-   logical and                                 apl/primitives/boolean.go:25
-   L^R  L scalar R scalar                      
-                                               
 ∧                                              
    logical and                                 apl/primitives/boolean.go:31
    ∧R  arithmetic arrays                       
    logical and                                 apl/primitives/boolean.go:25
    L∧R  L scalar R scalar                      
+                                               
+^                                              
+   logical and                                 apl/primitives/boolean.go:31
+   ^R  arithmetic arrays                       
+   logical and                                 apl/primitives/boolean.go:25
+   L^R  L scalar R scalar                      
                                                
 ⍲                                              
    logical nand                                apl/primitives/boolean.go:31
@@ -262,9 +262,9 @@
                                                
 ≡                                              
    match                                       apl/primitives/match.go:24
-   ≡R  any                                     
+   L≡R  L any, R any                           
    depth, level of nesting                     apl/primitives/match.go:11
-   ≡R  any                                     
+   ≡R  R any                                   
                                                
 ⌹                                              
    matrix divide, solve linear system, domino  apl/primitives/domino.go:18
@@ -292,9 +292,9 @@
                                                
 ∊                                              
    membership                                  apl/primitives/iota.go:23
-   ∊R  any                                     
+   L∊R  L any, R any                           
    enlist                                      apl/primitives/comma.go:18
-   ∊R  any                                     
+   ∊R  R any                                   
                                                
 ⌊                                              
    min, minumum                                apl/primitives/elementary.go:74
@@ -340,9 +340,9 @@
                                                
 ≢                                              
    not match                                   apl/primitives/match.go:30
-   ≢R  any                                     
+   L≢R  L any, R any                           
    tally, number of major cells                apl/primitives/match.go:17
-   ≢R  any                                     
+   ≢R  R any                                   
                                                
 +                                              
    plus, addition                              apl/primitives/elementary.go:74
@@ -384,25 +384,25 @@
    reshape                                     apl/primitives/rho.go:12
    L⍴R  L tovector toindexarray R toarray      
    shape                                       apl/primitives/rho.go:11
-   ⍴R  any                                     
+   ⍴R  R any                                   
                                                
 ⊢                                              
    right tack, right argument                  apl/primitives/tack.go:27
-   ⊢R  any                                     
+   L⊢R  L any, R any                           
    right tack, same                            apl/primitives/tack.go:15
-   ⊢R  any                                     
+   ⊢R  R any                                   
                                                
 ⌽                                              
    rotate                                      apl/primitives/reverse.go:27
    L⌽R  L toindexarray R any                   
    reverse                                     apl/primitives/reverse.go:11
-   ⌽R  any                                     
+   ⌽R  R any                                   
                                                
 ⊖                                              
    rotate first                                apl/primitives/reverse.go:34
    L⊖R  L toindexarray R any                   
    reverse first                               apl/primitives/reverse.go:18
-   ⊖R  any                                     
+   ⊖R  R any                                   
                                                
 -                                              
    substract, substraction                     apl/primitives/elementary.go:74
@@ -424,9 +424,9 @@
                                                
 ⍪                                              
    table                                       apl/primitives/comma.go:36
-   ⍪R  any                                     
+   ⍪R  R any                                   
    catenate first                              apl/primitives/comma.go:30
-   ⍪R  any                                     
+   L⍪R  L any, R any                           
                                                
 ↑                                              
    take one from channel                       apl/primitives/take.go:26
@@ -438,7 +438,7 @@
                                                
 ⌶                                              
    type                                        apl/primitives/type.go:11
-   ⌶R  any                                     
+   ⌶R  R any                                   
                                                
 ∪                                              
    union                                       apl/primitives/unique.go:15
@@ -525,6 +525,6 @@
                                    
 ```
 PASS
-ok  	github.com/ktye/iv/apl/primitives	0.681s
+ok  	github.com/ktye/iv/apl/primitives	0.698s
 
-generated by `go generate (apl/primitives/gen.go)` 2019-01-06 01:43:37
+generated by `go generate (apl/primitives/gen.go)` 2019-01-09 03:06:57
