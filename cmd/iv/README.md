@@ -1,4 +1,46 @@
 # iv stream processor
+
+## Rewrite
+Iv is currently being rewritten and simplified.
+
+## Intro
+Iv is a commandline program that reads a possibly large array on stdin and applies a lambda function repeatedly on a subspace.
+
+The input array can be considered to have shape `[* ... * A B C]`, when the program is called with the
+a rank parameter of 3.
+The number and size of leading dimensions (indicated by stars) is unknown to the program.
+
+In a simple form, the input array has shape [* C], which is a table with a known number of columns
+but an unkown and possibly very large number of rows.
+
+The known axes, are not given on the command line, they are part of the input data.
+Only the rank argument at which the data should be cut into pieces must be told.
+
+```
+	$ cat data | iv -r2 -b"BEGIN BLOCK" f:⍺g⍵ ⋄ g:B⍵
+	f, g, h are placeholders.
+	This translates into APL:
+	
+	BEGIN BLOCK	    ⍝ Any statement (optional), but don't use an iv variable name.
+	iv←{f:⍺g⍵ ⋄ g:h⍵}  ⍝ ⍵ is the rank 2 sub-array, ⍺ the termination level
+	IvC←iv→r 2          ⍝ IvC is a channel.
+	⍝ iv→r is the function r in package iv. 
+	⍝ It is called with rank 2 given on the command line as -r2.
+	⍝ Each take on the channel returns a list (A;E;) with the array and termination level.
+	{(¯1↑⍵) iv 1↑⍵}¨IvC
+	
+```
+TODO: explain termination levels
+
+TODO: describe input data format
+
+Note: When working on Windows with msys2, arguments such as '+/' may be automagically
+translated by a hidden compatibility layer into a path.
+To prevent this export `MSYS2_ARG_CONV_EXCL="*"`.
+
+Below is the old description.
+It is more complicated, but supports also *ivy*, *j*, *klong* and *kona*.
+
 ## Intro
 Iv is similar to awk.
 It reads data from stdin, applies a list of rules and writes the output to stdout.

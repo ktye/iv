@@ -1,3 +1,7 @@
+//+build ignore
+
+// This is the 1st version that is not working anymore.
+
 // Program iv is a command line interface to the iv stream processor.
 //
 // The program reads data from a text stream on stdin

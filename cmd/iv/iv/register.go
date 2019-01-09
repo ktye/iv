@@ -1,0 +1,59 @@
+// Package iv is an APL extension that sends subarrays over a channel
+//
+// Iv is used by the command line program cmd/iv, but can also be registered
+// in any APL instance by calling
+//	Register(a *Apl).
+package iv
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+
+	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/domain"
+)
+
+func Register(a *apl.Apl) {
+	pkg := map[string]apl.Value{
+		"r": &InputParser{},
+	}
+	a.RegisterPackage("iv", pkg)
+}
+
+func (_ *InputParser) String(a *apl.Apl) string {
+	return "iv r"
+}
+
+func (p *InputParser) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	if p.Reader != nil {
+		return nil, fmt.Errorf("iv: r can only be called once")
+		// TODO: This could be made possible, but cmd/iv needs it only once.
+	}
+
+	toidx := domain.ToIndex(nil)
+	if n, ok := toidx.To(a, R); ok == false {
+		return nil, fmt.Errorf("iv r expects an int argument: rank, got %T", R)
+	} else {
+		p.Rank = int(n.(apl.Index))
+		if p.Rank <= 0 {
+			return nil, fmt.Errorf("iv: rank must be > 0")
+		}
+	}
+	p.Reader = bufio.NewReader(tabularText(os.Stdin))
+	p.a = a
+	p.Separator = '\n'
+
+	c := apl.NewChannel()
+	go p.sendArrays(c)
+	/*
+		go func(c apl.Channel) {
+			var buf []apl.Value
+			s := "empty stack"
+			for {
+			}
+			close(c[0])
+		}(c)
+	*/
+	return c, nil
+}
