@@ -14,7 +14,7 @@
 
 # programs
 - [cmd/apl](cmd/apl): APL interpreter as a command line program
-- [cmd/aplui](cmd/aplui): APL gui application
+- [cmd/lui](cmd/lui): APL gui application
 - [cmd/iv](cmd/iv): a program similar to awk with an APL backend but for streaming n-dimensional data
 
 # status
