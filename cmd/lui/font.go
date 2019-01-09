@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang/freetype/truetype"
 	duitdraw "github.com/ktye/duitdraw"
-	"github.com/ktye/iv/cmd/aplui/font"
+	"github.com/ktye/iv/cmd/lui/font"
 )
 
 // registerFont parses APL385.ttf and registers it in duitdraw under the name APL385.

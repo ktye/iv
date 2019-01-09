@@ -23,7 +23,7 @@ import (
 //	  on the top left corner.
 //	  The image is not persistent. It will be overdrawn
 //	  by any updates of the edit widget.
-// An example application is cmd/aplui which also embedds
+// An example application is cmd/lui which also embedds
 // APL385 unicode fonts and translates key events without
 // the need for special keyboard drivers.
 type Apl struct {
@@ -228,7 +228,7 @@ var keymap = map[key.Code]rune{
 // Keyboard maps from a key code to two runes.
 // The first one is used if the Alt-Gr key is used,
 // The sencond if both, Alt-Gr and Shift are used.
-// See cmd/aplui/main.go: welcome for the keyboard layout.
+// See cmd/lui/main.go: welcome for the keyboard layout.
 var Keyboard = map[key.Code][2]rune{
 	// Top row.
 	53: {'⋄', '⍨'},
