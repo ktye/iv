@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -18,22 +19,33 @@ func main() {
 	if len(os.Args) < 2 {
 		usage()
 	}
+	iv.Stdin = os.Stdin
+	if err := run(os.Stdout, os.Args[1:]); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
 
+func run(w io.Writer, args []string) error {
 	var rank int = 1
 	var begin string
+	var end string
 	var λ string
 	var err error
 
-	// If an argument starts with -r or -b, it's a flag.
+	// If an argument starts with -r, -b, -e it's a flag.
 	// There is not space between the flag and the option.
-	args := os.Args[1:]
 	for len(args) > 0 {
 		s := args[0]
-		if strings.HasPrefix(s, "-r") != -1 {
+		if strings.HasPrefix(s, "-r") {
 			rank, err = strconv.Atoi(s[2:])
-			fatal(err)
+			if err != nil {
+				return err
+			}
 		} else if strings.HasPrefix(s, "-b") {
-			begin = strconv.Atoi(s[2:])
+			begin = s[2:]
+		} else if strings.HasPrefix(s, "-e") {
+			end = s[2:]
 		} else {
 			break
 		}
@@ -41,37 +53,42 @@ func main() {
 	}
 	λ = strings.Join(args, " ")
 	if len(λ) == 0 {
-		fatal(fmt.Errorf("command line lambda argument is missing"))
+		return fmt.Errorf("command line lambda argument is missing")
 	}
 
 	// Start an interpreter instance with the iv extension package.
-	a := apl.New(os.Stdout)
+	a := apl.New(w)
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
 	iv.Register(a)
 
-	if begin != "" {
-		fatal(a.ParseAndEval(begin))
+	program := []string{
+		begin,
+		"iv←{" + λ + "}",
+		fmt.Sprintf("IvC←iv→r %d", rank),
+		"IvN←0",
+		"IvS←{IvN=0:⎕←(¯1↑⍺) iv 1↑⍺⋄⎕←(¯1↑⍵) iv 1↑⍵}/IvC",
+		end,
 	}
-	fatal(a.ParseAndEval("iv←{" + λ + "}"))
-	fatal(a.ParseAndEval(fmt.Printf("IvC←iv→r %d", rank)))
-	fatal(a.ParseAndEval("{(¯1↑⍵) iv 1↑⍵}¨IvC"))
-}
 
-func fatal(err error) {
-	if err != nil {
-		return fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	for _, line := range program {
+		if line != "" {
+			if err := a.ParseAndEval(line); err != nil {
+				return err
+			}
+		}
 	}
+	return nil
 }
 
 func usage() {
 	fmt.Println(`
 Usage
-	iv -rRANK -bBEGIN lambda function < data
+	iv -rRANK -bBEGIN -eEND lambda function < data
 Example
-	iv -r2 '⍵,+/⍵'
+	iv '+/⍵' < data
+	iv -r2 '⍵,+/⍵' < data
 	`)
 	os.Exit(1)
 }
