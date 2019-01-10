@@ -20,13 +20,16 @@ import (
 // APL value that should be transfered over the wire need to be
 // registerd to the gob package.
 // See init.go for values that are already registerd.
-func Register(a *apl.Apl) {
+func Register(a *apl.Apl, name string) {
 	pkg := map[string]apl.Value{
 		"dial":  dial{},
 		"call":  call{},
 		"close": closeconn{},
 	}
-	a.RegisterPackage("rpc", pkg)
+	if name == "" {
+		name = "rpc"
+	}
+	a.RegisterPackage(name, pkg)
 }
 
 type dial struct{}

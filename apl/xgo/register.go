@@ -8,7 +8,10 @@ import (
 	"github.com/ktye/iv/apl"
 )
 
-func Register(a *apl.Apl) {
+func Register(a *apl.Apl, name string) {
+	if name == "" {
+		name = "go"
+	}
 	pkg := map[string]apl.Value{
 		"t":      New(reflect.TypeOf(T{})),
 		"s":      New(reflect.TypeOf(S{})),
@@ -16,7 +19,7 @@ func Register(a *apl.Apl) {
 		"source": source{},
 		"echo":   echo{},
 	}
-	a.RegisterPackage("xgo", pkg)
+	a.RegisterPackage("go", pkg)
 }
 
 type I int

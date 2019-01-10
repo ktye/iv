@@ -9,11 +9,14 @@ import (
 	"github.com/ktye/iv/apl/numbers"
 )
 
-func Register(a *apl.Apl) {
+func Register(a *apl.Apl, name string) {
 	pkg := map[string]apl.Value{
 		"set": settower{},
 	}
-	a.RegisterPackage("big", pkg)
+	if name == "" {
+		name = "big"
+	}
+	a.RegisterPackage(name, pkg)
 }
 
 // SetBigTower sets the numerical tower to Int->Rat.

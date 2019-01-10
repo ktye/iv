@@ -9,10 +9,15 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/domain"
 )
+
+// TODO: This reads from stdin hard coded. That's ok for cmd/iv.
+//       To make this useful as a package, it should use a reader.
+//	 This is planned to be provided by a more general io package.
 
 func Register(a *apl.Apl) {
 	pkg := map[string]apl.Value{
@@ -25,7 +30,7 @@ func (_ *InputParser) String(a *apl.Apl) string {
 	return "iv r"
 }
 
-func (p *InputParser) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+func (p *InputParser) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if p.Reader != nil {
 		return nil, fmt.Errorf("iv: r can only be called once")
 		// TODO: This could be made possible, but cmd/iv needs it only once.
@@ -40,7 +45,19 @@ func (p *InputParser) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 			return nil, fmt.Errorf("iv: rank must be > 0")
 		}
 	}
-	p.Reader = bufio.NewReader(tabularText(os.Stdin))
+
+	// For testing: we accept a string L (a variable name) and read from it's string value
+	// instead of stdin.
+	// TODO: This should change to a channel.
+	if L == nil {
+		p.Reader = bufio.NewReader(tabularText(os.Stdin))
+	} else {
+		if v, ok := L.(apl.String); ok == false {
+			return nil, fmt.Errorf("iv r: L must be a string")
+		} else {
+			p.Reader = bufio.NewReader(strings.NewReader(string(v)))
+		}
+	}
 	p.a = a
 	p.Separator = '\n'
 

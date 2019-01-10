@@ -9,7 +9,10 @@ import (
 	"github.com/ktye/iv/apl/xgo"
 )
 
-func Register(a *apl.Apl) {
+func Register(a *apl.Apl, name string) {
+	if name == "" {
+		name = "s"
+	}
 	pkg := map[string]apl.Value{
 		"compare":        xgo.Function{Name: "Compare", Fn: reflect.ValueOf(strings.Compare)},
 		"contains":       xgo.Function{Name: "Contains", Fn: reflect.ValueOf(strings.Contains)},
@@ -50,5 +53,5 @@ func Register(a *apl.Apl) {
 		"trimspace":      xgo.Function{Name: "TrimSpace", Fn: reflect.ValueOf(strings.TrimSpace)},
 		"trimsuffix":     xgo.Function{Name: "TrimSuffix", Fn: reflect.ValueOf(strings.TrimSuffix)},
 	}
-	a.RegisterPackage("s", pkg)
+	a.RegisterPackage(name, pkg)
 }

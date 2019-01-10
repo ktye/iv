@@ -403,7 +403,7 @@ var testCases = []struct {
 	{"2+/[1]4 3⍴⍳12", "5 7 9\n11 13 15\n17 19 21", 0},
 	{"0×/[1]2 3⍴⍳12", "1 1 1\n1 1 1\n1 1 1", 0},
 	{"1+/⍳6", "1 2 3 4 5 6", 0},
-	{`S←0.0 n→f "%.0f" ⋄ +/1000+/⍳10000`, "45009500500", 0},
+	{`+/1000+/⍳10000`, "45009500500", small},
 
 	{"⍝ Scan, scan first, scan with axis", "apl/operators/reduce.go", 0},
 	{`+\1 2 3 4 5`, "1 3 6 10 15", 0},
@@ -648,7 +648,8 @@ var testCases = []struct {
 	{`-\×\+\1 2 3`, "1 ¯2 16", 0},                  // chained monadic operators
 	{"+/+/+/+/1 2 3", "6", 0},
 	{`+.×/2 3 4`, "24", 0},
-	{`S←0.0 n→f "%.0f"⋄ +.×.*/2 3 4`, "2417851639229258349412352", 0},
+	// {`S←0.0 n→f "%.0f"⋄ +.×.*/2 3 4`, "2417851639229258349412352", 0},
+	{`+.×.*/2 3 4`, "2.4179e+24", small | short},
 	{`+.*.×/2 3 4`, "24", 0},
 
 	{"⍝ Identify item for reduction over empty array", "apl/operators/identity.go", 0},
@@ -834,7 +835,7 @@ var testCases = []struct {
 	{"f←{⍺←3⋄⍺+⍵}⋄ f 4 ⋄ 1 f 4", "7\n5", 0},
 
 	{"⍝ Recursion", "apl/lambda.go", 0},
-	{`S←0.0 n→f "%.0f" ⋄ f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10`, "3628800", 0},
+	{`f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10`, "3628800", short | small},
 	{"S←0{⍺>20:⍺⋄⍵∇⎕←⍺+⍵}1", "1\n2\n3\n5\n8\n13\n21\n34", 0},
 
 	{"⍝ Tail call", "apl/lambda.go", 0},
@@ -962,24 +963,24 @@ var testCases = []struct {
 	{"2+/⍉`a`b#(1 2 3;4 6 7;)", "a b\n3 10\n5 13", 0},
 	// TODO {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", 0}, // table with avg value.
 
-	{"⍝ Object, xgo example", "apl/xgo/register.go", 0},
-	{"X←xgo→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},
-	{"X←xgo→t 0⋄X[`I]←55⋄X[`inc]⍨0⋄X[`I]", "56", small},
-	{"X←xgo→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "4 a+b+c+d", small},
-	{"S←xgo→s 0⋄#[1]S", "sum", 0},
+	{"⍝ Object, go example", "apl/xgo/register.go", 0},
+	{"X←go→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},
+	{"X←go→t 0⋄X[`I]←55⋄X[`inc]⍨0⋄X[`I]", "56", small},
+	{"X←go→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "4 a+b+c+d", small},
+	{"S←go→s 0⋄#[1]S", "sum", 0},
 
 	{"⍝ Channels read, write and close", "apl/primitives/take.go", 0},
-	{"C←xgo→source 6⋄2 3↑C", "0 1 2\n3 4 5", 0},
-	{"C←xgo→source 6⋄↑C⋄↑C⋄↓C", "0\n1\n1", 0},
+	{"C←go→source 6⋄2 3↑C", "0 1 2\n3 4 5", 0},
+	{"C←go→source 6⋄↑C⋄↑C⋄↓C", "0\n1\n1", 0},
 
 	{"⍝ Reduce, scan and each over channel", "apl/operators/reduce.go", 0},
-	{"C←xgo→source 6⋄+/C", "15", 0},
-	{`C←xgo→source 6⋄+\C`, "0 1 3 6 10 15", 0},
-	{`C←xgo→source 6⋄+¨C`, "(0;1;2;3;4;5;)", 0},
-	{`C←xgo→source 4⋄5+¨C`, "(5;6;7;8;)", 0},
+	{"C←go→source 6⋄+/C", "15", 0},
+	{`C←go→source 6⋄+\C`, "0 1 3 6 10 15", 0},
+	{`C←go→source 6⋄+¨C`, "(0;1;2;3;4;5;)", 0},
+	{`C←go→source 4⋄5+¨C`, "(5;6;7;8;)", 0},
 
 	{"⍝ Communicate over a channel", "apl/channel.go", 0},
-	{`C←xgo→echo"?"⋄C↓'a'⋄C↓'b'⋄2↑C⋄↓C`, "a\nb\n?a ?b\n1", 0},
+	{`C←go→echo"?"⋄C↓'a'⋄C↓'b'⋄2↑C⋄↓C`, "a\nb\n?a ?b\n1", 0},
 
 	{"⍝ Primes", "", 0},
 	{"f←{(2=+⌿0=X∘.|X)⌿X←⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", 0},        // 01-primes
@@ -1119,8 +1120,8 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 		}
 		Register(a)
 		operators.Register(a)
-		aplstrings.Register(a)
-		xgo.Register(a)
+		aplstrings.Register(a, "s")
+		xgo.Register(a, "go")
 
 		// Set numeric formats.
 		m := make(map[reflect.Type]string)

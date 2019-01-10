@@ -16,10 +16,12 @@ func Register(a *apl.Apl) {
 		panic(err)
 	}
 
+	/* TODO: this should not be a package.
 	pkg := map[string]apl.Value{
 		"f": setformat{},
 	}
 	a.RegisterPackage("n", pkg)
+	*/
 }
 
 func newTower() apl.Tower {

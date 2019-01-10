@@ -18,7 +18,7 @@ func TestDoc(t *testing.T) {
 		numbers.Register(a)
 		Register(a)
 		operators.Register(a)
-		aplstrings.Register(a)
+		aplstrings.Register(a, "s")
 
 		var w io.Writer = os.Stdout
 		tw := tabwriter.NewWriter(w, 2, 0, 2, ' ', 0)

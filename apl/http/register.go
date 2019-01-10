@@ -7,11 +7,14 @@ import (
 	"github.com/ktye/iv/apl"
 )
 
-func Register(a *apl.Apl) {
+func Register(a *apl.Apl, name string) {
 	pkg := map[string]apl.Value{
 		"get": get{},
 	}
-	a.RegisterPackage("http", pkg)
+	if name == "" {
+		name = "http"
+	}
+	a.RegisterPackage(name, pkg)
 }
 
 type get struct{}

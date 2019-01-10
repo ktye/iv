@@ -42,14 +42,17 @@ import (
 	kdb "github.com/sv/kdbgo"
 )
 
-func Register(a *apl.Apl) {
+func Register(a *apl.Apl, name string) {
+	if name == "" {
+		name = "q"
+	}
 	pkg := map[string]apl.Value{
 		"dial":  dial{},
 		"call":  call{},
 		"test":  test{},
 		"close": closeconn{},
 	}
-	a.RegisterPackage("q", pkg)
+	a.RegisterPackage(name, pkg)
 }
 
 type dial struct{}
