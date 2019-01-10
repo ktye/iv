@@ -3,7 +3,7 @@
   <img width="760" height="300" src="aplui.png"><br/>
 </p>
 
-Codename: *ludwig der Kurze*
+Codename: *Ludwig der Kurze*
 
 Lui is a gui front-end to APL\iv
 
