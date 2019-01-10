@@ -8,8 +8,7 @@ package iv
 import (
 	"bufio"
 	"fmt"
-	"os"
-	"strings"
+	"io"
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/domain"
@@ -30,10 +29,17 @@ func (_ *InputParser) String(a *apl.Apl) string {
 	return "iv r"
 }
 
+// TODO: this should be converted to a channel L
+
+var Stdin io.Reader
+
 func (p *InputParser) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if p.Reader != nil {
 		return nil, fmt.Errorf("iv: r can only be called once")
 		// TODO: This could be made possible, but cmd/iv needs it only once.
+	}
+	if Stdin == nil {
+		return nil, fmt.Errorf("iv: package is not initialized Stdin=nil")
 	}
 
 	toidx := domain.ToIndex(nil)
@@ -41,36 +47,21 @@ func (p *InputParser) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return nil, fmt.Errorf("iv r expects an int argument: rank, got %T", R)
 	} else {
 		p.Rank = int(n.(apl.Index))
-		if p.Rank <= 0 {
+		if p.Rank < 0 {
 			return nil, fmt.Errorf("iv: rank must be > 0")
 		}
 	}
 
-	// For testing: we accept a string L (a variable name) and read from it's string value
-	// instead of stdin.
-	// TODO: This should change to a channel.
-	if L == nil {
-		p.Reader = bufio.NewReader(tabularText(os.Stdin))
-	} else {
-		if v, ok := L.(apl.String); ok == false {
-			return nil, fmt.Errorf("iv r: L must be a string")
-		} else {
-			p.Reader = bufio.NewReader(strings.NewReader(string(v)))
-		}
-	}
-	p.a = a
+	// TODO: accept L as a channel to read input from
+	p.Reader = bufio.NewReader(tabularText(Stdin))
+	p.Apl = a
 	p.Separator = '\n'
 
 	c := apl.NewChannel()
-	go p.sendArrays(c)
-	/*
-		go func(c apl.Channel) {
-			var buf []apl.Value
-			s := "empty stack"
-			for {
-			}
-			close(c[0])
-		}(c)
-	*/
+	if p.Rank == 0 {
+		go p.sendScalars(c)
+	} else {
+		go p.sendArrays(c)
+	}
 	return c, nil
 }

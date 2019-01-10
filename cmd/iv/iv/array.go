@@ -2,78 +2,99 @@ package iv
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/ktye/iv/apl"
 )
 
 // SendArrays assembles arrays from scalars and sends them over the channel once they are complete.
 // It also sends the termination level.
+// SendArrays is only called for rank > 0.
 func (p *InputParser) sendArrays(c apl.Channel) {
+	defer close(c[0])
+
 	var R = p.Rank
 	var shape []int = make([]int, R) // shape of the current array
 	var array []apl.Value            // current array
-	var E = 0                        // termination level
-	var max int                      // max level observed in input
+	var sp int                       // inc shape at this position
+	var pending bool                 // data available to be send at eof
 
-	send := func(eof bool) {
-		if eof {
-			E = -1
+	resetShape := func() {
+		for i := 0; i < R; i++ {
+			shape[i] = 1
 		}
+		sp = R
+		pending = false
+	}
+	send := func(E int) {
+		size := len(array)
+		if prod(shape) != size {
+			panic(fmt.Errorf("array is not uniform: prod(%v) != %d", shape, size))
+		}
+
 		dims := make([]int, len(shape))
 		copy(dims, shape)
-		ar := apl.MixedArray{Dims: dims, Values: array}
+		ar := apl.MixedArray{Dims: dims, Values: array} // array can be used. It's reallocated.
 		c[0] <- apl.List{ar, apl.Index(E)}
 
 		// Reset state after sending.
-		for i := range shape {
-			shape[i] = 0
-		}
-		array = nil
-		E = 0
+		resetShape()
+		array = make([]apl.Value, 0, size) // Likely the next array has a similar size.
 	}
 
-	for i := 0; i < R-1; i++ {
-		shape[i] = 1
-	}
+	resetShape()
 	for {
-		scalar, S, eof, err := p.Next()
-		if err != nil {
+		// Abort request.
+		select {
+		case _, ok := <-c[1]:
+			if ok == false {
+				return
+			}
+		default:
+		}
+
+		scalar, S, err := p.Next()
+		if err == io.EOF {
+			if pending {
+				send(0)
+			}
+			return
+		} else if err != nil {
 			panic(err) // TODO ?
 		}
 
-		E = S - R
-		if S > R {
-			S -= R
+		array = append(array, scalar)
+		pending = true
+		if idx := R - S; idx < 0 {
+			send(S - R - 1)
+		} else if idx < sp {
+			sp = idx
+			shape[sp]++
+		}
+	}
+}
+
+// SendScalars is like sendArrays, for the rank=0 case.
+func (p *InputParser) sendScalars(c apl.Channel) {
+	defer close(c[0])
+	for {
+		// Abort request.
+		select {
+		case _, ok := <-c[1]:
+			if ok == false {
+				return
+			}
+		default:
 		}
 
-		if scalar != nil {
-			// Catenate to current array and set shape.
-			array = append(array, scalar)
-			if idx := R - S; idx >= 0 && idx < R {
-				shape[idx]++
-			}
-			if prod(shape) != len(array) {
-				// TODO: how to signal an error?
-				panic(fmt.Errorf("array is not uniform: prod(%v) != %d", shape, len(array)))
-			}
-		}
-
-		if eof {
-			for i, x := range shape {
-				if x == 0 {
-					shape[i] = 1
-				}
-			}
-			E = max
-			send(true)
+		scalar, S, err := p.Next()
+		if err == io.EOF {
 			return
+		} else if err != nil {
+			panic(err)
 		}
-		if E > max {
-			max = E
-		}
-		if E > 0 {
-			send(false)
-		}
+		E := S - 1
+		c[0] <- apl.List{scalar, apl.Index(E)}
 	}
 }
 
