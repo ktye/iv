@@ -14,19 +14,23 @@ func (p *InputParser) sendArrays(c apl.Channel) {
 	defer close(c[0])
 
 	var R = p.Rank
-	var shape []int = make([]int, R) // shape of the current array
-	var array []apl.Value            // current array
-	var sp int                       // inc shape at this position
-	var pending bool                 // data available to be send at eof
+	var shape []int = make([]int, R)
+	var array []apl.Value
+	var idx, max, prd int
+	var pending bool
 
 	resetShape := func() {
 		for i := 0; i < R; i++ {
 			shape[i] = 1
 		}
-		sp = R
+		idx = 0
+		max = 1
+		prd = 1
 		pending = false
+
 	}
 	send := func(E int) {
+		shape[R-max] = len(array) / prd
 		size := len(array)
 		if prod(shape) != size {
 			panic(fmt.Errorf("array is not uniform: prod(%v) != %d", shape, size))
@@ -63,13 +67,21 @@ func (p *InputParser) sendArrays(c apl.Channel) {
 			panic(err) // TODO ?
 		}
 
+		// An [3 2 4] array has this sequence for S
+		// 1 1 1 2 1 1 1 3 1 1 1 2 1 1 1 3 1 1 1 2 1 1 ?   S
+		//       4       8                            24   positions at increase
+
+		idx++
 		array = append(array, scalar)
 		pending = true
-		if idx := R - S; idx < 0 {
+		if R-S < 0 {
 			send(S - R - 1)
-		} else if idx < sp {
-			sp = idx
-			shape[sp]++
+			continue
+		}
+		if S > max {
+			shape[R-S+1] = idx / prd
+			prd *= shape[R-S+1]
+			max = S
 		}
 	}
 }
