@@ -77,7 +77,10 @@ func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
 	return res, nil
 }
 
-// eachChannel applies the function f to each value in the channel and returns a channel.
+// EachChannel returns a channel and applies the function f to each value in the input channel.
+// The result is written to the output channel.
+// If f returns an EmptyArray, no output value is written.
+// This can be used as a filter. Empty strings however are written.
 func eachChannel(a *apl.Apl, L apl.Value, r apl.Channel, f apl.Function) (apl.Value, error) {
 	c := apl.NewChannel()
 	go func(r apl.Channel) {
@@ -99,7 +102,9 @@ func eachChannel(a *apl.Apl, L apl.Value, r apl.Channel, f apl.Function) (apl.Va
 					close(r[1])
 					return
 				}
-				c[0] <- v
+				if _, ok := v.(apl.EmptyArray); !ok {
+					c[0] <- v
+				}
 			}
 		}
 	}(r)
