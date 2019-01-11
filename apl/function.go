@@ -147,7 +147,46 @@ func (p Primitive) Select(a *Apl, L, R Value) (IndexArray, error) {
 // PrimitiveHandler is the interface that implementations of primitive functions satisfy.
 type PrimitiveHandler interface {
 	Domain
-	Call(*Apl, Value, Value) (Value, error)
+	Function
+	//Call(*Apl, Value, Value) (Value, error)
 	Select(*Apl, Value, Value) (IndexArray, error)
 	Doc() string
+}
+
+// ToHandler wraps the arguments into a simplified primitive handler.
+func ToHandler(f func(*Apl, Value, Value) (Value, error), d Domain, doc string) PrimitiveHandler {
+	return pHandler{f, d, doc}
+}
+
+type pHandler struct {
+	f func(*Apl, Value, Value) (Value, error)
+	d Domain
+	s string
+}
+
+func (h pHandler) Call(a *Apl, L, R Value) (Value, error) {
+	return h.f(a, L, R)
+}
+func (h pHandler) To(a *Apl, L, R Value) (Value, Value, bool) {
+	return h.d.To(a, L, R)
+}
+func (h pHandler) String(a *Apl) string {
+	return h.d.String(a)
+}
+func (h pHandler) Doc() string {
+	return h.s
+}
+func (h pHandler) Select(*Apl, Value, Value) (IndexArray, error) {
+	return IndexArray{}, fmt.Errorf("function cannot be used in selective assignment")
+}
+
+// ToFunction can be used to cast a function with the right signature to a type that implements the Function interface.
+type ToFunction func(*Apl, Value, Value) (Value, error)
+
+func (f ToFunction) Call(a *Apl, L, R Value) (Value, error) {
+	return f(a, L, R)
+}
+
+func (f ToFunction) String(a *Apl) string {
+	return "anonymous function"
 }

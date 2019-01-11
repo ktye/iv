@@ -2,6 +2,7 @@ package apl
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 )
 
@@ -53,4 +54,49 @@ func LineReader(rc io.ReadCloser) Channel {
 		rc.Close()
 	}(c)
 	return c
+}
+
+// NewChannelReader converts a channel to an io.Reader.
+func NewChannelReader(a *Apl, c Channel) *ChannelReader {
+	return &ChannelReader{
+		a: a,
+		c: c,
+	}
+}
+
+// ChannelReader converts values in the channel to strings and provides an io.Reader.
+// The strings are joind by newlines.
+type ChannelReader struct {
+	a      *Apl
+	c      Channel
+	buf    bytes.Buffer
+	first  bool
+	closed bool
+}
+
+func (r *ChannelReader) Read(p []byte) (n int, err error) {
+	if r.closed {
+		return r.buf.Read(p)
+	}
+	if r.buf.Len() < 1024 {
+		select {
+		case _, ok := <-r.c[1]:
+			if ok == false {
+				close(r.c[0])
+				return 0, io.ErrClosedPipe
+			}
+		case v, ok := <-r.c[0]:
+			if ok == false {
+				r.closed = true
+			} else {
+				if r.first {
+					r.first = false
+				} else {
+					r.buf.WriteRune('\n')
+				}
+				r.buf.WriteString(v.String(r.a)) // TODO: this could be a race when formatting.
+			}
+		}
+	}
+	return r.buf.Read(p)
 }

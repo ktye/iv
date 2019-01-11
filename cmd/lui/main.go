@@ -23,6 +23,7 @@ import (
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/big"
 	"github.com/ktye/iv/apl/http"
+	"github.com/ktye/iv/apl/io"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
@@ -38,14 +39,15 @@ func main() {
 	// Start APL.
 	a := apl.New(nil)
 	numbers.Register(a)
-	big.Register(a)
+	big.Register(a, "")
 	primitives.Register(a)
 	operators.Register(a)
-	aplstrings.Register(a)
-	xgo.Register(a)
-	rpc.Register(a)
-	http.Register(a)
-	q.Register(a)
+	io.Register(a, "")
+	aplstrings.Register(a, "")
+	xgo.Register(a, "")
+	rpc.Register(a, "")
+	http.Register(a, "")
+	q.Register(a, "")
 
 	// Build the gui.
 	fontsize := 18
