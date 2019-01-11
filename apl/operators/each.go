@@ -77,18 +77,33 @@ func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
 	return res, nil
 }
 
-func eachChannel(a *apl.Apl, L apl.Value, c apl.Channel, f apl.Function) (apl.Value, error) {
-	var res apl.List
-	for v := range c[0] {
-		v, err := f.Call(a, L, v)
-		if err != nil {
-			c.Close()
-			return nil, err
+// eachChannel applies the function f to each value in the channel and returns a channel.
+func eachChannel(a *apl.Apl, L apl.Value, r apl.Channel, f apl.Function) (apl.Value, error) {
+	c := apl.NewChannel()
+	go func(r apl.Channel) {
+		defer close(c[0])
+		var err error
+		for {
+			select {
+			case _, ok := <-c[1]:
+				if ok == false {
+					close(r[1])
+				}
+			case v, ok := <-r[0]:
+				if ok == false {
+					return
+				}
+				v, err = f.Call(a, L, v)
+				if err != nil {
+					c[0] <- apl.Error{err}
+					close(r[1])
+					return
+				}
+				c[0] <- v
+			}
 		}
-		res = append(res, v)
-	}
-	c.Close()
-	return res, nil
+	}(r)
+	return c, nil
 }
 
 func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {

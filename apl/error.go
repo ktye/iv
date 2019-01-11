@@ -8,5 +8,8 @@ type Error struct {
 }
 
 func (e Error) String(a *Apl) string {
+	if e.E == nil {
+		return "<nil error>"
+	}
 	return e.E.Error()
 }

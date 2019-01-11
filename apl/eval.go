@@ -36,7 +36,14 @@ func (a *Apl) Eval(p Program) (err error) {
 			fmt.Fprintf(a.stdout, "%T\n", val)
 		}
 		if isAssignment(expr) == false {
-			fmt.Fprintln(a.stdout, val.String(a))
+			switch v := val.(type) {
+			case Channel:
+				for e := range v[0] {
+					fmt.Fprintln(a.stdout, e.String(a))
+				}
+			default:
+				fmt.Fprintln(a.stdout, val.String(a))
+			}
 		}
 	}
 	return nil

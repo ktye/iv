@@ -23,6 +23,7 @@ var testCases = []struct {
 	in, exp string
 	flag    int
 }{
+
 	// {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", 0}, // table with avg value.
 
 	{"⍝ Basic numbers and arithmetics", "", 0},
@@ -976,8 +977,10 @@ var testCases = []struct {
 	{"⍝ Reduce, scan and each over channel", "apl/operators/reduce.go", 0},
 	{"C←go→source 6⋄+/C", "15", 0},
 	{`C←go→source 6⋄+\C`, "0 1 3 6 10 15", 0},
-	{`C←go→source 6⋄+¨C`, "(0;1;2;3;4;5;)", 0},
-	{`C←go→source 4⋄5+¨C`, "(5;6;7;8;)", 0},
+	{`C←go→source 6⋄⊢\C`, "0 1 2 3 4 5", 0},
+	{`C←go→source 4⋄5+¨C`, "5\n6\n7\n8", 0},
+	{"C←go→source 3⋄C", "0\n1\n2", 0},
+	{"C←go→source 3⋄-¨C", "0\n¯1\n¯2", 0},
 
 	{"⍝ Communicate over a channel", "apl/channel.go", 0},
 	{`C←go→echo"?"⋄C↓'a'⋄C↓'b'⋄2↑C⋄↓C`, "a\nb\n?a ?b\n1", 0},
