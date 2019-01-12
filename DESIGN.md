@@ -227,4 +227,6 @@ But there is room for improvement:
 	- `EXPR :: TRAP` individually for any line without an exception stack
 
 # Go interface
+
 # Streams and concurrency
+See CHANNELS.md
