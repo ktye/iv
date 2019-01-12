@@ -12,7 +12,7 @@ func TestIv(t *testing.T) {
 		args    []string
 		in, exp string
 	}{
-		{[]string{"⍵"}, "1\n1", "1\n1\n"},
+		//{[]string{"⍵"}, "1\n1", "1\n1\n"},
 		{[]string{"⍺ ⍵"}, "1 2 3\n4 5 6\n", "1\n1\n"},
 	}
 

@@ -14,15 +14,29 @@ import (
 	"github.com/ktye/iv/apl/domain"
 )
 
-// TODO: This reads from stdin hard coded. That's ok for cmd/iv.
-//       To make this useful as a package, it should use a reader.
-//	 This is planned to be provided by a more general io package.
-
-func Register(a *apl.Apl) {
+// Register adds iv to the interpreter.
+// It provides two functions:
+//
+//	C2 ←iv→p C1
+// C1: input channel (lines of text)
+// C2: output channel List(Number value; separators)
+//
+// 	C3 ←(f;R;)iv→f C2
+// f: lambda function receiving
+//	⍺ termination level
+//	⍵ sub-array
+// R: rank of ⍵
+// C3:
+//
+//	({+/⍵};2)iv→f iv→p <`data
+func Register(a *apl.Apl, name string) {
+	if name == "" {
+		name = "iv"
+	}
 	pkg := map[string]apl.Value{
 		"r": &InputParser{},
 	}
-	a.RegisterPackage("iv", pkg)
+	a.RegisterPackage(name, pkg)
 }
 
 func (_ *InputParser) String(a *apl.Apl) string {

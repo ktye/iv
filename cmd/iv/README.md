@@ -29,11 +29,11 @@ which is normally 0 and increased by 1 for each higher dimension that is complet
 In the multi-table example above, the lambda function receives ⍺←0 for each line, and ⍺←1 at the end of each table.
 
 ```
-	$ cat data | iv -r2 -b"BEGIN BLOCK" f:⍺g⍵ ⋄ g:B⍵
+	$ cat data | iv -r2 -b"BEGIN BLOCK" -eEND f:⍺g⍵ ⋄ g:B⍵
 	f, g, h are placeholders.
 	This translates into APL:
 	
-	BEGIN BLOCK	    ⍝ Any statement (optional), but don't use an iv variable name.
+	BEGIN BLOCK	    ⍝ Any statement (optional)
 	iv←{f:⍺g⍵ ⋄ g:h⍵}  ⍝ ⍵ is the rank 2 sub-array, ⍺ the termination level
 	IvC←iv→r 2          ⍝ IvC is a channel.
 	⍝ iv→r is the function r in package iv. 
