@@ -21,7 +21,7 @@ func init() {
 		{"÷", "reciprocal", "div, division, divide", div, div2},
 		{"*", "exponential", "power", pow, pow2},
 		{"⍟", "natural logarithm", "log, logarithm", log, log2},
-		{"|", "magnitude, absolute value", "magnitude, absolute value", abs, abs2},
+		{"|", "magnitude, absolute value", "residue, modulo", abs, abs2},
 		{"⌊", "floor", "min, minumum", min, min2},
 		{"⌈", "ceil", "max, maximum", max, max2},
 		{"!", "factorial", "binomial", factorial, binomial},
