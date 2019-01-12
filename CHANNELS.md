@@ -8,42 +8,44 @@ type Channel [2]chan Value
 ```
 
 Channels are move powerfull than file streams (descriptors) in that they cary any APL value not just bytes:
-An integer, a multiprecision complex number, an n-dimensional array their of, a dictionary etc.
+An integer, a multiprecision complex number, an n-dimensional array thereof, a list, a dictionary etc.
 
-A channel itself is also an apl value.
+A channel itself is also an APL value.
 It can be assigned to a variable and passed around.
 Just like it is done with functions.
 
 The primary motivation was to provide a simple rpc mechanism, but they offer more.
 
-In Go, channels primarily used to synchronise concurrency.
+In Go, channels are primarily used to synchronise concurrency.
 
-The primitives introduced come in two forms:
+The extensions to the primitives introduced come in two forms:
 - Simple ones like take and drop perform a single operation and returns. Just like most functions.
 - Others create their own go routine and run concurrently
 
 ## Pairs
 Channels come in pairs of two.
 From the APL (client) side `Channel[0]` is the read channel and `Channel[1]` is the write channel,
-when communication with an rpc service provider.
+when communication with an rpc server for example.
 
-The client never closes the read channel (0), instead to signal it's done, it closes `Channel[1]`.
+When the client want's to hang up, it never closes read `Channel[0]`, instead it closes `Channel[1]`.
 
 This level of detail is not exposed to APL.
 We take a channel pair as one value.
 
 ## Creating channels
-The monadic `<` primitive function is used to create a channel.
+The monadic primitive function `<` is used to create a channel.
 
 ```apl
-This is in design stage.
-	<1        returns a channel, starts a go routine and writes the value 1 to it.
-	          Only once.
+	<1        return a channel, start a go routine and write the value 1 to it.
+	          Only once. Close afterwards.
 	<A        same as above. We can send any value down a channel.
 	<[5]1     Send the value 5 times.
 	<[¯1]1    Send the value repeatatly. As long as it's open.
 	          Sending on a channel blocks until there is someone taking the values.
 ```
+Keep in mind, an expression like `A←<[5]2 3⍴⍳6` only assigns a channel to `A`.
+The values are have not yet being sent anywhere.
+In the background there is a sleeping go-routine waiting for a receiver, we don't have to care about.
 
 ## Atomic channel operations
 Atomic read and write are implemented with take and drop:
