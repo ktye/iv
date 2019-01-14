@@ -20,6 +20,9 @@ func (f Function) String(a *apl.Apl) string {
 // If it requires 1 argument, that is taken from the right value.
 // Two arguments may be the right and left argument or a vector of 2 arguments.
 // More than two arguments must be passed in a vector of the right size.
+// If the function returns an error as the last value, it is checked and returned.
+// Otherwise, or if the error is nil the result is converted and returned.
+// More than one result will be returned as a List.
 func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	errarg := func(i int, err error) error {
 		return fmt.Errorf("function %s argument %d: %s", f.Name, i+1, err)
@@ -79,14 +82,14 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if len(out) == 0 {
 		return apl.EmptyArray{}, nil
 	} else if len(out) == 1 {
-		return convert(a, out[0])
+		return Convert(a, out[0])
 	} else {
-		res := apl.MixedArray{Dims: []int{len(out)}, Values: make([]apl.Value, len(out))}
+		res := make(apl.List, len(out))
 		for i := range out {
-			if v, err := convert(a, out[i]); err != nil {
+			if v, err := Convert(a, out[i]); err != nil {
 				return nil, err
 			} else {
-				res.Values[i] = v
+				res[i] = v
 			}
 		}
 		return res, nil

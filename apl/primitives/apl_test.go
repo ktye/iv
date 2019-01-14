@@ -967,7 +967,7 @@ var testCases = []struct {
 	{"⍝ Object, go example", "apl/xgo/register.go", 0},
 	{"X←go→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},
 	{"X←go→t 0⋄X[`I]←55⋄X[`inc]⍨0⋄X[`I]", "56", small},
-	{"X←go→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "4 a+b+c+d", small},
+	{"X←go→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "(4;a+b+c+d;)", small},
 	{"S←go→s 0⋄#[1]S", "sum", 0},
 
 	{"⍝ Channels read, write and close", "apl/primitives/take.go", 0},

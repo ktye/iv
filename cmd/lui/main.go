@@ -21,6 +21,7 @@ import (
 
 	"github.com/ktye/duit"
 	"github.com/ktye/iv/apl"
+	apkg "github.com/ktye/iv/apl/a"
 	"github.com/ktye/iv/apl/big"
 	"github.com/ktye/iv/apl/http"
 	"github.com/ktye/iv/apl/io"
@@ -42,6 +43,7 @@ func main() {
 	big.Register(a, "")
 	primitives.Register(a)
 	operators.Register(a)
+	apkg.Register(a, "")
 	io.Register(a, "")
 	aplstrings.Register(a, "")
 	xgo.Register(a, "")

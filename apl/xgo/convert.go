@@ -3,6 +3,7 @@ package xgo
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
@@ -92,10 +93,17 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 }
 
 // convert converts a go value to an apl value.
-func convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
+func Convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
 	switch v.Kind() {
 	case reflect.Int:
 		return apl.Index(int(v.Int())), nil
+
+	case reflect.Uint64:
+		u := uint64(v.Uint())
+		if u > 1<<63-1 {
+			return apl.String(strconv.FormatUint(u, 10) + " overflows int64"), nil
+		}
+		return numbers.Integer(int64(v.Uint())), nil
 
 	case reflect.Float64:
 		return numbers.Float(v.Float()), nil
@@ -110,13 +118,16 @@ func convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
 		n := v.Len()
 		ar := apl.MixedArray{Dims: []int{n}, Values: make([]apl.Value, n)}
 		for i := range ar.Values {
-			if e, err := convert(a, v.Index(i)); err != nil {
+			if e, err := Convert(a, v.Index(i)); err != nil {
 				return nil, err
 			} else {
 				ar.Values[i] = e
 			}
 		}
 		return ar, nil
+
+	case reflect.Struct:
+		return Value(v), nil // TODO: populate
 
 	default:
 		return nil, fmt.Errorf("cannot convert %s to an apl value", v.Kind())

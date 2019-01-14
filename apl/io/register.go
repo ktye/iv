@@ -1,17 +1,8 @@
 // Package io provides input and output streams.
 //
 // Linking it into APL leads to an unsafe system.
-package io
-
-import (
-	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/domain"
-)
-
-// Register adds the io package to the interpreter.
-// This will provide access to the file system and allows to start external processes.
 //
-// io overloads several primitive operators:
+// Io overloads several primitive operators:
 //	< string          returns a Channel reading from a file
 //      < 0               returns a Channel reading from stdin
 //	!`ls              execute program return a channel
@@ -21,6 +12,15 @@ import (
 //	`dst<<`src        copy idiom (TODO)
 //	`log<!`prog       redirection (TODO)
 //	⍎¨channel         returns a channel with values
+package io
+
+import (
+	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/domain"
+)
+
+// Register adds the io package to the interpreter.
+// This will provide access to the file system and allows to start external processes.
 func Register(a *apl.Apl, name string) {
 	if name == "" {
 		name = "io"

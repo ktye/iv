@@ -96,7 +96,7 @@ func (v Value) At(a *apl.Apl, key apl.Value) apl.Value {
 	if sf == zero {
 		return nil
 	}
-	rv, err := convert(a, sf)
+	rv, err := Convert(a, sf)
 	if err != nil {
 		return nil
 	}
