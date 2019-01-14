@@ -24,6 +24,14 @@ func New(w io.Writer) *Apl {
 		symbols:    make(map[rune]string),
 		pkg:        make(map[string]*env),
 	}
+
+	// Init scanner.
+	m := make(map[rune]string)
+	for r, s := range a.symbols {
+		m[r] = s
+	}
+	a.SetSymbols(m)
+
 	a.parser.a = &a
 	return &a
 }
@@ -40,25 +48,12 @@ type Apl struct {
 	operators  map[string][]Operator
 	symbols    map[rune]string
 	pkg        map[string]*env
-	initscan   bool
 	debug      bool
 }
 
 // Parse parses a line of input into the current context.
 // It returns a Program which can be evaluated.
 func (a *Apl) Parse(line string) (Program, error) {
-
-	// Before the scanner is used for the first time,
-	// tell it about all registered symbols.
-	if a.initscan == false {
-		m := make(map[rune]string)
-		for r, s := range a.symbols {
-			m[r] = s
-		}
-		a.SetSymbols(m)
-		a.initscan = true
-	}
-
 	tokens, err := a.Scan(line)
 	if a.debug {
 		fmt.Fprintf(a.stdout, "%s\n", scan.PrintTokens(tokens))
