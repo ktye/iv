@@ -35,13 +35,15 @@ We take a channel pair as one value.
 ## Creating channels
 The monadic primitive function `<` is used to create a channel.
 
-```apl
+```
 	<1        return a channel, start a go routine and write the value 1 to it.
 	          Only once. Close afterwards.
 	<A        same as above. We can send any value down a channel.
 	<[5]1     Send the value 5 times.
 	<[¯1]1    Send the value repeatatly. As long as it's open.
 	          Sending on a channel blocks until there is someone taking the values.
+	<[0]1     return a channel that sends what it reads but is initialized with 1.
+	          It sends 1 the first time (before reading input).
 ```
 Keep in mind, an expression like `A←<[5]2 3⍴⍳6` only assigns a channel to `A`.
 The values are have not yet being sent anywhere.
@@ -49,7 +51,7 @@ In the background there is a sleeping go-routine waiting for a receiver, we don'
 
 ## Atomic channel operations
 Atomic read and write are implemented with take and drop:
-```apl
+```
 	 ↑C       takes one value
 	L↑C       takes multiple values (according to L) and reshapes them
 	          L is similar to the left argument of ⍴
@@ -68,7 +70,7 @@ The statement evaluation can now proceed as usual and pass the channel as an inp
 to the next function. 
 But the go routine is still alive.
 It is just sleeping until all connections are done and the pipeline unblocks automatically.
-```apl
+```
 	 f¨C      read a value from a channel, apply f to it and send the result to the
 	          response channel.
 	Lf¨C      same as above, but use L as the left argument to f on each call.
@@ -81,7 +83,7 @@ The way the each operator ¨ is implemented for channels, it send one value for 
 It would be nice to also have a **filter** method available.
 One idea is not to send values, if `f` returns an empty array, 
 another to use another dyadic operator in the form
-```apl
+```
 	g DOP fC  this would send only values fV, for which gV is not 0
 	RO DOP fC this would send only values fV for which the RO is not 0
 ```
@@ -95,11 +97,40 @@ to act like being called with the each operator implicitly.
 # Applications
 
 ## IO operations
+```
+	<`file
+	!`ls
+	(`wc`-l)!<`file
+	`cat!<!`ls
+	`dst<<`src
+```
+
+## Paste two files
+```
+	(<`file2)+<`file1
+```
 
 ## Feedback loop
+```
+     ⎕←+(G)-f---(+)- <[5]1
+        |         |
+        +->-(F)---+
+	
+	f←-         ⍝ system function is negation
+	F←<[0]1     ⍝ initialize feedback channel with 1
+	G←f¨F+<[5]1 ⍝ main branch
+	F<⎕←G       ⍝ connect feedback channel and monitor values
+¯2
+ 1
+¯2
+ 1
+¯2
+```
 
-## Ping pong and laser
-
+## Ping pong or laser
+```
+	⊢⎕←f⊣<1
+```
 
 
 
