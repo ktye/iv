@@ -11,7 +11,7 @@ import (
 // Continuation lines are only allowed for lambda functions.
 func (a *Apl) ParseLines(lines string) (Program, error) {
 	b := NewLineBuffer(a)
-	v := strings.Split(line, "\n")
+	v := strings.Split(lines, "\n")
 	for i, s := range v {
 		if ok, err := b.Add(s); err != nil {
 			return nil, err
@@ -19,7 +19,7 @@ func (a *Apl) ParseLines(lines string) (Program, error) {
 			if ok == false {
 				return nil, fmt.Errorf("unbalanced {")
 			}
-			return lb.Parse()
+			return b.Parse()
 		}
 	}
 	return nil, nil
