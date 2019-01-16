@@ -91,6 +91,7 @@ func eachChannel(a *apl.Apl, L apl.Value, r apl.Channel, f apl.Function) (apl.Va
 			case _, ok := <-c[1]:
 				if ok == false {
 					close(r[1])
+					return
 				}
 			case v, ok := <-r[0]:
 				if ok == false {

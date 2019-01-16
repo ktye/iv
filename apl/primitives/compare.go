@@ -30,6 +30,13 @@ func init() {
 			fn:     array2(e.symbol, compare(e.symbol)),
 		})
 	}
+
+	register(primitive{
+		symbol: "<",
+		doc:    "channel send, source",
+		Domain: Monadic(nil),
+		fn:     channelSource, // channels.go
+	})
 }
 
 func compare(symbol string) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bool) {

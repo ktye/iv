@@ -87,7 +87,7 @@ another to use another dyadic operator in the form
 	g DOP fC  this would send only values fV, for which gV is not 0
 	RO DOP fC this would send only values fV for which the RO is not 0
 ```
-Which operator should be used?
+Which operator should be used? Maybe ⌿.
 
 ## Application to elementary primitive functions
 
