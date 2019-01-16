@@ -31,9 +31,11 @@ func channelSource(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 	c := apl.NewChannel()
 	if n == 0 {
-		// go sendInitial(c, r)
-		// return c, nil
-		return nil, fmt.Errorf("TODO: sendInitial")
+		// Send only once, but do not close any channels.
+		go func(v apl.Value) {
+			c[0] <- v
+		}(r)
+		return c, nil
 	}
 
 	// Send v n times. If n is negative send until c[1] is closed.
@@ -56,34 +58,3 @@ func channelSource(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}(r, n)
 	return c, nil
 }
-
-/*
-// sendInitial sends the initial value to c[0], then it read repeatedly from c[0] and
-// send the value back to c[0] until c[1] is closed.
-func sendInitial(c apl.Channel, initial apl.Value) {
-	c[0] <- initial
-	var v apl.Value
-	var ok bool
-	for {
-	???
-
-		select {
-		case _, ok = <-c[1]:
-			if ok == false {
-				return
-			}
-		case v, ok = <-c[0]:
-			if ok == false {
-
-			select {
-			case _, ok := <-c[1]:
-				if ok == false {
-					close(c[1])
-					return
-				}
-			case c[0] <- v:
-			}
-		}
-	}
-}
-*/
