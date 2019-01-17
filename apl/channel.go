@@ -3,6 +3,7 @@ package apl
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 )
 
@@ -33,6 +34,38 @@ func (c Channel) Close() {
 	close(c[1])
 	for range c[0] {
 	}
+}
+
+// scope return a channel and copies values from R[0].
+// It is called by scope assignment: ⎕←R.
+func (R Channel) Scope(a *Apl) Channel {
+	c := NewChannel()
+	go func(r Channel) {
+		defer close(c[0])
+		for {
+			select {
+			case _, ok := <-c[1]:
+				if ok == false {
+					close(r[1])
+					return
+				}
+			case v, ok := <-r[0]:
+				if ok == false {
+					return
+				}
+				fmt.Fprintf(a.stdout, "%s\n", v.String(a))
+				select {
+				case _, ok := <-c[1]:
+					if ok == false {
+						close(r[1])
+						return
+					}
+				case c[0] <- v:
+				}
+			}
+		}
+	}(R)
+	return c
 }
 
 // Apply returns a new channel.

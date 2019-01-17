@@ -33,6 +33,11 @@ func assign(a *apl.Apl, f, g apl.Value) apl.Function {
 			return assignVector(a, as.Identifiers, R, as.Modifier)
 		}
 
+		// Special case: channel scope: ⎕←C
+		if c, ok := R.(apl.Channel); ok && as.Identifier == "⎕" {
+			return c.Scope(a), nil
+		}
+
 		return R, assignScalar(a, as.Identifier, as.Indexes, as.Modifier, R)
 	}
 	return function(derived)

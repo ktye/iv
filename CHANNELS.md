@@ -36,14 +36,13 @@ We take a channel pair as one value.
 The monadic primitive function `<` is used to create a channel.
 
 ```
-	<1        return a channel, start a go routine and write the value 1 to it.
-	          Only once. Close afterwards.
-	<A        same as above. We can send any value down a channel.
-	<[5]1     Send the value 5 times.
-	<[¯1]1    Send the value repeatatly. As long as it's open.
+	<A        return a channel, start a go routine and write A to it.
+	          A may be any value (except a channel). Only once. Close afterwards.
+	<[5]A     Send A 5 times.
+	<[¯1]A    Send A repeatatly. As long as the channel is open.
 	          Sending on a channel blocks until there is someone taking the values.
-	<[0]1     return a channel that sends what it reads but is initialized with 1.
-	          It sends 1 the first time (before reading input).
+	<[0]A     return a channel that sends A once as an initial value.
+	          The channel remains open.
 ```
 Keep in mind, an expression like `A←<[5]2 3⍴⍳6` only assigns a channel to `A`.
 The values are have not yet being sent anywhere.
@@ -77,17 +76,9 @@ It is just sleeping until all connections are done and the pipeline unblocks aut
 	Df¨C      D is also a channel. This is a synchronisation point.
 	          The derived function waits until it has input on both channels C and D,
 		  the applies the dyadic version of f to them and sends the result.
+	Lf⌿C      same as Lf¨C, but skip values for which f returns an EmptyArray.
+	          This can be used to implement a filter with a lambda function.
 ```
-
-The way the each operator ¨ is implemented for channels, it send one value for each channel read.
-It would be nice to also have a **filter** method available.
-One idea is not to send values, if `f` returns an empty array, 
-another to use another dyadic operator in the form
-```
-	g DOP fC  this would send only values fV, for which gV is not 0
-	RO DOP fC this would send only values fV for which the RO is not 0
-```
-Which operator should be used? Maybe ⌿.
 
 ## Application to elementary primitive functions
 
@@ -124,7 +115,6 @@ to act like being called with the each operator implicitly.
  1
 ¯2
  1
-¯2
 ```
 
 ## Ping pong or laser
