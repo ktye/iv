@@ -35,6 +35,49 @@ func (c Channel) Close() {
 	}
 }
 
+// Apply returns a new channel.
+// It reads values from c[0], applies the f the each value and writes the result to return
+// returned channel.
+// L (may be nil) is used as a left value for f.
+// If L is also a channel, a value is read each time, before applying f.
+// If filter is true, values are skipped if f returns an EmptyArray.
+func (R Channel) Apply(a *Apl, f Function, L Value, filter bool) Channel {
+	lv := L
+	l, lc := L.(Channel)
+
+	c := NewChannel()
+	go func(r Channel) {
+		defer close(c[0])
+		var err error
+		for {
+			select {
+			case _, ok := <-c[1]:
+				if ok == false {
+					close(r[1])
+					return
+				}
+			case v, ok := <-r[0]:
+				if ok == false {
+					return
+				}
+				if lc {
+					lv = <-l[0]
+				}
+				v, err = f.Call(a, lv, v)
+				if err != nil {
+					c[0] <- Error{err}
+					close(r[1])
+					return
+				}
+				if _, ok := v.(EmptyArray); filter == false || ok == false {
+					c[0] <- v
+				}
+			}
+		}
+	}(R)
+	return c
+}
+
 // LineReader wraps a ReadCloser with a Channel.
 func LineReader(rc io.ReadCloser) Channel {
 	scn := bufio.NewScanner(rc)

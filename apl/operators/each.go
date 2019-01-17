@@ -82,34 +82,7 @@ func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
 // If f returns an EmptyArray, no output value is written.
 // This can be used as a filter. Empty strings however are written.
 func eachChannel(a *apl.Apl, L apl.Value, r apl.Channel, f apl.Function) (apl.Value, error) {
-	c := apl.NewChannel()
-	go func(r apl.Channel) {
-		defer close(c[0])
-		var err error
-		for {
-			select {
-			case _, ok := <-c[1]:
-				if ok == false {
-					close(r[1])
-					return
-				}
-			case v, ok := <-r[0]:
-				if ok == false {
-					return
-				}
-				v, err = f.Call(a, L, v)
-				if err != nil {
-					c[0] <- apl.Error{err}
-					close(r[1])
-					return
-				}
-				if _, ok := v.(apl.EmptyArray); !ok {
-					c[0] <- v
-				}
-			}
-		}
-	}(r)
-	return c, nil
+	return r.Apply(a, f, L, false), nil
 }
 
 func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
