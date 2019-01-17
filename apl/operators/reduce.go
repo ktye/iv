@@ -112,6 +112,10 @@ func reduction(a *apl.Apl, f apl.Value, axis int) apl.Function {
 func reduct(a *apl.Apl, f apl.Function, l, r apl.Value, axis int) (apl.Value, error) {
 
 	if c, ok := r.(apl.Channel); ok {
+		if axis == 0 {
+			// l f⌿ c applies f and filters empty values.
+			return c.Apply(a, f, l, true), nil
+		}
 		return reduceChannel(a, l, f, c)
 	}
 
