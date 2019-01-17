@@ -58,3 +58,19 @@ func channelSource(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}(r, n)
 	return c, nil
 }
+
+// channel1 applies the monadic elementary function to each value in a channel.
+func channel1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
+	return func(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+		c := R.(apl.Channel)
+		return c.Apply(a, apl.Primitive(symbol), nil, false), nil
+	}
+}
+
+// channel2 applies the dyadic elementary function to each value in a channel.
+func channel2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, bool)) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
+	return func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		c := R.(apl.Channel)
+		return c.Apply(a, apl.Primitive(symbol), L, false), nil
+	}
+}

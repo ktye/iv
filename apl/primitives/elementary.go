@@ -49,6 +49,12 @@ func init() {
 		})
 		register(primitive{
 			symbol: e.symbol,
+			doc:    e.doc,
+			Domain: Monadic(IsChannel(nil)),
+			fn:     channel1(e.symbol, e.monadic),
+		})
+		register(primitive{
+			symbol: e.symbol,
 			doc:    e.doc2,
 			Domain: Dyadic(Split(IsScalar(nil), IsScalar(nil))),
 			fn:     arith2(e.symbol, e.dyadic),
@@ -76,6 +82,12 @@ func init() {
 			doc:    e.doc2,
 			Domain: Dyadic(Both(Or(IsTable(nil), IsObject(nil)))),
 			fn:     tableBoth(e.symbol, e.dyadic),
+		})
+		register(primitive{
+			symbol: e.symbol,
+			doc:    e.doc2,
+			Domain: Dyadic(Split(nil, IsChannel(nil))),
+			fn:     channel2(e.symbol, e.dyadic),
 		})
 	}
 }
