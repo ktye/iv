@@ -35,7 +35,13 @@ func init() {
 		symbol: "<",
 		doc:    "channel send, source",
 		Domain: Monadic(nil),
-		fn:     channelSource, // channels.go
+		fn:     channelSource, // channel.go
+	})
+	register(primitive{
+		symbol: "<",
+		doc:    "channel copy, connect",
+		Domain: Dyadic(Split(IsChannel(nil), IsChannel(nil))),
+		fn:     channelCopy, // channel.go
 	})
 }
 

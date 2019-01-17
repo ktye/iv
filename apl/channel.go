@@ -54,10 +54,16 @@ func (R Channel) Apply(a *Apl, f Function, L Value, filter bool) Channel {
 			case _, ok := <-c[1]:
 				if ok == false {
 					close(r[1])
+					if lc {
+						close(l[1])
+					}
 					return
 				}
 			case v, ok := <-r[0]:
 				if ok == false {
+					if lc {
+						close(l[1])
+					}
 					return
 				}
 				if lc {

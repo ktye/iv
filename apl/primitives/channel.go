@@ -59,6 +59,37 @@ func channelSource(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	return c, nil
 }
 
+// channelCopy connects two channels. It writes to L what it reads from R.
+// The function returns the number of values copied.
+func channelCopy(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	l := L.(apl.Channel)
+	r := R.(apl.Channel)
+	// Should this run in a go-routine and return directly?
+	defer close(l[0])
+	ret := apl.EmptyArray{}
+	for {
+		select {
+		case _, ok := <-l[1]:
+			if ok == false {
+				close(r[1])
+				return ret, nil
+			}
+		case v, ok := <-r[0]:
+			if ok == false {
+				return ret, nil
+			}
+			select {
+			case _, ok := <-l[1]:
+				if ok == false {
+					close(r[1])
+					return ret, nil
+				}
+			case l[0] <- v:
+			}
+		}
+	}
+}
+
 // channel1 applies the monadic elementary function to each value in a channel.
 func channel1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
 	return func(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
