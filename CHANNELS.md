@@ -82,12 +82,12 @@ It is just sleeping until all connections are done and the pipeline unblocks aut
 
 ## Application to elementary primitive functions
 
-Elementary primitive functions `+-×...` everything in `apl/primtives/elementary.go` could be extended
-to act like being called with the each operator implicitly.
+Elementary primitive functions `+-×...` everything in `apl/primtives/elementary.go` are extended to act like being called with the each operator implicitly.
 
 # Applications
 
 ## IO operations
+IO operations are defined in package `io`. They overwrite monadic `<`.
 ```
 	<`file
 	!`ls
@@ -102,6 +102,13 @@ to act like being called with the each operator implicitly.
 ```
 
 ## Feedback loop
+When learing Go, I had the idea to use channels and go to simulate feedback loops, like they appear in control theory.
+It is described [here](https://github.com/ktye/loops).
+
+Now we can do the same thing in APL with a concise notation.
+
+Here is the reason, `<[0]` is needed to create a channel with an initial condition.
+Otherwise the feedback channel would block.
 ```
      ⎕←+(G)-f---(+)- <[5]1
         |         |
@@ -116,19 +123,3 @@ to act like being called with the each operator implicitly.
 ¯2
  1
 ```
-
-## Ping pong or laser
-```
-	⊢⎕←f⊣<1
-```
-
-
-
-
-
-
-
-
-
-
-
