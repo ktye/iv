@@ -25,7 +25,7 @@ func main() {
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
-	rpc.Register(a)
+	rpc.Register(a, "")
 
 	line := 0
 	scanner := bufio.NewScanner(os.Stdin)
