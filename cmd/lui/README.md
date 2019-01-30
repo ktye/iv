@@ -3,24 +3,27 @@
   <img width="760" height="300" src="aplui.png"><br/>
 </p>
 
-Codename: *Ludwig der Kurze*
+Lui is a gui frontend to APL\iv
 
-Lui is a gui front-end to APL\iv
+Lui is built on to of ktye/ui toolkit.
+It embedds APL385 Unicode font and translates keystrokes automatically.
+No special keyboard driver is needed.
 
-It uses the a [duit](https://github.com/ktye/duit) widget 
-on top of [shiny](https://golang.org/x/exp/shiny) and embedds the APL385 Unicode font.
-Keystrokes are translated automatically and no special keyboard
-driver is needed.
+When pressing the ENTER key, the current line is interpreted and the result is appended to the end of the editor.
+ESC toggles hold mode, which prevents execution to edit multiple lines.
 
-When pressing the ENTER key, the current line is interpreted
-and the result is appended to the end of the editor.
-Otherwise, it is a normal text edit widget.
+## ui customization
+The user interface can be changed at runtime using package `aplextra/u` which is built-in.
+See the documentation of package `u` for examples.
 
-Lui displays image values on the top left corner over the text.
-The image disappears at the next input event. *TODO*
+## Attach application (TODO)
+Lui builds as a single static binary.
+Custom startup code can be attached to the binary in a zip file,
+that can be used to create a self-contained APL application with a custom user interface bundled with data.
 
-Aplui builds as a single binary.
-On windows, build with: `go build -ldflags -H=windowsgui` to prevent the console.
-
-The slightly modified GNU APL keyboard layout visible on startup is for the learning phase.
-It will eventually disappear.
+## Installation
+```
+	go get github.com/ktye/iv/cmd/lui
+	go install github.com/ktye/iv/cmd/lui
+```
+On windows, build with: `go build -ldflags -H=windowsgui`

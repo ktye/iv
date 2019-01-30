@@ -1,25 +1,8 @@
 // Lui is a gui frontend to APL\iv
-//
-// Lui uses the iv/duit widget and embedds APL385 Unicode font.
-// Keystrokes are translated automatically and no special keyboard
-// driver is needed.
-//
-// When pressing the ENTER key, the current line is interpreted
-// and the result is appended to the end of the editor.
-//
-// Lui displays image values on the top left corner over the
-// input text. The image disappears at the next input event.
-//
-// Lui builds as a single binary.
-// On windows, build with: go build -ldflags -H=windowsgui
 package main
 
 import (
-	"fmt"
-	"log"
-	"strings"
-
-	"github.com/ktye/duit"
+	"github.com/eaburns/T/rope"
 	"github.com/ktye/iv/apl"
 	apkg "github.com/ktye/iv/apl/a"
 	"github.com/ktye/iv/apl/big"
@@ -32,12 +15,13 @@ import (
 	aplstrings "github.com/ktye/iv/apl/strings"
 	"github.com/ktye/iv/apl/xgo"
 	"github.com/ktye/iv/aplextra/q"
-	"github.com/ktye/iv/cmd/lui/widget"
+	"github.com/ktye/iv/aplextra/u"
+	"github.com/ktye/ui"
 )
 
 func main() {
 
-	// Start APL.
+	// Start APL and register all packages.
 	a := apl.New(nil)
 	numbers.Register(a)
 	big.Register(a, "")
@@ -50,43 +34,37 @@ func main() {
 	rpc.Register(a, "")
 	http.Register(a, "")
 	q.Register(a, "")
+	u.Register(a, "")
 
-	// Build the gui.
-	fontsize := 18
-	registerFont(fontsize)
-	dui, err := duit.NewDUI("APL\\iv", &duit.DUIOpts{
-		FontName: fmt.Sprintf("APL385@%d", fontsize),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	dui.Display.KeyTranslator = widget.AplKeyboard{}
+	// Implement the repl interface.
+	var interp interp
+	repl := &ui.Repl{Reply: true}
+	repl.SetText(rope.New("APL\\iv\n\t"))
+	interp.repl = repl
+	repl.Interp = &interp
 
-	// Use a single apl widget as the only ui element.
-	content := `APL\iv` + Keyboard + "        "
-	ui, err := widget.NewAPL(strings.NewReader(content))
-	if err != nil {
-		log.Fatal(err)
-	}
-	end := int64(len(content))
-	ui.SetCursor(duit.Cursor{end, end})
-	ui.Apl = a
-	ui.Apl.SetOutput(ui)
+	// Connect APL with the repl.
+	interp.apl = a
+	a.SetOutput(repl)
 
-	//dui.Top.UI = &duit.Box{Kids: duit.NewKids(print, edit)}
-	dui.Top.UI = ui
-	dui.Render()
-
-	for {
-		select {
-		case e := <-dui.Inputs:
-			dui.Input(e)
-
-		case err, ok := <-dui.Error:
-			if !ok {
-				return
-			}
-			log.Print(err)
-		}
-	}
+	// Run the ui main loop.
+	u.Loop(repl)
 }
+
+type interp struct {
+	apl  *apl.Apl
+	repl *ui.Repl
+}
+
+func (i *interp) Eval(s string) {
+	i.repl.Write([]byte{'\n'})
+	if err := i.apl.ParseAndEval(s); err != nil {
+		i.repl.Write([]byte(err.Error()))
+	}
+	i.repl.Write([]byte("\t"))
+	i.repl.Edit.MarkAddr("$")
+}
+
+// Cancel is ignored.
+// Currently there is no way to interrupt APL.
+func (i *interp) Cancel() {}

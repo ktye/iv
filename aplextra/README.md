@@ -23,6 +23,7 @@ To be included in the interpreter, each package needs to be compiled in:
 
 ## extra packages
 - q: rpc interface from APL to kdb (via `github.com/sv/kdbgo`)
+- u: ui elements used by `cmd/lui`
 
 ### planned:
 - [ ] mat: linear algebra package based on gonum
