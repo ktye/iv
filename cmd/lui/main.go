@@ -58,8 +58,12 @@ type interp struct {
 
 func (i *interp) Eval(s string) {
 	i.repl.Write([]byte{'\n'})
-	if err := i.apl.ParseAndEval(s); err != nil {
-		i.repl.Write([]byte(err.Error()))
+	p, err := i.apl.ParseLines(s)
+	if err == nil {
+		err = i.apl.Eval(p)
+	}
+	if err != nil {
+		i.repl.Write([]byte(err.Error() + "\n"))
 	}
 	i.repl.Write([]byte("\t"))
 	i.repl.Edit.MarkAddr("$")
