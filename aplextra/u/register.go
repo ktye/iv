@@ -22,6 +22,7 @@ package u
 
 import (
 	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/scan"
 	"github.com/ktye/ui"
 )
 
@@ -31,16 +32,58 @@ func Register(a *apl.Apl, name string) {
 		name = "u"
 	}
 	pkg := map[string]apl.Value{
-		"kb":     apl.ToFunction(kb),
-		"top":    apl.ToFunction(top),
-		"f":      apl.ToFunction(setCallback),
 		"button": apl.ToFunction(button),
+		"cls":    apl.ToFunction(cls),
+		"sam":    apl.ToFunction(sam),
+		"f":      apl.ToFunction(setCallback),
+		"kb":     apl.ToFunction(kb),
 		"split":  apl.ToFunction(split),
+		"top":    apl.ToFunction(top),
 	}
+	cmd := map[string]scan.Command{
+		"c": rw0("cls"),
+		"e": toCommand(samCmd),
+		"k": rw0("kb"),
+	}
+	a.AddCommands(cmd)
 	a.RegisterPackage(name, pkg)
 }
 
 // Kb returns the APL keyboard layout as a string.
 func kb(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	return apl.String(ui.AplKeyboard{}.String()), nil
+}
+
+// Cls clears the repl window.
+func cls(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	// We assume /c has been called from a toplevel repl.
+	e := apl.EmptyArray{}
+	if window == nil {
+		return e, nil
+	}
+	repl, ok := window.Top.W.(*ui.Repl)
+	if !ok {
+		return e, nil
+	}
+	_, err := repl.Edit.Edit(",d")
+	return e, err
+}
+
+// copied from apl/a/commands.go
+type rw0 string
+
+func (r rw0) Rewrite(t []scan.Token) []scan.Token {
+	sym := scan.Token{T: scan.Identifier, S: "u→" + string(r)}
+	num := scan.Token{T: scan.Number, S: "0"}
+	tokens := make([]scan.Token, len(t)+2)
+	tokens[0] = sym
+	tokens[1] = num
+	copy(tokens[2:], t)
+	return tokens
+}
+
+type toCommand func([]scan.Token) []scan.Token
+
+func (f toCommand) Rewrite(t []scan.Token) []scan.Token {
+	return f(t)
 }

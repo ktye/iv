@@ -14,6 +14,7 @@ import (
 	"os"
 
 	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/scan"
 )
 
 // Register adds the a package to the interpreter.
@@ -23,11 +24,19 @@ func Register(p *apl.Apl, name string) {
 	}
 	pkg := map[string]apl.Value{
 		"c": apl.ToFunction(cpus),
-		"m": apl.ToFunction(Memstats),
 		"g": apl.ToFunction(goroutines),
-		"v": apl.ToFunction(goversion),
+		"h": apl.ToFunction(help),
+		"m": apl.ToFunction(Memstats),
 		"q": apl.ToFunction(quit),
+		"t": apl.ToFunction(timer),
+		"v": apl.ToFunction(goversion),
 	}
+	cmd := map[string]scan.Command{
+		"h": rw0("h"),
+		"q": rw0("q"),
+		"t": toCommand(timeCmd),
+	}
+	p.AddCommands(cmd)
 	p.RegisterPackage(name, pkg)
 }
 
