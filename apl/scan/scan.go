@@ -3,6 +3,7 @@ package scan
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -39,17 +40,48 @@ const (
 // Scanner can split APL input into tokens.
 // SetSymbols must be called before using the scanner.
 type Scanner struct {
-	input   string
-	tokens  []Token
-	symbols map[rune]string
-	pos     int
-	width   int
+	input    string
+	tokens   []Token
+	symbols  map[rune]string
+	commands map[string]Command
+	pos      int
+	width    int
 }
 
 // SetSymbols initializes the Scanner to recognize the given APL symbols.
 // In the map, both the rune and the string are the same letter.
 func (s *Scanner) SetSymbols(symbols map[rune]string) {
 	s.symbols = symbols
+}
+
+// AddCommands sets token rewrite commands.
+func (s *Scanner) AddCommands(commands map[string]Command) {
+	if s.commands == nil {
+		s.commands = make(map[string]Command)
+	}
+	for name, cmd := range commands {
+		s.commands[name] = cmd
+	}
+}
+
+// Commands returns a list of commands.
+func (s *Scanner) Commands() []string {
+	l := make([]string, len(s.commands))
+	i := 0
+	for c := range s.commands {
+		l[i] = c
+		i++
+	}
+	sort.Strings(l)
+	return l
+}
+
+// A command is a function that rewrites a token list.
+// It is recognized by a leading / or \.
+// The identifier following is the command name.
+// Commands are set by registering package a.
+type Command interface {
+	Rewrite(l []Token) []Token
 }
 
 // Scan returns the tokens from one line of APL input.
@@ -69,7 +101,7 @@ func (s *Scanner) Scan(line string) ([]Token, error) {
 			s.tokens = append(s.tokens, t)
 		}
 	}
-	return s.tokens, nil
+	return s.applyCmds(s.tokens), nil
 }
 
 func (t Type) String() string {
@@ -342,4 +374,20 @@ func AllowedInVarname(r rune, first bool) bool {
 		return true
 	}
 	return r == '_' || unicode.IsLetter(r)
+}
+
+// applyCmds applyes rewrite rules recursively.
+// In /e/h* first /h is applyd to * then /e on the result.
+func (s *Scanner) applyCmds(t []Token) []Token {
+	if s.commands == nil {
+		return t
+	}
+	if len(t) > 1 && t[0].T == Symbol && (t[0].S == "/" || t[0].S == `\`) && t[1].T == Identifier {
+		cmd, ok := s.commands[string(t[1].S)]
+		if ok {
+			t = s.applyCmds(t[2:])
+			return cmd.Rewrite(t)
+		}
+	}
+	return t
 }
