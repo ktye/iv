@@ -11,20 +11,6 @@ import (
 
 func TestParse(t *testing.T) {
 
-	// For testing the parser we register just a couple of dummy primitives and two operators.
-	reg := func(a *Apl) {
-		for _, r := range "+-*!>" {
-			a.RegisterPrimitive(Primitive(r), dummy)
-		}
-		a.RegisterOperator("/", mop{})
-		a.RegisterOperator("←", mop{})
-		a.RegisterOperator(".", dot{})
-		a.RegisterOperator("⍂", brack{})
-		if err := a.SetTower(newTower()); err != nil {
-			panic(err)
-		}
-	}
-
 	testCases := []struct {
 		in, exp string
 	}{
@@ -83,8 +69,6 @@ func TestParse(t *testing.T) {
 		a := New(os.Stdout)
 		reg(a)
 
-		// fmt.Println("⍟ test:", tc.in)
-
 		p, err := a.Parse(tc.in)
 		if err != nil {
 			t.Fatalf("[%d] %s: %s", i+1, tc.in, err)
@@ -94,21 +78,48 @@ func TestParse(t *testing.T) {
 			t.Fatalf("[%d] %s:\nexpected:\n%s\ngot:\n%s", i+1, tc.in, tc.exp, got)
 		}
 	}
+}
 
-	/*
-		The hierarchy of binding strengths is listed below in descending order.
-		Binding Strength:     What Is Bound
-		Brackets:             Brackets to what is on their left
-		Specification left:   Left arrow to what is on its left
-		Right operand:        Dyadic operator to its right operand
-		Vector:               Array to an array
-		Left operand:         Operator to its left operand
-		Left argument:        Function to its left argument
-		Right argument:       Function to its right argument
-		Specification right:  Left arrow to what is on its right
-		For binding, the branch arrow behaves as a monadic function. Brackets and
-		monadic operators have no binding strength on the right. Parentheses change the default binding.
-	*/
+// TestMultiline test parsing of multi line lambda functions.
+func TestMultiline(t *testing.T) {
+	testCases := []struct {
+		in, exp string
+	}{
+		{"1", "1"},
+		{"+1", "(+ 1)"},
+		{"1+1", "(1 + 1)"},
+		{"1{}2", "(1 {} 2)"},
+		{"{X←⍵\n2+⍵}", "{((X ←) ⍵)⋄(2 + ⍵)}"},
+		{"{\n\tX←⍵\n\t2+⍵\n}", "{((X ←) ⍵)⋄(2 + ⍵)}"},
+	}
+
+	for i, tc := range testCases {
+		a := New(os.Stdout)
+		reg(a)
+
+		p, err := a.ParseLines(tc.in)
+		if err != nil {
+			t.Fatalf("[%d] %s: %s", i+1, tc.in, err)
+		}
+		got := p.String(a)
+		if got != tc.exp {
+			t.Fatalf("[%d] %s:\nexpected:\n%s\ngot:\n%s", i+1, tc.in, tc.exp, got)
+		}
+	}
+}
+
+// For testing the parser we register just a couple of dummy primitives and two operators.
+func reg(a *Apl) {
+	for _, r := range "+-*!>" {
+		a.RegisterPrimitive(Primitive(r), dummy)
+	}
+	a.RegisterOperator("/", mop{})
+	a.RegisterOperator("←", mop{})
+	a.RegisterOperator(".", dot{})
+	a.RegisterOperator("⍂", brack{})
+	if err := a.SetTower(newTower()); err != nil {
+		panic(err)
+	}
 }
 
 // Dummy primitive.

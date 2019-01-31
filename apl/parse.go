@@ -340,6 +340,13 @@ func (p *parser) parseLambda() (item, error) {
 			body = append(body, &guardExpr{e: ternary})
 		}
 	}
+	// Remove an empty last entry, that happens if a diamond is inserted before }.
+	if len(body) > 0 {
+		last := body[len(body)-1]
+		if last.cond == nil && last.e == nil {
+			body = body[:len(body)-1]
+		}
+	}
 	return item{e: &lambda{body}, class: verb}, nil
 }
 
