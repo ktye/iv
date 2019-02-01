@@ -12,6 +12,20 @@ No special keyboard driver is needed.
 When pressing the ENTER key, the current line is interpreted and the result is appended to the end of the editor.
 ESC toggles hold mode, which prevents execution to edit multiple lines.
 
+## Commands
+Commands can be entered following a slash or a backslash.
+The rewrite the tokens of the current line.
+
+There is a built-in sam editor with the `/e` command.
+To edit the definition of a lambda function stored in the variable `f`, do:
+```
+	f←{⍺+⍵}
+	/e`f	
+```
+
+Commands are recursive.
+To see the help text searchable in the editor, type `/e/h`
+
 ## ui customization
 The user interface can be changed at runtime using package `aplextra/u` which is built-in.
 See the documentation of package `u` for examples.
