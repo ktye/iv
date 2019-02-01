@@ -1,22 +1,13 @@
 // Package io provides input and output streams.
 //
 // Linking it into APL leads to an unsafe system.
-//
-// Io overloads several primitive operators:
-//	< string          returns a Channel reading from a file
-//      < 0               returns a Channel reading from stdin
-//	!`ls              execute program return a channel
-//	!(`ls`-l)         same with arguments
-//	`cat!A            same reading input from A (String method) or channel (pipe)
-//	`file<channel     write to file (TODO)
-//	`dst<<`src        copy idiom (TODO)
-//	`log<!`prog       redirection (TODO)
-//	⍎¨channel         returns a channel with values
+// See README.md
 package io
 
 import (
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/domain"
+	"github.com/ktye/iv/apl/scan"
 )
 
 // Register adds the io package to the interpreter.
@@ -26,9 +17,17 @@ func Register(a *apl.Apl, name string) {
 		name = "io"
 	}
 	pkg := map[string]apl.Value{
-		"r": apl.ToFunction(read),
-		"x": apl.ToFunction(exec),
+		"cd":     apl.ToFunction(cd),
+		"r":      apl.ToFunction(read),
+		"x":      apl.ToFunction(exec),
+		"mount":  apl.ToFunction(mount),
+		"umount": apl.ToFunction(umount),
 	}
+	cmd := map[string]scan.Command{
+		"cd": toCommand(cdCmd),
+		"m":  toCommand(mCmd),
+	}
+	a.AddCommands(cmd)
 	a.RegisterPackage(name, pkg)
 
 	a.RegisterPrimitive("<", apl.ToHandler(

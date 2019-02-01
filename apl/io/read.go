@@ -18,7 +18,7 @@ func read(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	if ok == false {
 		return nil, fmt.Errorf("io read: expect file name %T", R)
 	}
-	f, err := os.Open(string(name))
+	f, err := Open(string(name))
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +36,8 @@ func readfd(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 // exec executes a program and sends the output through a channel.
 // If called dyadically it uses R as an input, that can be a channel or a Value.
+// If the program starts with a slash, it's location is looked up in the file system.
+// TODO: should all arguments starting with a slash be replaced?
 func exec(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	r := R
 	var in io.Reader
@@ -56,6 +58,19 @@ func exec(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	argv := v.(apl.StringArray).Strings
 	if len(argv) == 0 {
 		return nil, fmt.Errorf("io exec: argv empty")
+	}
+
+	// If the command starts with a slash, we may relocate it.
+	if strings.HasPrefix(argv[0], "/") {
+		fsys, err := lookup(argv[0])
+		if err != nil {
+			return nil, err
+		}
+		if f, ok := fsys.(fs); ok == false {
+			return nil, fmt.Errorf("exec: %s: file system is not an os fs: %s", argv[0], fsys.String())
+		} else {
+			argv[0] = f.path(argv[0])
+		}
 	}
 
 	cmd := ex.Command(argv[0], argv[1:]...)
