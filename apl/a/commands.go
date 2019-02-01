@@ -34,6 +34,25 @@ func (r rw0) Rewrite(t []scan.Token) []scan.Token {
 	return tokens
 }
 
+// printvar prints a string representation of the value.
+// If the value is a string that is a valid variable name, it is dereferenced.
+// This allows to print the definition of lambda functions.
+func printvar(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	s, ok := R.(apl.String)
+	if !ok {
+		return apl.String(R.String(a)), nil
+	}
+	v := a.Lookup(string(s))
+	if v == nil {
+		return s, nil
+	}
+	return apl.String(v.String(a)), nil
+}
+
+func printCmd(t []scan.Token) []scan.Token {
+	return append([]scan.Token{scan.Token{T: scan.Identifier, S: "a→p"}}, t...)
+}
+
 // Timer is used to time an expression. It is called by the rewrite command /t
 // If the argument is a time, it returns the elapsed duration since that time.
 // Otherwise it returns the current time.

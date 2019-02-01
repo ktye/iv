@@ -27,12 +27,14 @@ func Register(p *apl.Apl, name string) {
 		"g": apl.ToFunction(goroutines),
 		"h": apl.ToFunction(help),
 		"m": apl.ToFunction(Memstats),
+		"p": apl.ToFunction(printvar),
 		"q": apl.ToFunction(quit),
 		"t": apl.ToFunction(timer),
 		"v": apl.ToFunction(goversion),
 	}
 	cmd := map[string]scan.Command{
 		"h": rw0("h"),
+		"p": toCommand(printCmd),
 		"q": rw0("q"),
 		"t": toCommand(timeCmd),
 	}
