@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/scan"
@@ -25,13 +26,52 @@ func sam(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		return nil, fmt.Errorf("edt can only be called in a graphical session")
 	}
 	cmd, edt := read(a, R)
+	if l := cmd.Len(); l == 0 {
+		cmd = rope.New("⍎ \nq\n")
+	} else if r := rope.Slice(cmd, l-1, l); r.String() == "\n" {
+		cmd = rope.Append(cmd, rope.New("⍎ \nq\n"))
+	} else {
+		cmd = rope.Append(cmd, rope.New("\n⍎ \nq\n"))
+	}
 
 	sam := ui.NewSam(window)
-	sam.SetTexts(cmd, edt)
+	sam.Cmd.SetText(cmd)
+	sam.Edt.SetText(edt)
 	save := window.Top.W
-	sam.Quit = func() ui.Event {
-		window.Top.W = save
-		return ui.Event{}
+
+	dot := func(addr string) (string, bool) {
+		if sam.Edt.MarkAddr(addr) != nil {
+			return "", false
+		}
+		return sam.Edt.Selection(), true
+	}
+
+	sam.Commands = map[string]func(*ui.Sam, string){
+		"q": func(s *ui.Sam, args string) {
+			window.Top.W = save
+		},
+		"⍎": func(s *ui.Sam, args string) {
+			t, _ := dot(".")
+			if t == "" {
+				t, _ = dot(",")
+			}
+			dsave := a.Lookup("Dot")
+			out := a.GetOutput()
+			defer func() {
+				a.Assign("Dot", dsave)
+				a.SetOutput(out)
+			}()
+			a.SetOutput(sam.Cmd)
+
+			a.Assign("Dot", apl.String(t))
+			_, err := sam.Cmd.Edit.Edit(`/\n$/`)
+			if _, ok := err.(edit.NoCommandError); !ok {
+				sam.Cmd.Write([]byte{'\n'})
+			}
+			if err := a.ParseAndEval(args); err != nil {
+				sam.Cmd.Write([]byte(err.Error() + "\n"))
+			}
+		},
 	}
 	window.Top.W = sam
 	window.Resize()
@@ -67,7 +107,8 @@ func read(a *apl.Apl, R apl.Value) (cmd, edt rope.Rope) {
 		return cmd, edt
 	case apl.String:
 		if val := a.Lookup(string(v)); val != nil {
-			return rope.New("var " + reflect.TypeOf(val).String()), rope.New(val.String(a))
+			s := fmt.Sprintf("var %s %s\n⍎ %s← ⍎Dot\n", v, reflect.TypeOf(val).String(), v)
+			return rope.New(s), rope.New(val.String(a))
 		}
 		return rope.New(reflect.TypeOf(R).String()), rope.New(R.String(a))
 	default:
