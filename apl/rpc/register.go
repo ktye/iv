@@ -7,19 +7,7 @@ import (
 )
 
 // Register adds the rpc package to the interpreter.
-// Example:
-//	Start a server on local port 1966 (cmd/apl):
-//		apl ":1966"
-//	On a different process, run a normal APL session:
-//		C←rpc→dial ":1966"
-//		rpc→call (C; "+/"; 5; ⍳10;)
-//	15 20 25 30 35 40
-// The rpc call evaluates the function string in the remove environment
-// and calls it with the local values on the remote process.
-//
-// APL value that should be transfered over the wire need to be
-// registerd to the gob package.
-// See init.go for values that are already registerd.
+// See README.md
 func Register(a *apl.Apl, name string) {
 	pkg := map[string]apl.Value{
 		"dial":  dial{},
