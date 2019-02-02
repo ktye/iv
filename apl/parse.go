@@ -152,7 +152,7 @@ func (p *parser) parseStatement() (item, error) {
 				}
 				push(i, false)
 			} else {
-				return item{}, fmt.Errorf(":%d: unknown symbol: %s", t.Pos, t.S)
+				return item{}, fmt.Errorf("unknown symbol: %s", t.S)
 			}
 
 		case scan.Number, scan.String, scan.Chars:
@@ -165,7 +165,7 @@ func (p *parser) parseStatement() (item, error) {
 		case scan.Identifier:
 			i := item{class: verb}
 			if ok, fok := isVarname(t.S); ok == false {
-				return item{}, fmt.Errorf(":%d: illegal variable name: %s", t.Pos, t.S)
+				return item{}, fmt.Errorf("illegal variable name: %s", t.S)
 			} else if fok == false {
 				e, err := p.collectArray(t)
 				if err != nil {
@@ -182,23 +182,23 @@ func (p *parser) parseStatement() (item, error) {
 			push(item{e: self{}, class: verb}, false)
 
 		case scan.LeftParen, scan.LeftBrack, scan.LeftBrace:
-			return item{}, fmt.Errorf(":%d: unexpected opening %s", t.Pos, t.S)
+			return item{}, fmt.Errorf("unexpected opening %s", t.S)
 
 		case scan.RightParen, scan.RightBrack, scan.RightBrace:
 			i, err := p.subStatement(t.T)
 			if err != nil {
-				return item{}, fmt.Errorf(":%d: %s", t.Pos, err)
+				return item{}, fmt.Errorf("%s", err)
 			}
 			push(i, false)
 
 		case scan.Colon:
-			return item{}, fmt.Errorf(":%d: unexpected : outside {}", t.Pos)
+			return item{}, fmt.Errorf("unexpected : outside {}")
 
 		case scan.Semicolon:
-			return item{}, fmt.Errorf(":%d: unexpected ; outside []", t.Pos)
+			return item{}, fmt.Errorf("unexpected ; outside []")
 
 		default:
-			return item{}, fmt.Errorf(":%d: unknown token %s", t.Pos, t.S)
+			return item{}, fmt.Errorf("unknown token %s", t.S)
 		}
 	}
 	return item{}, fmt.Errorf("illegal parser state") // Should not be reached.
@@ -397,7 +397,7 @@ loop:
 		switch t.T {
 		case scan.Number:
 			if n, err := p.a.Tower.Parse(t.S); err != nil {
-				return nil, fmt.Errorf(":%d: %s", t.Pos, err)
+				return nil, err
 			} else {
 				ar = append(ar, n)
 			}
@@ -414,7 +414,7 @@ loop:
 					chars[i] = String(string(runes[k]))
 				}
 				if ar != nil && len(chars) > 1 {
-					return nil, fmt.Errorf(":%d: only scalars can be added to an array", t.Pos)
+					return nil, fmt.Errorf("only scalars can be added to an array")
 				}
 				ar = append(ar, chars...)
 			}
