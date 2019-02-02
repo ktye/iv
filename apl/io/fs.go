@@ -14,13 +14,16 @@ import (
 // Protocols are recognized by mount with the syntax: "zip://".
 // They are registered by external packages supporting special file systems.
 func RegisterProtocol(name string, p Protocol) {
+	if protocols == nil {
+		protocols = make(map[string]Protocol)
+	}
 	protocols[name] = p
 }
 
 // FileSystem is the interface for a file system provider.
 // A directory returns the names of it's content in the reader, with directories ending in a slash.
 type FileSystem interface {
-	Open(string) (io.ReadCloser, error)
+	Open(string, string) (io.ReadCloser, error)
 	String() string
 }
 
@@ -31,7 +34,7 @@ func (o fs) String() string {
 	return string(o)
 }
 
-func (o fs) Open(name string) (io.ReadCloser, error) {
+func (o fs) Open(name, mpt string) (io.ReadCloser, error) {
 	f, err := os.Open(o.path(name))
 	if err != nil {
 		return nil, err
@@ -52,7 +55,7 @@ func (o fs) Open(name string) (io.ReadCloser, error) {
 	}
 	names := make([]string, len(dir))
 	for i, d := range dir {
-		names[i] = d.Name()
+		names[i] = mpt + name + d.Name()
 		if d.IsDir() {
 			names[i] += "/"
 		}
@@ -79,20 +82,21 @@ type mpoint struct {
 
 // Open opens a file or directory from the filesystem.
 func Open(name string) (io.ReadCloser, error) {
-	if fs, err := lookup(name); err != nil {
+	if fs, mpt, err := lookup(name); err != nil {
 		return nil, err
 	} else {
-		return fs.Open(name)
+		relpath := strings.TrimPrefix(name, mpt)
+		return fs.Open(relpath, mpt)
 	}
 }
 
-func lookup(name string) (FileSystem, error) {
+func lookup(name string) (FileSystem, string, error) {
 	mtab.Lock()
 	defer mtab.Unlock()
 
 	n := len(mtab.tab)
 	if n == 0 {
-		return nil, &os.PathError{
+		return nil, "", &os.PathError{
 			Op:   "open",
 			Path: name,
 			Err:  fmt.Errorf("no filesystem is mounted"),
@@ -103,10 +107,10 @@ func lookup(name string) (FileSystem, error) {
 	for i := n - 1; i >= 0; i-- {
 		t := mtab.tab[i]
 		if strings.HasPrefix(name, t.mpt) {
-			return t.src, nil
+			return t.src, t.mpt, nil
 		}
 	}
-	return nil, &os.PathError{
+	return nil, "", &os.PathError{
 		Op:   "open",
 		Path: name,
 		Err:  fmt.Errorf("not found"),
@@ -120,6 +124,9 @@ func Mount(mpt string, fs FileSystem) error {
 
 	if strings.HasPrefix(mpt, "/") == false {
 		return fmt.Errorf("io mount: mount point must start with /: %s", mpt)
+	}
+	if strings.HasSuffix(mpt, "/") == false {
+		return fmt.Errorf("io mount: mount point must end with a /: %s", mpt)
 	}
 
 	for _, t := range mtab.tab {

@@ -2,6 +2,7 @@ package apl
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -105,6 +106,31 @@ func (a *Apl) LookupEnv(name string) (Value, *env) {
 		e = e.parent
 	}
 	return nil, nil
+}
+
+// Vars returns a list of variable names in a package.
+// If pkg is empty, the variables the root environment are returned,
+// and a list of packages ending with "/".
+func (a *Apl) Vars(pkg string) ([]string, error) {
+	var l []string
+	var e *env
+	if pkg == "" {
+		for n := range a.pkg {
+			l = append(l, n+"/")
+		}
+		e = a.env
+	} else {
+		var ok bool
+		e, ok = a.pkg[pkg]
+		if ok == false {
+			return nil, fmt.Errorf("package %s is not registered", pkg)
+		}
+	}
+	for n := range e.vars {
+		l = append(l, n)
+	}
+	sort.Strings(l)
+	return l, nil
 }
 
 func (a *Apl) packageVar(name string) Value {

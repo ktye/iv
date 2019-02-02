@@ -26,9 +26,11 @@ Examples:
 	/m . /                           ⍝ mount the current working directory to root
 	/m "c:/very deep directory" `/w  ⍝ mount a windows directory under /w
 	/m `/path/a `/a                  ⍝ mount /path/a to /a
+	/m `var:/// `/var                ⍝ mount apl variables to /var
 	/m                               ⍝ list mtab
 	io→umount `/a                    ⍝ unmout /a
 	<`/                              ⍝ list the root directory, similar to unix ls
+	<`/var/                          ⍝ list all variables with their types and packages
 	/cd                              ⍝ show current os directory
 	/cd `dir                         ⍝ change current os directory
 	/e<`/file                        ⍝ open the file content in the editor (requires pkg u)

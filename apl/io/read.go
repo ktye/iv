@@ -63,14 +63,15 @@ func exec(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// If the command starts with a slash, we may relocate it.
 	if strings.HasPrefix(argv[0], "/") {
-		fsys, err := lookup(argv[0])
+		fsys, mpt, err := lookup(argv[0])
 		if err != nil {
 			return nil, err
 		}
 		if f, ok := fsys.(fs); ok == false {
 			return nil, fmt.Errorf("exec: %s: file system is not an os fs: %s", argv[0], fsys.String())
 		} else {
-			argv[0] = f.path(argv[0])
+			relpath := strings.TrimPrefix(argv[0], mpt)
+			argv[0] = f.path(relpath)
 		}
 	}
 

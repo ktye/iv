@@ -52,5 +52,5 @@ func Register(a *apl.Apl, name string) {
 		domain.Dyadic(domain.Split(domain.ToStringArray(nil), nil)),
 		"exec",
 	))
-
+	RegisterProtocol("var", varfs{Apl: a})
 }
