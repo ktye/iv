@@ -996,6 +996,7 @@ var testCases = []struct {
 
 	{"⍝ Conway-completeness", "", 0},
 	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", 0},
+	// A←5 5⍴(23⍴2)⊤1215488⋄l←3=s-⊢∧4=s←{+/,⍵}⌺3 3⋄(l⍣8)A // TODO: This cannot be reduced.
 	// life2←{3=s-⍵∧4=s←{+/,⍵}⌺3 3⊢⍵} // Dya: works without braces.
 
 	// github.com/DhavalDalal/APL-For-FP-Programmers
