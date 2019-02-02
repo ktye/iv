@@ -2,22 +2,19 @@
 //
 // Usage
 //	apl < INPUT
-// Server mode
-//	apl ADDR < INPUT
-// Example
-//	apl ":1966"
+//	apl FILES...
 package main
 
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
-	"github.com/ktye/iv/apl/rpc"
 )
 
 func main() {
@@ -25,21 +22,38 @@ func main() {
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
-	rpc.Register(a, "")
 
-	line := 0
+	// Execute files.
+	if len(os.Args) > 1 {
+		for _, name := range os.Args[1:] {
+			var r io.Reader
+			if name == "-" {
+				r = os.Stdin
+				name = "stdin"
+			} else {
+				f, err := os.Open(name)
+				fatal(err)
+				defer f.Close()
+				r = f
+			}
+			fatal(run(a, r, name))
+		}
+		os.Exit(0)
+	}
+
+	// Run interactively.
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		s := scanner.Text()
-		line++
-		// TODO: assemble multiline lambda expressions.
 		if err := a.ParseAndEval(s); err != nil {
-			fmt.Fprintf(os.Stderr, "%d: %s\n", line, err)
-			os.Exit(1)
+			fmt.Println(err)
 		}
 	}
+}
 
-	if len(os.Args) > 1 {
-		rpc.ListenAndServe(a, os.Args[1])
+func fatal(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
