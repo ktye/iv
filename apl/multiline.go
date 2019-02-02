@@ -88,6 +88,10 @@ func (b *LineBuffer) Parse() (Program, error) {
 	return b.a.parse(b.tokens)
 }
 
+func (b *LineBuffer) Len() int {
+	return len(b.tokens)
+}
+
 func (b *LineBuffer) reset() {
 	b.level = 0
 	if len(b.tokens) > 0 {

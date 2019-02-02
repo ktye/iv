@@ -39,7 +39,7 @@ func run(a *apl.Apl, r io.Reader, file string) (err error) {
 			}
 		}
 	}
-	if ok == false {
+	if ok == false && b.Len() > 0 {
 		return fmt.Errorf("multiline statement is not terminated")
 	}
 	return nil
