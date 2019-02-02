@@ -2,9 +2,10 @@ package u
 
 import (
 	"fmt"
+	"io/ioutil"
 	"reflect"
+	"strings"
 
-	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/scan"
@@ -20,23 +21,51 @@ import (
 // Example print a lambda function f: /e`f
 //
 // Other values are converted to strings.
-func sam(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	// Callback for button-2 exec:
+	// Open files from the apl file system.
+	exec := func(sam *ui.Sam, s string) {
+		if strings.HasPrefix(s, "/") == false {
+			return
+		}
+		if strings.ContainsRune(s, '\n') {
+			return
+		}
+		if strings.HasSuffix(s, "/") == false {
+			// sam.Cmd.Write([]byte("w" + s + "\n"))
+		}
+		out := a.GetOutput()
+		defer func() {
+			a.SetOutput(out)
+		}()
+		a.SetOutput(ioutil.Discard)
+
+		e := `"` + s + `"` + " u→sam <`" + s // TODO: s should be quoted, when quoted strings are supported.
+		if err := a.ParseAndEval(e); err != nil {
+			sam.Cmd.AppendText(err.Error())
+		}
+	}
+
 	e := apl.EmptyArray{}
 	if window == nil || window.Top.W == nil {
 		return nil, fmt.Errorf("edt can only be called in a graphical session")
 	}
 	cmd, edt := read(a, R)
-	if l := cmd.Len(); l == 0 {
-		cmd = rope.New("⍎ \nq\n")
-	} else if r := rope.Slice(cmd, l-1, l); r.String() == "\n" {
-		cmd = rope.Append(cmd, rope.New("⍎ \nq\n"))
-	} else {
-		cmd = rope.Append(cmd, rope.New("\n⍎ \nq\n"))
+	if len(cmd) > 0 && cmd[len(cmd)-1] != '\n' {
+		cmd += "\n"
+	}
+	cmd += "⍎ \nq\n"
+
+	if L != nil {
+		if s, ok := L.(apl.String); ok {
+			cmd += "w" + string(s)
+		}
 	}
 
 	sam := ui.NewSam(window)
-	sam.Cmd.SetText(cmd)
+	sam.Cmd.SetText(rope.New(cmd))
 	sam.Edt.SetText(edt)
+	sam.SetExec(exec)
 	save := window.Top.W
 
 	dot := func(addr string) (string, bool) {
@@ -62,15 +91,13 @@ func sam(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 				a.SetOutput(out)
 			}()
 			a.SetOutput(sam.Cmd)
+			sam.Cmd.AppendText("")
 
 			a.Assign("Dot", apl.String(t))
-			_, err := sam.Cmd.Edit.Edit(`/\n$/`)
-			if _, ok := err.(edit.NoCommandError); !ok {
-				sam.Cmd.Write([]byte{'\n'})
-			}
 			if err := a.ParseAndEval(args); err != nil {
-				sam.Cmd.Write([]byte(err.Error() + "\n"))
+				sam.Cmd.AppendText(err.Error())
 			}
+
 		},
 	}
 	window.Top.W = sam
@@ -80,7 +107,7 @@ func sam(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 // read returns the text for sam's command and edit window based
 // on the value v.
-func read(a *apl.Apl, R apl.Value) (cmd, edt rope.Rope) {
+func read(a *apl.Apl, R apl.Value) (cmd string, edt rope.Rope) {
 	switch v := R.(type) {
 	case apl.Channel:
 		edt = rope.New("")
@@ -103,20 +130,20 @@ func read(a *apl.Apl, R apl.Value) (cmd, edt rope.Rope) {
 		if t != nil {
 			ts = t.String()
 		}
-		cmd := rope.New(fmt.Sprintf("from channel (%d %s)\n", n, ts))
+		cmd := fmt.Sprintf("from channel (%d %s)\n", n, ts)
 		return cmd, edt
 	case apl.String:
 		if val := a.Lookup(string(v)); val != nil {
 			s := fmt.Sprintf("var %s %s\n⍎ %s← ⍎Dot\n", v, reflect.TypeOf(val).String(), v)
-			return rope.New(s), rope.New(val.String(a))
+			return s, rope.New(val.String(a))
 		}
-		return rope.New(reflect.TypeOf(R).String()), rope.New(R.String(a))
+		return reflect.TypeOf(R).String(), rope.New(R.String(a))
 	default:
 		shape := ""
 		if ar, ok := R.(apl.Array); ok {
 			shape = fmt.Sprintf(" %v", ar.Shape())
 		}
-		return rope.New(reflect.TypeOf(R).String() + shape), rope.New(R.String(a))
+		return reflect.TypeOf(R).String() + shape, rope.New(R.String(a))
 	}
 }
 
