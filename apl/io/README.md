@@ -35,4 +35,5 @@ Examples:
 	/cd `dir                         ⍝ change current os directory
 	/e<`/file                        ⍝ open the file content in the editor (requires pkg u)
 	/l`/file                         ⍝ load (evaluate) a file
+	/l`/file`f                       ⍝ load a file and store its variables in the pkg f
 ```

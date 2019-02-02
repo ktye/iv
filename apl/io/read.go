@@ -88,9 +88,11 @@ func exec(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return c, nil
 }
 
-// load reads the file R and executes it.
+// Load reads the file R and executes it.
 // It returns an error, if R is not a file.
-func load(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+// If L is given, the file is executed in a new environment and the resulting variables
+// are copied to a package with the name of L.
+func load(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	s, ok := R.(apl.String)
 	if ok == false {
 		return nil, fmt.Errorf("io l: argument must be a file name: %T", R)
@@ -102,13 +104,29 @@ func load(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 	defer f.Close()
 
-	if err := a.EvalFile(f, string(s)); err != nil {
+	if L == nil {
+		if err := a.EvalFile(f, string(s)); err != nil {
+			return nil, err
+		}
+		return apl.EmptyArray{}, nil
+	}
+
+	l, ok := L.(apl.String)
+	if ok == false {
+		return nil, fmt.Errorf("io l: left argument must be a package name: %T", L)
+	}
+
+	if err := a.LoadPkg(f, string(s), string(l)); err != nil {
 		return nil, err
 	}
 	return apl.EmptyArray{}, nil
 }
 
 func lCmd(t []scan.Token) []scan.Token {
+	// /l `/file.apl `pkg
+	if len(t) == 2 && t[0].T == scan.String && t[1].T == scan.String {
+		return []scan.Token{t[1], scan.Token{T: scan.Identifier, S: "io→l"}, t[0]}
+	}
 	l := scan.Token{T: scan.Identifier, S: "io→l"}
 	return append([]scan.Token{l}, t...)
 }

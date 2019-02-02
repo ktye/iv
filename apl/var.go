@@ -33,6 +33,10 @@ func (a *Apl) AssignEnv(name string, v Value, env *env) error {
 		return fmt.Errorf("variable name is not allowed: %s", name)
 	}
 
+	if strings.ContainsRune(name, '→') {
+		return fmt.Errorf("cannot assign to a package variable")
+	}
+
 	// Assignment to the special variable ⎕ prints the value.
 	if name == "⎕" {
 		fmt.Fprintf(a.stdout, "%s\n", v.String(a))

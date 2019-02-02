@@ -12,19 +12,15 @@ import (
 
 // New starts a new interpreter.
 func New(w io.Writer) *Apl {
-	e := env{vars: map[string]Value{
-		"⎕NL": String("\n"),
-	}}
 	a := Apl{
 		stdout:     w,
-		env:        &e,
+		env:        newEnv(),
 		Origin:     1,
 		primitives: make(map[Primitive][]PrimitiveHandler),
 		operators:  make(map[string][]Operator),
 		symbols:    make(map[rune]string),
 		pkg:        make(map[string]*env),
 	}
-
 	a.parser.a = &a
 	return &a
 }
@@ -43,6 +39,24 @@ type Apl struct {
 	pkg        map[string]*env
 	scaninit   bool
 	debug      bool
+}
+
+// LoadPkg loads a package from a file.
+// It temporarily removes the current environment, executes the package file with EvalFile
+// and stores the resulting environment in a package with the name of pkg.
+func (a *Apl) LoadPkg(r io.Reader, file string, pkg string) (err error) {
+	save := a.env
+	a.env = newEnv()
+	defer func() {
+		a.env = save
+	}()
+
+	err = a.EvalFile(r, file)
+	if err != nil {
+		return err
+	}
+	a.pkg[pkg] = a.env
+	return nil
 }
 
 // Parse parses a line of input into the current context.
@@ -104,4 +118,10 @@ func (a *Apl) GetOutput() io.Writer {
 		return ioutil.Discard
 	}
 	return a.stdout
+}
+
+func newEnv() *env {
+	return &env{vars: map[string]Value{
+		"⎕NL": String("\n"),
+	}}
 }
