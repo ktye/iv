@@ -39,7 +39,7 @@ func main() {
 	// Implement the repl interface.
 	var interp interp
 	repl := &ui.Repl{Reply: true}
-	repl.SetText(rope.New("APL\\iv\n\t"))
+	repl.SetText(rope.New("\t"))
 	interp.repl = repl
 	repl.Interp = &interp
 
