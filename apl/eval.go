@@ -1,7 +1,9 @@
 package apl
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"runtime/debug"
 	"strings"
 )
@@ -68,6 +70,56 @@ func (p Program) String(a *Apl) string {
 		v[i] = p[i].String(a)
 	}
 	return strings.Join(v, "⋄")
+}
+
+// EvalFile parses and evalutes from a reader.
+// It handles multiline statements.
+// The file argument is used only in the error message.
+func (a *Apl) EvalFile(r io.Reader, file string) (err error) {
+	line := 0
+	defer func() {
+		if err != nil {
+			err = fileError{file: file, line: line, err: err}
+		}
+	}()
+
+	ok := true
+	var p Program
+	b := NewLineBuffer(a)
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line++
+		ok, err = b.Add(scanner.Text())
+		if err != nil {
+			return
+		}
+
+		if ok {
+			p, err = b.Parse()
+			if err != nil {
+				return
+			}
+
+			err = a.Eval(p)
+			if err != nil {
+				return
+			}
+		}
+	}
+	if ok == false && b.Len() > 0 {
+		return fmt.Errorf("multiline statement is not terminated")
+	}
+	return nil
+}
+
+type fileError struct {
+	file string
+	line int
+	err  error
+}
+
+func (f fileError) Error() string {
+	return fmt.Sprintf("%s:%d: %s", f.file, f.line, f.err.Error())
 }
 
 type expr interface {

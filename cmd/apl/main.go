@@ -36,7 +36,7 @@ func main() {
 				defer f.Close()
 				r = f
 			}
-			fatal(run(a, r, name))
+			fatal(a.EvalFile(r, name))
 		}
 		os.Exit(0)
 	}

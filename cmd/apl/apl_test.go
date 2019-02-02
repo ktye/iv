@@ -51,7 +51,7 @@ func testfile(file string) error {
 	}
 	defer f.Close()
 
-	err = run(a, f, file)
+	err = a.EvalFile(f, file)
 	if err != nil {
 		return compareError(err, file)
 	}
