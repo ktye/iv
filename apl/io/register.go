@@ -18,6 +18,7 @@ func Register(a *apl.Apl, name string) {
 	}
 	pkg := map[string]apl.Value{
 		"cd":     apl.ToFunction(cd),
+		"e":      apl.ToFunction(env),
 		"l":      apl.ToFunction(load),
 		"r":      apl.ToFunction(read),
 		"x":      apl.ToFunction(exec),

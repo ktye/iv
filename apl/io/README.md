@@ -36,4 +36,8 @@ Examples:
 	/e<`/file                        ⍝ open the file content in the editor (requires pkg u)
 	/l`/file                         ⍝ load (evaluate) a file
 	/l`/file`f                       ⍝ load a file and store its variables in the pkg f
+	E←io→e 0                         ⍝ returns the environment as an object
+	E[`GOPATH]←`/h/go                ⍝ set an environment variable
+	E[`PATH],←":xyz"                 ⍝ TODO
 ```
+
