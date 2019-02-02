@@ -18,6 +18,7 @@ func Register(a *apl.Apl, name string) {
 	}
 	pkg := map[string]apl.Value{
 		"cd":     apl.ToFunction(cd),
+		"l":      apl.ToFunction(load),
 		"r":      apl.ToFunction(read),
 		"x":      apl.ToFunction(exec),
 		"mount":  apl.ToFunction(mount),
@@ -25,6 +26,7 @@ func Register(a *apl.Apl, name string) {
 	}
 	cmd := map[string]scan.Command{
 		"cd": toCommand(cdCmd),
+		"l":  toCommand(lCmd),
 		"m":  toCommand(mCmd),
 	}
 	a.AddCommands(cmd)

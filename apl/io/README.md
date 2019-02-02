@@ -32,4 +32,5 @@ Examples:
 	/cd                              ⍝ show current os directory
 	/cd `dir                         ⍝ change current os directory
 	/e<`/file                        ⍝ open the file content in the editor (requires pkg u)
+	/l`/file                         ⍝ load (evaluate) a file
 ```
