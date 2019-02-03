@@ -815,6 +815,7 @@ var testCases = []struct {
 	{"1{1+⍺{1+⍺{1+⍺+⍵}1+⍵}1+⍵}1", "7", 0},
 	{"2{}4", "", 0}, // empty lambda expression ignores arguments
 	{"{⍺×⍵}/2 3 4", "24", 0},
+	{"A←1⋄{A+←1⋄A>0:B←A⋄B}0", "2", 0}, // continue if guarded expr is an assignment (differs from Dyalog)
 	{`{1:1+2⋄{1:1+⍵}3}4`, "3", 0},
 
 	{"⍝ Evaluation order", "apl/function.go", 0},

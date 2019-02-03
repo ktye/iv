@@ -5,16 +5,20 @@
 ## Primitive functions
 ```
 !                                              
-   binomial                                    apl/primitives/elementary.go:74
+   binomial                                    apl/primitives/elementary.go:86
+   L!R  L any R channel                        
+   binomial                                    apl/primitives/elementary.go:80
    !R  both (table or object)                  
-   binomial                                    apl/primitives/elementary.go:68
+   binomial                                    apl/primitives/elementary.go:74
    !R  any (table or object)                   
-   binomial                                    apl/primitives/elementary.go:62
+   binomial                                    apl/primitives/elementary.go:68
    !R  arithmetic arrays with axis             
-   binomial                                    apl/primitives/elementary.go:56
+   binomial                                    apl/primitives/elementary.go:62
    !R  arithmetic arrays                       
-   binomial                                    apl/primitives/elementary.go:50
+   binomial                                    apl/primitives/elementary.go:56
    L!R  L scalar R scalar                      
+   factorial                                   apl/primitives/elementary.go:50
+   !R  channel                                 
    factorial                                   apl/primitives/elementary.go:44
    !R  (object or table)                       
    factorial                                   apl/primitives/elementary.go:38
@@ -40,17 +44,31 @@
    ravel, ravel with axis                      apl/primitives/comma.go:11
    ,R  R any                                   
                                                
+<                                              
+   channel copy, connect                       apl/primitives/compare.go:40
+   L<R  L channel R channel                    
+   channel send, source                        apl/primitives/compare.go:34
+   <R  R any                                   
+   less that                                   apl/primitives/compare.go:26
+   <R  arithmetic arrays                       
+   less that                                   apl/primitives/compare.go:20
+   L<R  L scalar R scalar                      
+                                               
 ○                                              
-   circular, trigonometric                     apl/primitives/elementary.go:74
+   circular, trigonometric                     apl/primitives/elementary.go:86
+   L○R  L any R channel                        
+   circular, trigonometric                     apl/primitives/elementary.go:80
    ○R  both (table or object)                  
-   circular, trigonometric                     apl/primitives/elementary.go:68
+   circular, trigonometric                     apl/primitives/elementary.go:74
    ○R  any (table or object)                   
-   circular, trigonometric                     apl/primitives/elementary.go:62
+   circular, trigonometric                     apl/primitives/elementary.go:68
    ○R  arithmetic arrays with axis             
-   circular, trigonometric                     apl/primitives/elementary.go:56
+   circular, trigonometric                     apl/primitives/elementary.go:62
    ○R  arithmetic arrays                       
-   circular, trigonometric                     apl/primitives/elementary.go:50
+   circular, trigonometric                     apl/primitives/elementary.go:56
    L○R  L scalar R scalar                      
+   pi times                                    apl/primitives/elementary.go:50
+   ○R  channel                                 
    pi times                                    apl/primitives/elementary.go:44
    ○R  (object or table)                       
    pi times                                    apl/primitives/elementary.go:38
@@ -85,16 +103,20 @@
    #R  R any                                   
                                                
 ÷                                              
-   div, division, divide                       apl/primitives/elementary.go:74
+   div, division, divide                       apl/primitives/elementary.go:86
+   L÷R  L any R channel                        
+   div, division, divide                       apl/primitives/elementary.go:80
    ÷R  both (table or object)                  
-   div, division, divide                       apl/primitives/elementary.go:68
+   div, division, divide                       apl/primitives/elementary.go:74
    ÷R  any (table or object)                   
-   div, division, divide                       apl/primitives/elementary.go:62
+   div, division, divide                       apl/primitives/elementary.go:68
    ÷R  arithmetic arrays with axis             
-   div, division, divide                       apl/primitives/elementary.go:56
+   div, division, divide                       apl/primitives/elementary.go:62
    ÷R  arithmetic arrays                       
-   div, division, divide                       apl/primitives/elementary.go:50
+   div, division, divide                       apl/primitives/elementary.go:56
    L÷R  L scalar R scalar                      
+   reciprocal                                  apl/primitives/elementary.go:50
+   ÷R  channel                                 
    reciprocal                                  apl/primitives/elementary.go:44
    ÷R  (object or table)                       
    reciprocal                                  apl/primitives/elementary.go:38
@@ -188,23 +210,21 @@
    less or equal                               apl/primitives/compare.go:20
    L≤R  L scalar R scalar                      
                                                
-<                                              
-   less that                                   apl/primitives/compare.go:26
-   <R  arithmetic arrays                       
-   less that                                   apl/primitives/compare.go:20
-   L<R  L scalar R scalar                      
-                                               
 ⍟                                              
-   log, logarithm                              apl/primitives/elementary.go:74
+   log, logarithm                              apl/primitives/elementary.go:86
+   L⍟R  L any R channel                        
+   log, logarithm                              apl/primitives/elementary.go:80
    ⍟R  both (table or object)                  
-   log, logarithm                              apl/primitives/elementary.go:68
+   log, logarithm                              apl/primitives/elementary.go:74
    ⍟R  any (table or object)                   
-   log, logarithm                              apl/primitives/elementary.go:62
+   log, logarithm                              apl/primitives/elementary.go:68
    ⍟R  arithmetic arrays with axis             
-   log, logarithm                              apl/primitives/elementary.go:56
+   log, logarithm                              apl/primitives/elementary.go:62
    ⍟R  arithmetic arrays                       
-   log, logarithm                              apl/primitives/elementary.go:50
+   log, logarithm                              apl/primitives/elementary.go:56
    L⍟R  L scalar R scalar                      
+   natural logarithm                           apl/primitives/elementary.go:50
+   ⍟R  channel                                 
    natural logarithm                           apl/primitives/elementary.go:44
    ⍟R  (object or table)                       
    natural logarithm                           apl/primitives/elementary.go:38
@@ -242,24 +262,6 @@
    logical or                                  apl/primitives/boolean.go:25
    L∨R  L scalar R scalar                      
                                                
-|                                              
-   magnitude, absolute value                   apl/primitives/elementary.go:74
-   |R  both (table or object)                  
-   magnitude, absolute value                   apl/primitives/elementary.go:68
-   |R  any (table or object)                   
-   magnitude, absolute value                   apl/primitives/elementary.go:62
-   |R  arithmetic arrays with axis             
-   magnitude, absolute value                   apl/primitives/elementary.go:56
-   |R  arithmetic arrays                       
-   magnitude, absolute value                   apl/primitives/elementary.go:50
-   L|R  L scalar R scalar                      
-   magnitude, absolute value                   apl/primitives/elementary.go:44
-   |R  (object or table)                       
-   magnitude, absolute value                   apl/primitives/elementary.go:38
-   |R  array                                   
-   magnitude, absolute value                   apl/primitives/elementary.go:32
-   |R  scalar                                  
-                                               
 ≡                                              
    match                                       apl/primitives/match.go:24
    L≡R  L any, R any                           
@@ -273,16 +275,20 @@
    ⌹R  toarray                                 
                                                
 ⌈                                              
-   max, maximum                                apl/primitives/elementary.go:74
+   max, maximum                                apl/primitives/elementary.go:86
+   L⌈R  L any R channel                        
+   max, maximum                                apl/primitives/elementary.go:80
    ⌈R  both (table or object)                  
-   max, maximum                                apl/primitives/elementary.go:68
+   max, maximum                                apl/primitives/elementary.go:74
    ⌈R  any (table or object)                   
-   max, maximum                                apl/primitives/elementary.go:62
+   max, maximum                                apl/primitives/elementary.go:68
    ⌈R  arithmetic arrays with axis             
-   max, maximum                                apl/primitives/elementary.go:56
+   max, maximum                                apl/primitives/elementary.go:62
    ⌈R  arithmetic arrays                       
-   max, maximum                                apl/primitives/elementary.go:50
+   max, maximum                                apl/primitives/elementary.go:56
    L⌈R  L scalar R scalar                      
+   ceil                                        apl/primitives/elementary.go:50
+   ⌈R  channel                                 
    ceil                                        apl/primitives/elementary.go:44
    ⌈R  (object or table)                       
    ceil                                        apl/primitives/elementary.go:38
@@ -297,16 +303,20 @@
    ∊R  R any                                   
                                                
 ⌊                                              
-   min, minumum                                apl/primitives/elementary.go:74
+   min, minumum                                apl/primitives/elementary.go:86
+   L⌊R  L any R channel                        
+   min, minumum                                apl/primitives/elementary.go:80
    ⌊R  both (table or object)                  
-   min, minumum                                apl/primitives/elementary.go:68
+   min, minumum                                apl/primitives/elementary.go:74
    ⌊R  any (table or object)                   
-   min, minumum                                apl/primitives/elementary.go:62
+   min, minumum                                apl/primitives/elementary.go:68
    ⌊R  arithmetic arrays with axis             
-   min, minumum                                apl/primitives/elementary.go:56
+   min, minumum                                apl/primitives/elementary.go:62
    ⌊R  arithmetic arrays                       
-   min, minumum                                apl/primitives/elementary.go:50
+   min, minumum                                apl/primitives/elementary.go:56
    L⌊R  L scalar R scalar                      
+   floor                                       apl/primitives/elementary.go:50
+   ⌊R  channel                                 
    floor                                       apl/primitives/elementary.go:44
    ⌊R  (object or table)                       
    floor                                       apl/primitives/elementary.go:38
@@ -315,16 +325,20 @@
    ⌊R  scalar                                  
                                                
 ×                                              
-   multiply                                    apl/primitives/elementary.go:74
+   multiply                                    apl/primitives/elementary.go:86
+   L×R  L any R channel                        
+   multiply                                    apl/primitives/elementary.go:80
    ×R  both (table or object)                  
-   multiply                                    apl/primitives/elementary.go:68
+   multiply                                    apl/primitives/elementary.go:74
    ×R  any (table or object)                   
-   multiply                                    apl/primitives/elementary.go:62
+   multiply                                    apl/primitives/elementary.go:68
    ×R  arithmetic arrays with axis             
-   multiply                                    apl/primitives/elementary.go:56
+   multiply                                    apl/primitives/elementary.go:62
    ×R  arithmetic arrays                       
-   multiply                                    apl/primitives/elementary.go:50
+   multiply                                    apl/primitives/elementary.go:56
    L×R  L scalar R scalar                      
+   signum, sign of, direction                  apl/primitives/elementary.go:50
+   ×R  channel                                 
    signum, sign of, direction                  apl/primitives/elementary.go:44
    ×R  (object or table)                       
    signum, sign of, direction                  apl/primitives/elementary.go:38
@@ -345,16 +359,20 @@
    ≢R  R any                                   
                                                
 +                                              
-   plus, addition                              apl/primitives/elementary.go:74
+   plus, addition                              apl/primitives/elementary.go:86
+   L+R  L any R channel                        
+   plus, addition                              apl/primitives/elementary.go:80
    +R  both (table or object)                  
-   plus, addition                              apl/primitives/elementary.go:68
+   plus, addition                              apl/primitives/elementary.go:74
    +R  any (table or object)                   
-   plus, addition                              apl/primitives/elementary.go:62
+   plus, addition                              apl/primitives/elementary.go:68
    +R  arithmetic arrays with axis             
-   plus, addition                              apl/primitives/elementary.go:56
+   plus, addition                              apl/primitives/elementary.go:62
    +R  arithmetic arrays                       
-   plus, addition                              apl/primitives/elementary.go:50
+   plus, addition                              apl/primitives/elementary.go:56
    L+R  L scalar R scalar                      
+   identity, complex conjugate                 apl/primitives/elementary.go:50
+   +R  channel                                 
    identity, complex conjugate                 apl/primitives/elementary.go:44
    +R  (object or table)                       
    identity, complex conjugate                 apl/primitives/elementary.go:38
@@ -363,16 +381,20 @@
    +R  scalar                                  
                                                
 *                                              
-   power                                       apl/primitives/elementary.go:74
+   power                                       apl/primitives/elementary.go:86
+   L*R  L any R channel                        
+   power                                       apl/primitives/elementary.go:80
    *R  both (table or object)                  
-   power                                       apl/primitives/elementary.go:68
+   power                                       apl/primitives/elementary.go:74
    *R  any (table or object)                   
-   power                                       apl/primitives/elementary.go:62
+   power                                       apl/primitives/elementary.go:68
    *R  arithmetic arrays with axis             
-   power                                       apl/primitives/elementary.go:56
+   power                                       apl/primitives/elementary.go:62
    *R  arithmetic arrays                       
-   power                                       apl/primitives/elementary.go:50
+   power                                       apl/primitives/elementary.go:56
    L*R  L scalar R scalar                      
+   exponential                                 apl/primitives/elementary.go:50
+   *R  channel                                 
    exponential                                 apl/primitives/elementary.go:44
    *R  (object or table)                       
    exponential                                 apl/primitives/elementary.go:38
@@ -385,6 +407,28 @@
    L⍴R  L tovector toindexarray R toarray      
    shape                                       apl/primitives/rho.go:11
    ⍴R  R any                                   
+                                               
+|                                              
+   residue, modulo                             apl/primitives/elementary.go:86
+   L|R  L any R channel                        
+   residue, modulo                             apl/primitives/elementary.go:80
+   |R  both (table or object)                  
+   residue, modulo                             apl/primitives/elementary.go:74
+   |R  any (table or object)                   
+   residue, modulo                             apl/primitives/elementary.go:68
+   |R  arithmetic arrays with axis             
+   residue, modulo                             apl/primitives/elementary.go:62
+   |R  arithmetic arrays                       
+   residue, modulo                             apl/primitives/elementary.go:56
+   L|R  L scalar R scalar                      
+   magnitude, absolute value                   apl/primitives/elementary.go:50
+   |R  channel                                 
+   magnitude, absolute value                   apl/primitives/elementary.go:44
+   |R  (object or table)                       
+   magnitude, absolute value                   apl/primitives/elementary.go:38
+   |R  array                                   
+   magnitude, absolute value                   apl/primitives/elementary.go:32
+   |R  scalar                                  
                                                
 ⊢                                              
    right tack, right argument                  apl/primitives/tack.go:27
@@ -405,16 +449,20 @@
    ⊖R  R any                                   
                                                
 -                                              
-   substract, substraction                     apl/primitives/elementary.go:74
+   substract, substraction                     apl/primitives/elementary.go:86
+   L-R  L any R channel                        
+   substract, substraction                     apl/primitives/elementary.go:80
    -R  both (table or object)                  
-   substract, substraction                     apl/primitives/elementary.go:68
+   substract, substraction                     apl/primitives/elementary.go:74
    -R  any (table or object)                   
-   substract, substraction                     apl/primitives/elementary.go:62
+   substract, substraction                     apl/primitives/elementary.go:68
    -R  arithmetic arrays with axis             
-   substract, substraction                     apl/primitives/elementary.go:56
+   substract, substraction                     apl/primitives/elementary.go:62
    -R  arithmetic arrays                       
-   substract, substraction                     apl/primitives/elementary.go:50
+   substract, substraction                     apl/primitives/elementary.go:56
    L-R  L scalar R scalar                      
+   reverse sign                                apl/primitives/elementary.go:50
+   -R  channel                                 
    reverse sign                                apl/primitives/elementary.go:44
    -R  (object or table)                       
    reverse sign                                apl/primitives/elementary.go:38
@@ -525,6 +573,6 @@
                                    
 ```
 PASS
-ok  	github.com/ktye/iv/apl/primitives	0.870s
+ok  	github.com/ktye/iv/apl/primitives	0.687s
 
-generated by `go generate (apl/primitives/gen.go)` 2019-01-10 13:17:34
+generated by `go generate (apl/primitives/gen.go)` 2019-02-03 18:44:53
