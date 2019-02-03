@@ -733,7 +733,7 @@ func (p *parser) reduceAfA(last bool) bool {
 // On the last call, also
 //	Af
 // is reduced to a train, if f is already a train with an even length.
-// This builds an Agh fork. It might need parenthesis.
+// This builds an Agh fork. It needs parenthesis.
 func (p *parser) resolveFunctions(last bool) {
 	for {
 		if p.reduceff(last) == false {
