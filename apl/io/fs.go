@@ -27,6 +27,15 @@ type FileSystem interface {
 	String() string
 }
 
+// FileWriter may be implemented by a filesystem to be writable.
+type FileWriter interface {
+	Write(string) (io.WriteCloser, error)
+}
+
+type writable interface {
+	Write(string) (io.WriteCloser, error)
+}
+
 // fs stores the leading part of the path which is cut from file names.
 type fs string
 
@@ -90,18 +99,53 @@ func Open(name string) (io.ReadCloser, error) {
 	}
 }
 
+// Create opens a file for writing from the filesystem.
+func Create(name string) (io.WriteCloser, error) {
+	mtab.Lock()
+	defer mtab.Unlock()
+	n := len(mtab.tab)
+	if n == 0 {
+		return nil, fmt.Errorf("mtab is empty")
+	}
+
+	var fsys FileSystem
+	var relpath string
+	var mpt string
+	for i := n - 1; i >= 0; i-- {
+		t := mtab.tab[i]
+		if strings.HasPrefix(name, t.mpt) {
+			mpt = t.mpt
+			fsys = t.src
+			relpath = strings.TrimPrefix(name, t.mpt)
+			break
+		}
+	}
+	if fsys == nil {
+		return nil, &os.PathError{
+			Op:   "create",
+			Path: name,
+			Err:  fmt.Errorf("filesystem not found"),
+		}
+	}
+	wfs, ok := fsys.(writable)
+	if ok == false {
+		return nil, &os.PathError{
+			Op:   "create",
+			Path: name,
+			Err:  fmt.Errorf("filesystem is readonly: %s", mpt),
+		}
+	}
+	return wfs.Write(relpath)
+}
+
 func lookup(name string) (FileSystem, string, error) {
 	mtab.Lock()
 	defer mtab.Unlock()
-
 	n := len(mtab.tab)
 	if n == 0 {
-		return nil, "", &os.PathError{
-			Op:   "open",
-			Path: name,
-			Err:  fmt.Errorf("no filesystem is mounted"),
-		}
+		return nil, "", fmt.Errorf("mtab is empty")
 	}
+
 	// Files may shadow each other.
 	// The last mounted file system is tested first.
 	for i := n - 1; i >= 0; i-- {

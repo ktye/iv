@@ -23,7 +23,7 @@ func (v varfs) FileSystem(root string) (FileSystem, error) {
 		return nil, fmt.Errorf("varfs: apl is not connected")
 	}
 	if root != "/" {
-		return nil, fmt.Errorf("varfs can only be registerd with with root file: var:///")
+		return nil, fmt.Errorf("varfs can only be registerd with root file: var:///")
 	}
 	return v, nil
 }
