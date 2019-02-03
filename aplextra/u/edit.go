@@ -78,9 +78,11 @@ func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	sam.Commands = map[string]func(*ui.Sam, string){
 		"q": func(s *ui.Sam, args string) {
+			// Quit.
 			window.Top.W = save
 		},
 		"⍎": func(s *ui.Sam, args string) {
+			// Eval apl. This may replace dot.
 			t, _ := dot(".")
 			if t == "" {
 				t, _ = dot(",")
@@ -101,6 +103,7 @@ func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 		},
 		"w": func(s *ui.Sam, args string) {
+			// Write.
 			wc, err := aio.Create(args)
 			if err != nil {
 				sam.Cmd.AppendText(err.Error())
@@ -110,6 +113,11 @@ func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			if _, err := sam.Edt.TextBox.Text().WriteTo(wc); err != nil {
 				sam.Cmd.AppendText(err.Error())
 			}
+		},
+		"l": func(s *ui.Sam, args string) {
+			// Long lines: toggle nowrap.
+			s.Cmd.Nowrap = !s.Cmd.Nowrap
+			s.Edt.Nowrap = !s.Edt.Nowrap
 		},
 	}
 	window.Top.W = sam
