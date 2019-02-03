@@ -8,6 +8,7 @@ import (
 
 	"github.com/eaburns/T/rope"
 	"github.com/ktye/iv/apl"
+	aio "github.com/ktye/iv/apl/io"
 	"github.com/ktye/iv/apl/scan"
 	"github.com/ktye/ui"
 )
@@ -98,6 +99,17 @@ func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				sam.Cmd.AppendText(err.Error())
 			}
 
+		},
+		"w": func(s *ui.Sam, args string) {
+			wc, err := aio.Create(args)
+			if err != nil {
+				sam.Cmd.AppendText(err.Error())
+				return
+			}
+			defer wc.Close()
+			if _, err := sam.Edt.TextBox.Text().WriteTo(wc); err != nil {
+				sam.Cmd.AppendText(err.Error())
+			}
 		},
 	}
 	window.Top.W = sam
