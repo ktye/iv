@@ -39,7 +39,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			}
 			size := apl.ArraySize(av)
 			if size != len(mask) {
-				return nil, fmt.Errorf("at: array returned by function g has wrong size", v)
+				return nil, fmt.Errorf("at: array returned by function g has wrong size")
 			}
 			for i := range mask {
 				if err := apl.ArrayBounds(av, i); err != nil {
