@@ -84,6 +84,10 @@ func (l guardList) String(a *Apl) string {
 // is nil.
 // The function returns after the first evaluated expression, if it is
 // not an assignment.
+//
+// TODO: Extensions to dfns:
+//	- in a guarded expr, continue if there is an assignment
+//	- in a nonguarded expr, always continue
 func (l guardList) Eval(a *Apl) (Value, error) {
 	if len(l) == 0 {
 		return EmptyArray{}, nil
