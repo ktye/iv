@@ -90,6 +90,13 @@ func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			dsave := a.Lookup("Dot")
 			out := a.GetOutput()
 			defer func() {
+				d := a.Lookup("Dot")
+				if d != nil {
+					newdot := d.String(a)
+					if newdot != t {
+						sam.Edt.Edit("c/" + sam.Edt.Escape(newdot) + "/")
+					}
+				}
 				a.Assign("Dot", dsave)
 				a.SetOutput(out)
 			}()
