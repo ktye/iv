@@ -1,5 +1,7 @@
 package apl
 
+import "io"
+
 // Value is the result of an evaluation.
 // Any type that implements the interface is a valid type for apl.
 //
@@ -24,4 +26,12 @@ type Value interface {
 
 	// TODO: should we require a serialization interface?
 	// or serialize optionally if a Value implements an Encoder?
+}
+
+// VarReader is implemented by Values that are able to parse from a Reader.
+// The ReadFrom method must return a new value of the same type.
+// The function should be able to parse the format of it's String method.
+// It is used by varfs in package io.
+type VarReader interface {
+	ReadFrom(*Apl, io.Reader) (Value, error)
 }

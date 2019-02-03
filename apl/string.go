@@ -2,6 +2,8 @@ package apl
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"reflect"
 )
 
@@ -15,6 +17,14 @@ func (s String) String(a *Apl) string {
 
 func (s String) Eval(a *Apl) (Value, error) {
 	return s, nil
+}
+
+func (s String) ReadFrom(a *Apl, r io.Reader) (Value, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	return String(b), nil
 }
 
 // Less implements primitives.lesser to be used for comparison and sorting.

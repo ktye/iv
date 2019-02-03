@@ -32,6 +32,54 @@ func (v varfs) String() string {
 	return "var:///"
 }
 
+func (v varfs) Write(name string) (rc io.WriteCloser, err error) {
+	defer func() {
+		if err != nil {
+			err = &os.PathError{
+				Op:   "write",
+				Path: name,
+				Err:  err,
+			}
+		}
+	}()
+
+	if strings.HasSuffix(name, "/") {
+		return nil, fmt.Errorf("varfs: cannot write to directory")
+	}
+	// Package variables are immutable.
+	if strings.ContainsRune(name, '→') {
+		return nil, fmt.Errorf("varfs: cannot update package variable")
+	}
+	x := v.Apl.Lookup(name)
+	if x == nil {
+		return nil, fmt.Errorf("varfs: variable does not exist")
+	}
+	if vr, ok := x.(apl.VarReader); ok {
+		var b bytes.Buffer
+		return varWriter{Buffer: &b, a: v.Apl, v: vr, name: name}, nil
+	}
+	return nil, fmt.Errorf("varfs: type is not assignable: %T", x)
+}
+
+type varWriter struct {
+	*bytes.Buffer
+	a    *apl.Apl
+	v    apl.VarReader
+	name string
+}
+
+func (vw varWriter) Close() error {
+	t := reflect.TypeOf(vw.v)
+	v, err := vw.v.ReadFrom(vw.a, vw.Buffer)
+	if err != nil {
+		return err
+	}
+	if nt := reflect.TypeOf(v); nt != t {
+		return fmt.Errorf("%T ReadFrom returns a wrong type: %T", t, nt)
+	}
+	return vw.a.Assign(vw.name, v)
+}
+
 func (v varfs) Open(name, mpt string) (io.ReadCloser, error) {
 	list := func() (io.ReadCloser, error) {
 		pkg := strings.TrimSuffix(name, "/")
