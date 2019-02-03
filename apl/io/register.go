@@ -54,4 +54,8 @@ func Register(a *apl.Apl, name string) {
 		"exec",
 	))
 	RegisterProtocol("var", varfs{Apl: a})
+	RegisterProtocol("env", envfs{})
+	mount(a, apl.String("/"), apl.String("."))
+	mount(a, apl.String("/v/"), apl.String("var:///"))
+	mount(a, apl.String("/e/"), apl.String("env:///"))
 }
