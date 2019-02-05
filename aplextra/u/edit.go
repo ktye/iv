@@ -116,8 +116,10 @@ func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				sam.Cmd.AppendText(err.Error())
 				return
 			}
-			defer wc.Close()
 			if _, err := sam.Edt.TextBox.Text().WriteTo(wc); err != nil {
+				sam.Cmd.AppendText(err.Error())
+			}
+			if err := wc.Close(); err != nil {
 				sam.Cmd.AppendText(err.Error())
 			}
 		},
