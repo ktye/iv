@@ -121,7 +121,5 @@ func (a *Apl) GetOutput() io.Writer {
 }
 
 func newEnv() *env {
-	return &env{vars: map[string]Value{
-		"⎕NL": String("\n"),
-	}}
+	return &env{vars: map[string]Value{}}
 }
