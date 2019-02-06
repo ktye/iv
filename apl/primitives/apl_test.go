@@ -99,10 +99,13 @@ var testCases = []struct {
 	{"1 2⋄3 4", "1 2\n3 4", 0},
 	{"X←3 ⋄ Y←4", "", 0},
 
-	{"⍝ Index origin", "apl/var.go", 0},
+	{"⍝ Index origin, print precision", "apl/var.go", 0},
 	{"⎕IO←0 ⋄ ⍳3", "0 1 2", 0},
 	{"⎕IO", "1", 0},
 	{"⎕IO←0 ⋄ ⎕IO", "0", 0},
+	{"⎕PP←1 ⋄ ⎕PP", "1", 0},
+	{"⎕PP←1 2⋄ ⎕PP", "1 2", 0},
+	{"⎕PP←3 ⋄ 1.23456789", "1.23", 0},
 
 	{"⍝ Type, typeof", "apl/primitives/type.go", 0},
 	{"⌶'a'", "apl.String", 0},

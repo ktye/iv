@@ -39,26 +39,17 @@ func init() {
 func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// With 1 or 2 integers, set temporarily set PP.
 	toIdx := ToIndexArray(nil)
-	ia, ok := toIdx.To(a, L)
-	if _, isempty := ia.(apl.EmptyArray); isempty {
-		return nil, fmt.Errorf("format: left argument is empty")
-	}
-	if ok {
-		idx := ia.(apl.IndexArray).Ints
-		var pp [2]int
-		if len(idx) == 1 {
-			pp[1] = int(idx[0])
-		} else if len(idx) == 2 {
-			pp[0] = int(idx[0])
-			pp[1] = int(idx[1])
-		} else {
-			return nil, fmt.Errorf("format: left argument has wrong number of integers")
-		}
-		a.Tower.SetPP(pp)
+	if _, ok := toIdx.To(a, L); ok {
+		save := a.PP
 		defer func() {
-			a.Tower.SetPP(pp)
+			a.PP = save
+			a.Tower.SetPP(save)
 		}()
+		if err := a.SetPP(L); err != nil {
+			return nil, err
+		}
 	}
+
 	return apl.String(R.String(a)), nil
 }
 

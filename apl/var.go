@@ -52,6 +52,8 @@ func (a *Apl) AssignEnv(name string, v Value, env *env) error {
 			}
 		}
 		return fmt.Errorf("cannot set index origin: %T", v)
+	} else if name == "⎕PP" {
+		return a.SetPP(v)
 	}
 
 	if _, ok := v.(Function); ok && isfunc != true {
@@ -87,6 +89,11 @@ func (a *Apl) Lookup(name string) Value {
 func (a *Apl) LookupEnv(name string) (Value, *env) {
 	if name == "⎕IO" {
 		return Index(a.Origin), nil
+	} else if name == "⎕PP" {
+		if a.PP[0] == 0 {
+			return Index(a.PP[1]), nil
+		}
+		return IndexArray{Dims: []int{2}, Ints: []int{a.PP[0], a.PP[1]}}, nil
 	}
 
 	if idx := strings.Index(name, "→"); idx != -1 {
@@ -217,4 +224,52 @@ func isVarname(s string) (ok, isfunc bool) {
 		}
 	}
 	return true, upper == false
+}
+
+func (a *Apl) SetPP(R Value) error {
+	if num, ok := R.(Number); ok {
+		if i, ok := num.ToIndex(); ok {
+			a.PP = [2]int{0, i}
+			a.Tower.SetPP(a.PP)
+			return nil
+		} else {
+			return fmt.Errorf("PP: number must be integer")
+		}
+	}
+	if _, ok := R.(EmptyArray); ok {
+		a.PP = [2]int{0, 6} // default value.
+		a.Tower.SetPP(a.PP)
+		return nil
+	}
+	ar, ok := R.(Array)
+	if ok == false {
+		return fmt.Errorf("PP: argument must be 1 or 2 integers: %T", R)
+	}
+
+	n := ar.Size()
+	if n < 1 || n > 2 {
+		return fmt.Errorf("PP: argument must be 1 or 2 integers: %T", R)
+	}
+
+	var pp [2]int
+	for i := 0; i < n; i++ {
+		v := ar.At(i)
+		if num, ok := v.(Number); ok {
+			if n, ok := num.ToIndex(); ok {
+				pp[i] = n
+			} else {
+				return fmt.Errorf("PP: numbers must be integers: %T", v)
+			}
+		} else {
+			fmt.Errorf("PP: argument must be 1 or 2 integers: %T", R)
+		}
+	}
+	if n == 1 {
+		pp[1] = pp[0]
+		pp[0] = 0
+	}
+
+	a.PP = pp
+	a.Tower.SetPP(a.PP)
+	return nil
 }
