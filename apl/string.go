@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"reflect"
+	"strconv"
 )
 
 type String string
@@ -13,6 +14,10 @@ type String string
 // To quote a string, use format (⍕S).
 func (s String) String(a *Apl) string {
 	return string(s)
+}
+
+func (s String) MarshalText() ([]byte, error) {
+	return []byte(strconv.Quote(string(s))), nil
 }
 
 func (s String) Eval(a *Apl) (Value, error) {

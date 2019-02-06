@@ -26,6 +26,9 @@ type Value interface {
 
 	// TODO: should we require a serialization interface?
 	// or serialize optionally if a Value implements an Encoder?
+
+	// A Value may implement encoding.Text[Un]Marshaller.
+	// This is used as a preference over String, in ¯1⍕V for serialization.
 }
 
 // VarReader is implemented by Values that are able to parse from a Reader.

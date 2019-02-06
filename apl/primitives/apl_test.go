@@ -559,6 +559,9 @@ var testCases = []struct {
 	{"`%.3f@%.1f ⍕1J2", "2.236@63.4", small}, // format with string
 	{"`%.3f ⍕¯1.23456", "¯1.235", 0},         // format with string
 	{"`-%.3f ⍕¯1.23456", "-1.235", 0},        // format with string (normal minus sign)
+	{`⍕"alpha"`, `alpha`, 0},                 // format with default stringer
+	{`¯1⍕"alpha"`, `"alpha"`, 0},             // format with text marshaler
+	{`¯1⍕"al\npha"`, `"al\npha"`, 0},         // format with text marshaler
 	{`⍎"1+1"`, "2", 0},                       // evaluate expression
 	{"⍝ TODO: dyadic format with specification.", "", 0},
 	{"⍝ TODO: dyadic execute with namespace.", "", 0},

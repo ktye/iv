@@ -1,6 +1,7 @@
 package primitives
 
 import (
+	"encoding"
 	"fmt"
 	"reflect"
 
@@ -35,20 +36,27 @@ func init() {
 }
 
 // Format converts the argument to string.
-// If L is a number it is used as the precision.
-// If L is two numbers, it is used as width and precision.
+// If L is a number it is used as the precision (sets PP).
+// If L is two numbers, it is used as width and precision (sets PP).
 // If L is a string and R a Number or uniform numeric array, L is used as a format string.
+// If L is ¯1, R is formatted with MarshalText, if it implements an encoding.TextMarshaller.
 func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	textenc := false
+
 	// With 1 or 2 integers, set temporarily set PP.
 	toIdx := ToIndexArray(nil)
-	if _, ok := toIdx.To(a, L); ok {
-		save := a.PP
-		defer func() {
-			a.PP = save
-			a.Tower.SetPP(save)
-		}()
-		if err := a.SetPP(L); err != nil {
-			return nil, err
+	if ia, ok := toIdx.To(a, L); ok {
+		if idx, ok := ia.(apl.IndexArray); ok && len(idx.Ints) == 1 && idx.Ints[0] == -1 {
+			textenc = true
+		} else {
+			save := a.PP
+			defer func() {
+				a.PP = save
+				a.Tower.SetPP(save)
+			}()
+			if err := a.SetPP(L); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -74,6 +82,14 @@ func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 					a.Tower.Numbers[t] = numeric
 				}()
 			}
+		}
+	}
+
+	if m, ok := R.(encoding.TextMarshaler); ok && textenc {
+		if b, err := m.MarshalText(); err != nil {
+			return nil, err
+		} else {
+			return apl.String(b), nil
 		}
 	}
 
