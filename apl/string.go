@@ -16,8 +16,8 @@ func (s String) String(a *Apl) string {
 	return string(s)
 }
 
-func (s String) MarshalText() ([]byte, error) {
-	return []byte(strconv.Quote(string(s))), nil
+func (s String) Marshal(a *Apl) string {
+	return strconv.Quote(string(s))
 }
 
 func (s String) Eval(a *Apl) (Value, error) {

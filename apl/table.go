@@ -2,6 +2,7 @@ package apl
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"text/tabwriter"
 )
@@ -58,4 +59,18 @@ func (t Table) String(a *Apl) string {
 		return s[:len(s)-1]
 	}
 	return s
+}
+
+func (t Table) Marshal(a *Apl) string {
+	panic("TODO: table marshal text")
+}
+
+// Csv writes the table to w in csv format.
+// L may be a dict with conforming keys of formatting values.
+func (t Table) Csv(a *Apl, L Value, w io.Writer) error {
+	return fmt.Errorf("TODO: table csv")
+}
+
+func (t Table) WriteFormatted(a *Apl, L Object, w io.Writer) error {
+	return fmt.Errorf("TODO: table write formatted")
 }

@@ -1,7 +1,8 @@
 package primitives
 
 import (
-	"encoding"
+	"bytes"
+	"encoding/csv"
 	"fmt"
 	"reflect"
 
@@ -24,6 +25,12 @@ func init() {
 		Domain: Dyadic(nil),
 		fn:     format,
 	})
+	register(primitive{
+		symbol: "⍕",
+		doc:    "format, convert to string",
+		Domain: Dyadic(Split(IsObject(nil), IsTable(nil))),
+		fn:     formatTable,
+	})
 	// TODO: dyadic ⍕: format with specification.
 
 	register(primitive{
@@ -38,8 +45,9 @@ func init() {
 // Format converts the argument to string.
 // If L is a number it is used as the precision (sets PP).
 // If L is two numbers, it is used as width and precision (sets PP).
+// If L is the string "csv", csv encoding is used.
 // If L is a string and R a Number or uniform numeric array, L is used as a format string.
-// If L is ¯1, R is formatted with MarshalText, if it implements an encoding.TextMarshaller.
+// If L is ¯1, R is formatted with Marshal, if it implements an Marshaler.
 func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	textenc := false
 
@@ -62,6 +70,9 @@ func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// L string, R numeric: set format numeric format.
 	if s, ok := L.(apl.String); ok {
+		if s == "csv" {
+			return formatCsv(a, nil, R)
+		}
 		var n apl.Number
 		if num, ok := R.(apl.Number); ok {
 			n = num
@@ -85,15 +96,66 @@ func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 
-	if m, ok := R.(encoding.TextMarshaler); ok && textenc {
-		if b, err := m.MarshalText(); err != nil {
-			return nil, err
-		} else {
-			return apl.String(b), nil
-		}
+	if m, ok := R.(apl.Marshaler); ok && textenc {
+		return apl.String(m.Marshal(a)), nil
 	}
 
 	return apl.String(R.String(a)), nil
+}
+
+// L is an object and R a Table.
+// Corresponding values of L are used as format arguments to values in R.
+// If L contains the key CSV, formatCSV is used.
+func formatTable(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	t := R.(apl.Table)
+	d := L.(apl.Object)
+	if d.At(a, apl.String("CSV")) != nil {
+		return formatCsv(a, L, R)
+	}
+	var b bytes.Buffer
+	if err := t.WriteFormatted(a, d, &b); err != nil {
+		return nil, err
+	}
+	return apl.String(b.Bytes()), nil
+}
+
+// formatCSV formats R in csv format.
+// R must be a rank 2 array or a table.
+// If L with corresponding keys.
+func formatCsv(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	var b bytes.Buffer
+	w := csv.NewWriter(&b)
+
+	ar, ok := R.(apl.Array)
+	if ok {
+		shape := ar.Shape()
+		if len(shape) != 2 {
+			return nil, fmt.Errorf("format csv: R must be rank 2: shape is %v", shape)
+		}
+		if shape[0] == 0 || shape[1] == 0 {
+			return apl.String(""), nil
+		}
+		records := make([]string, shape[1])
+		idx := 0
+		for i := 0; i < shape[0]; i++ {
+			for k := 0; k < shape[1]; k++ {
+				records[k] = ar.At(idx).String(a)
+				idx++
+			}
+			if err := w.Write(records); err != nil {
+				return nil, fmt.Errorf("format csv: %s", err)
+			}
+		}
+		w.Flush()
+		return apl.String(b.Bytes()), nil
+	} else if t, ok := R.(apl.Table); ok {
+		var b bytes.Buffer
+		if err := t.Csv(a, L, &b); err != nil {
+			return nil, err
+		}
+		return apl.String(b.Bytes()), nil
+	}
+	return nil, fmt.Errorf("format csv: unexpected type: %T", R)
 }
 
 // Execute evaluates the string in R.
