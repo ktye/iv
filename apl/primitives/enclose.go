@@ -20,6 +20,12 @@ func init() {
 		Domain: Dyadic(Split(IsString(nil), strvec{})),
 		fn:     strjoin,
 	})
+	register(primitive{
+		symbol: "⊃",
+		doc:    "split runes",
+		Domain: Monadic(IsString(nil)),
+		fn:     runesplit,
+	})
 }
 
 // strvec accepts an array if all elements are strings.
@@ -62,4 +68,13 @@ func strjoin(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		v[i] = string(s.(apl.String))
 	}
 	return apl.String(strings.Join(v, string(L.(apl.String)))), nil
+}
+
+func runesplit(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	r := []rune(string(R.(apl.String)))
+	v := make([]string, len(r))
+	for i, s := range r {
+		v[i] = string(s)
+	}
+	return apl.StringArray{Dims: []int{len(v)}, Strings: v}, nil
 }
