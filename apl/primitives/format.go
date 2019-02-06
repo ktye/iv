@@ -2,6 +2,7 @@ package primitives
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
@@ -36,6 +37,7 @@ func init() {
 // Format converts the argument to string.
 // If L is a number it is used as the precision.
 // If L is two numbers, it is used as width and precision.
+// If L is a string and R a Number or uniform numeric array, L is used as a format string.
 func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// With 1 or 2 integers, set temporarily set PP.
 	toIdx := ToIndexArray(nil)
@@ -47,6 +49,31 @@ func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}()
 		if err := a.SetPP(L); err != nil {
 			return nil, err
+		}
+	}
+
+	// L string, R numeric: set format numeric format.
+	if s, ok := L.(apl.String); ok {
+		var n apl.Number
+		if num, ok := R.(apl.Number); ok {
+			n = num
+		} else if u, ok := R.(apl.Uniform); ok {
+			z := u.Zero()
+			if num, ok := z.(apl.Number); ok {
+				n = num
+			}
+		}
+		if n != nil {
+			t := reflect.TypeOf(n)
+			if numeric, ok := a.Tower.Numbers[t]; ok {
+				save := numeric.Format
+				numeric.Format = string(s)
+				a.Tower.Numbers[t] = numeric
+				defer func() {
+					numeric.Format = save
+					a.Tower.Numbers[t] = numeric
+				}()
+			}
 		}
 	}
 

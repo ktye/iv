@@ -28,7 +28,7 @@ func (c Complex) String(a *apl.Apl) string {
 		s = fmt.Sprintf(format, complex128(c))
 	} else {
 		a, b := real(c), imag(c)
-		if strings.Index(format, "a") != -1 {
+		if strings.Index(format, "a") != -1 || strings.Index(format, "@") != -1 {
 			a, b = cmplx.Polar(complex128(c))
 			b *= 180.0 / math.Pi
 			if b < 0 {

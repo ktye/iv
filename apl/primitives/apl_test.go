@@ -550,12 +550,16 @@ var testCases = []struct {
 	{"A←2 3 4⍴⍳24⋄2 1↓[3 2]A", "7 8\n11 12\n\n19 20\n23 24", 0},
 
 	{"⍝ Format as a string, Execute", "apl/primitives/format.go", 0},
-	{"⍕10", "10", 0},                    // format as string
-	{"⍕10.1", "10.1", 0},                // format as string
-	{"⍕123.45678901234", "123.457", 0},  // format as string
-	{"4⍕123.45678901234", "123.5", 0},   // format with precision
-	{"⍴⊃(7 1⍕123.45678901234)", "7", 0}, // format with width and precision
-	{`⍎"1+1"`, "2", 0},                  // evaluate expression
+
+	{"⍕10", "10", 0},                         // format as string
+	{"⍕10.1", "10.1", 0},                     // format as string
+	{"⍕123.45678901234", "123.457", 0},       // format as string
+	{"4⍕123.45678901234", "123.5", 0},        // format with precision
+	{"⍴⊃(7 1⍕123.45678901234)", "7", 0},      // format with width and precision
+	{"`%.3f@%.1f ⍕1J2", "2.236@63.4", small}, // format with string
+	{"`%.3f ⍕¯1.23456", "¯1.235", 0},         // format with string
+	{"`-%.3f ⍕¯1.23456", "-1.235", 0},        // format with string (normal minus sign)
+	{`⍎"1+1"`, "2", 0},                       // evaluate expression
 	{"⍝ TODO: dyadic format with specification.", "", 0},
 	{"⍝ TODO: dyadic execute with namespace.", "", 0},
 
