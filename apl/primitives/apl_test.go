@@ -2,7 +2,6 @@ package primitives
 
 import (
 	"fmt"
-	"math"
 	"reflect"
 	"regexp"
 	"strings"
@@ -86,7 +85,7 @@ var testCases = []struct {
 	{"15 1 2 7 ∨ 35 1 4 0", "5 1 2 7", small},   // greatest common divisor
 	{"0∨3", "3", 0},                             // gcm with 0
 	{"3∨0", "3", 0},                             // gcm with 0
-	{"3^3.6", "18", short | small},              // lcm
+	{"3^3.6", "18", small},                      // lcm
 	//{"¯29J53^¯1J107", "¯853J¯329", 0},          // lcm
 	//{"2 3 4 ∧ 0j1 1j2 2j3", "0J2 3J6 8J12", 0}, // least common multiple
 	//{"2j2 2j4 ∧ 5j5 4j4", "10J10 ¯4J12", 0},    // least common multiple
@@ -198,13 +197,13 @@ var testCases = []struct {
 	{"4 5 6⍷3 3⍴⍳9", "0 0 0\n1 0 0\n0 0 0", 0},
 
 	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "apl/primitives/elementary.go", 0},
-	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", short | cmplx},      // magnitude
+	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", cmplx},              // magnitude
 	{"3 3 ¯3 ¯3|¯5 5 ¯4 4", "1 2 ¯1 ¯2", 0},                  // residue
-	{"0.5|3.12 ¯1 ¯0.6", "0.12 0 0.4", short},                // residue
-	{"¯1 0 1|¯5.25 0 2.41", "¯0.25 0 0.41", short},           // residue
+	{"0.5|3.12 ¯1 ¯0.6", "0.12 0 0.4", 0},                    // residue
+	{"¯1 0 1|¯5.25 0 2.41", "¯0.25 0 0.41", 0},               // residue
 	{"1j2|2j3 3j4 5j6", "1J1 ¯1J1 0J1", cmplx},               // complex residue
 	{"4J6|7J10", "3J4", cmplx},                               // complex residue
-	{"¯10 7J10 .3|17 5 10", "¯3 ¯5J7 0.1", short | cmplx},    // residue
+	{"¯10 7J10 .3|17 5 10", "¯3 ¯5J7 0.1", cmplx},            // residue
 	{"⌊¯2.3 0.1 100 3.3", "¯3 0 100 3", 0},                   // floor
 	{"⌊0.5 + 0.4 0.5 0.6", "0 1 1", 0},                       // floor
 	{"⌊1j3.2 3.3j2.5 ¯3.3j¯2.5", "1J3 3J2 ¯3J¯3", cmplx},     // complex floor
@@ -225,18 +224,18 @@ var testCases = []struct {
 	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", 0}, // max
 
 	{"⍝ Factorial, gamma, binomial", "apl/primitives/elementary.go", 0},
-	{"!4", "24", sfloat},                                         // factorial
-	{"!1 2 3 4 5", "1 2 6 24 120", sfloat},                       // factorial
-	{"!3J2", "¯3.0115J1.7702", cmplx | small},                    // complex gamma
-	{"!.5 ¯.05", "0.88623 1.0315", short | small},                // real gamma (APL2 doc: "0.0735042656 1.031453317"?)
-	{"2!5", "10", small},                                         // binomial
-	{"3.2!5.2", "10.92", short | small},                          // binomial, floats with beta function
-	{"3!¯2", "¯4", small},                                        // binomial, negative R
-	{"¯6!¯3", "¯10", small},                                      // binomial negative L and R
-	{"2 3 4!6 18 24", "15 816 10626", short | small},             // binomial
-	{"3!.05 2.5 ¯3.6", "0.015437 0.3125 ¯15.456", short | small}, // binomial
-	{"0 1 2 3!3", "1 3 3 1", small},                              // binomial coefficients
-	{"2!3J2", "1J5", small | cmplx},                              // binomial complex
+	{"!4", "24", sfloat},                                  // factorial
+	{"!1 2 3 4 5", "1 2 6 24 120", sfloat},                // factorial
+	{"!3J2", "¯3.0115J1.7702", cmplx | small},             // complex gamma
+	{"!.5 ¯.05", "0.886227 1.03145", small},               // real gamma (APL2 doc: "0.0735042656 1.031453317"?)
+	{"2!5", "10", small},                                  // binomial
+	{"3.2!5.2", "10.92", small},                           // binomial, floats with beta function
+	{"3!¯2", "¯4", small},                                 // binomial, negative R
+	{"¯6!¯3", "¯10", small},                               // binomial negative L and R
+	{"2 3 4!6 18 24", "15 816 10626", small},              // binomial
+	{"3!.05 2.5 ¯3.6", "0.0154375 0.3125 ¯15.456", small}, // binomial
+	{"0 1 2 3!3", "1 3 3 1", small},                       // binomial coefficients
+	{"2!3J2", "1J5", small | cmplx},                       // binomial complex
 
 	{"⍝ Match, Not match, tally, depth", "apl/primitives/match.go", 0},
 	{"≡5", "0", 0},          // depth
@@ -467,27 +466,27 @@ var testCases = []struct {
 	{"⍝ TODO expand with selective specification", "", 0},
 
 	{"⍝ Pi times, circular, trigonometric", "apl/primitives/elementary.go", 0},
-	{"○0 1 2", "0 3.1416 6.2832", short | small},            // pi times
+	{"○0 1 2", "0 3.14159 6.28319", small},                  // pi times
 	{"*○0J1", "¯1.00J0.00", cmplxf | small},                 // Euler identity
-	{"0 ¯1 ○ 1", "0 1.5708", short | small},                 //
-	{"1○(○1)÷2 3 4", "1 0.86603 0.70711", short | small},    //
-	{"2○(○1)÷3", "0.5", short | small},                      //
+	{"0 ¯1 ○ 1", "0 1.5708", small},                         //
+	{"1○(○1)÷2 3 4", "1 0.866025 0.707107", small},          //
+	{"2○(○1)÷3", "0.5", small},                              //
 	{"9 11○3.5J¯1.2", "3.5 ¯1.2", small},                    //
 	{"9 11∘.○3.5J¯1.2 2J3 3J4", "3.5 2 3\n¯1.2 3 4", small}, //
 	{"¯4○¯1", "0", small},                                   //
-	{"3○2", "¯2.185", short | small},                        //
-	{"2○1", "0.5403", short | small},                        //
-	{"÷3○2", "¯0.45766", short | small},                     //
-	{"1○○30÷180", "0.5", short | small},
-	{"2○○45÷180", "0.70711", short | small},
-	{"¯1○1", "1.5708", short | small},
-	{"¯2○.54032023059", "0.99998", short | small},
-	{"(¯1○.5)×180÷○1", "30", short | small},
-	{"(¯3○1)×180÷○1", "45", short | small},
-	{"5○1", "1.1752", short | small},
-	{"6○1", "1.5431", short | small},
-	{"¯5○1.175201194", "1", short | small},
-	{"¯6○1.543080635", "1", short | small},
+	{"3○2", "¯2.18504", small},                              //
+	{"2○1", "0.540302", small},                              //
+	{"÷3○2", "¯0.457658", small},                            //
+	{"1○○30÷180", "0.5", small},
+	{"2○○45÷180", "0.707107", small},
+	{"¯1○1", "1.5708", small},
+	{"¯2○.54032023059", "0.999979", small},
+	{"(¯1○.5)×180÷○1", "30", small},
+	{"(¯3○1)×180÷○1", "45", small},
+	{"5○1", "1.1752", small},
+	{"6○1", "1.54308", small},
+	{"¯5○1.175201194", "1", small},
+	{"¯6○1.543080635", "1", small},
 
 	{"⍝ Take, drop", "apl/primitives/take.go", 0}, // Monadic First and split are not implemented.
 	{"5↑'ABCDEF'", "A B C D E", 0},
@@ -548,8 +547,12 @@ var testCases = []struct {
 	{"A←2 3 4⍴⍳24⋄2 1↓[3 2]A", "7 8\n11 12\n\n19 20\n23 24", 0},
 
 	{"⍝ Format as a string, Execute", "apl/primitives/format.go", 0},
-	{"⍕10", "10", 0},   // format as string
-	{`⍎"1+1"`, "2", 0}, // evaluate expression
+	{"⍕10", "10", 0},                    // format as string
+	{"⍕10.1", "10.1", 0},                // format as string
+	{"⍕123.45678901234", "123.457", 0},  // format as string
+	{"4⍕123.45678901234", "123.5", 0},   // format with precision
+	{"⍴⊃(7 1⍕123.45678901234)", "7", 0}, // format with width and precision
+	{`⍎"1+1"`, "2", 0},                  // evaluate expression
 	{"⍝ TODO: dyadic format with specification.", "", 0},
 	{"⍝ TODO: dyadic execute with namespace.", "", 0},
 
@@ -604,15 +607,15 @@ var testCases = []struct {
 	{"⍝ Enclose, string catenation, join strings, newline", "apl/primitives/enclose.go", 0},
 	{`⊂'alpha'`, "alpha", 0},
 	{`"+"⊂'alpha'`, "a+l+p+h+a", 0},
-	{`"\n"⊂"alpha" "beta" "gamma"`, `alpha\nbeta\ngamma`, 0},
+	{`"\n"⊂"alpha" "beta" "gamma"`, "alpha\nbeta\ngamma", 0},
 	{"`alpha`beta`gamma", "alpha beta gamma", 0},
 	{"(`alpha`beta`gamma)", "alpha beta gamma", 0},
 	{"`alpha`beta`gamma⋄", "alpha beta gamma", 0},
 
 	{"⍝ Domino, solve linear system", "apl/primitives/domino.go", 0},
-	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", short},
+	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", 0},
 	// TODO: this fails for big.Float. Remove sfloat and debug
-	{"(1 ¯2 0)⌹3 3⍴3 2 ¯1 2 ¯2 4 ¯1 .5 ¯1", "1\n¯2\n¯2", short | sfloat},
+	{"(1 ¯2 0)⌹3 3⍴3 2 ¯1 2 ¯2 4 ¯1 .5 ¯1", "1\n¯2\n¯2", sfloat},
 	// A←2a30
 	// B←1a10
 	// RHS←A+B**(¯1+⍳6)×○1÷3
@@ -650,7 +653,7 @@ var testCases = []struct {
 	{"+/+/+/+/1 2 3", "6", 0},
 	{`+.×/2 3 4`, "24", 0},
 	// {`S←0.0 n→f "%.0f"⋄ +.×.*/2 3 4`, "2417851639229258349412352", 0},
-	{`+.×.*/2 3 4`, "2.4179e+24", small | short},
+	{`+.×.*/2 3 4`, "2.41785E+24", small},
 	{`+.*.×/2 3 4`, "24", 0},
 
 	{"⍝ Identify item for reduction over empty array", "apl/operators/identity.go", 0},
@@ -659,8 +662,8 @@ var testCases = []struct {
 	{"×/⍳0", "1", 0},
 	{"÷/⍳0", "1", 0},
 	{"|/⍳0", "0", 0},
-	{"⌊/⍳0", fmt.Sprintf("¯%v", float64(math.MaxFloat64)), 0},
-	{"⌈/⍳0", fmt.Sprintf("%v", float64(math.MaxFloat64)), 0},
+	{"⌊/⍳0", "¯1.79769E+308", small},
+	{"⌈/⍳0", "1.79769E+308", small},
 	{"*/⍳0", "1", 0},
 	{"!/⍳0", "1", 0},
 	{"^/⍳0", "1", 0},
@@ -706,15 +709,15 @@ var testCases = []struct {
 
 	{"⍝ Composition", "apl/operators/jot.go", 0},
 	{"+/∘⍳¨2 4 6", "3 10 21", 0}, // Form I
-	{"1∘○ 10 20 30", "¯0.54402 0.91295 ¯0.98803", short | small},
-	{"+∘÷/40⍴1", "1.618", short},       // Form IV, golden ratio (continuous-fraction)
+	{"1∘○ 10 20 30", "¯0.544021 0.912945 ¯0.988032", small},
+	{"+∘÷/40⍴1", "1.61803", 0},         // Form IV, golden ratio (continuous-fraction)
 	{"(*∘0.5)4 16 25", "2 4 5", float}, // Form III
 
 	{"⍝ Power operator", "apl/operators/power.go", 0},
-	{"⍟⍣2 +2 3 4", "¯0.36651 0.094048 0.32663", short | float}, // log log
+	{"⍟⍣2 +2 3 4", "¯0.366513 0.0940478 0.326634", float}, // log log
 	// TODO: 1+∘÷⍣=1 oscillates for big.Float.
 	// TODO: Add comparison tolerance and remove sfloat.
-	{"1+∘÷⍣=1", "1.618", short | small}, // fixed point iteration golden ratio
+	{"1+∘÷⍣=1", "1.61803", small}, // fixed point iteration golden ratio
 	{"⍝ TODO: function inverse", "", 0},
 
 	{"⍝ Rank operator", "apl/operators/rank.go", 0},
@@ -736,7 +739,7 @@ var testCases = []struct {
 	{"10×@2 4⍳5", "1 20 3 40 5", 0},
 	{`(+\@2 4)4 3⍴⍳12`, "1 2 3\n4 9 15\n7 8 9\n10 21 33", 0},
 	{"0@(2∘|)⍳5", "0 2 0 4 0", 0},
-	{"÷@(2∘|)⍳5", "1 2 0.33333 4 0.2", short},
+	{"÷@(2∘|)⍳5", "1 2 0.333333 4 0.2", 0},
 	{"⌽@(2∘|)⍳5", "5 2 3 4 1", 0},
 
 	{"⍝ Stencil", "apl/operators/stencil.go", 0},
@@ -837,7 +840,7 @@ var testCases = []struct {
 	{"f←{⍺←3⋄⍺+⍵}⋄ f 4 ⋄ 1 f 4", "7\n5", 0},
 
 	{"⍝ Recursion", "apl/lambda.go", 0},
-	{`f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10`, "3628800", short | small},
+	{`f←{⍵≤1: 1 ⋄ ⍵×∇⍵-1} ⋄ f 10`, "3628800", small},
 	{"S←0{⍺>20:⍺⋄⍵∇⎕←⍺+⍵}1", "1\n2\n3\n5\n8\n13\n21\n34", 0},
 
 	{"⍝ Tail call", "apl/lambda.go", 0},
@@ -853,14 +856,14 @@ var testCases = []struct {
 	{"6(+,-,×,÷)2", "8 4 12 3", 0},
 	{"6(⌽+,-,×,÷)2", "3 12 4 8", 0},
 	{"(⍳12) (⍳∘1 ≥)9", "9", 0},
-	{"(*-)1", "0.36788", short | float},
-	{"2(*-)1", "2.7183", short | float},
-	{"1(*-)2", "0.36788", short | float},
+	{"(*-)1", "0.367879", float},
+	{"2(*-)1", "2.71828", float},
+	{"1(*-)2", "0.367879", float},
 	{"3(÷+×-)1", "0.125", 0},
 	{"(÷+×-)4", "¯0.0625", 0},
 	{"(⌊÷+×-)4", "¯0.25", 0},
 	{"6(⌊÷+×-)4", "0.2", 0},
-	{"(3+*)4", "57.598", short | float}, // Agh fork
+	{"(3+*)4", "57.5982", float}, // Agh fork
 	//{"(⍳(/∘⊢)⍳)3", "1 2 2 3 3 3", 0}, // The hybrid token does not parse.
 
 	{"⍝ Go interface package strings", "apl/strings/register.go", 0},
@@ -991,9 +994,9 @@ var testCases = []struct {
 	{"⎕IO←0 ⋄ f←{(~X∊X∘.×X)⌿X←2↓⍳⍵} ⋄ f 42", "2 3 5 7 11 13 17 19 23 29 31 37 41", 0}, // 01-primes
 
 	{"⍝ π", "", 0},
-	{".5*⍨6×+/÷2*⍨⍳1000", "3.1406", short | float},
-	{"4×-/÷¯1+2×⍳100", "3.1316", short},
-	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.1216", short},
+	{".5*⍨6×+/÷2*⍨⍳1000", "3.14064", float},
+	{"4×-/÷¯1+2×⍳100", "3.13159", 0},
+	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.12159", 0},
 
 	{"⍝ Conway-completeness", "", 0},
 	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", 0},
@@ -1041,8 +1044,7 @@ func testCompare(got, exp string) bool {
 }
 
 const (
-	short  int = 1 << iota // short format
-	float                  // only for floating point towers
+	float  int = 1 << iota // only for floating point towers
 	small                  // normal tower only
 	sfloat                 // short float only
 	cmplx                  // short %g complex format
@@ -1133,11 +1135,6 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 
 		// Set numeric formats.
 		m := make(map[reflect.Type]string)
-		m[reflect.TypeOf(rat0)] = "%.5g"
-		if tc.flag&short != 0 {
-			m[reflect.TypeOf(numbers.Float(0))] = "%.5g"
-			m[reflect.TypeOf(big.Float{})] = "%.5g"
-		}
 		if tc.flag&cmplx != 0 {
 			m[reflect.TypeOf(numbers.Complex(0))] = "%.5gJ%.5g"
 			m[reflect.TypeOf(big.Complex{})] = "%.5gJ%.5g"

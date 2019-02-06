@@ -16,6 +16,7 @@ func New(w io.Writer) *Apl {
 		stdout:     w,
 		env:        newEnv(),
 		Origin:     1,
+		PP:         [2]int{0, 6},
 		primitives: make(map[Primitive][]PrimitiveHandler),
 		operators:  make(map[string][]Operator),
 		symbols:    make(map[rune]string),
@@ -32,6 +33,7 @@ type Apl struct {
 	stdout     io.Writer
 	Tower      Tower
 	Origin     int
+	PP         [2]int
 	env        *env
 	primitives map[Primitive][]PrimitiveHandler
 	operators  map[string][]Operator

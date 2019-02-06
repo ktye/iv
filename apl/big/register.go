@@ -38,10 +38,27 @@ func SetBigTower(a *apl.Apl) {
 			return Int{big.NewInt(int64(n))}
 		},
 		Uniform: func(v []apl.Value) (apl.Value, bool) { return nil, false },
+		SetPP:   func(pp [2]int) { setBigPP(pp, m) },
 	}
 	if err := a.SetTower(t); err != nil {
 		panic(err)
 	}
+}
+
+func setBigPP(pp [2]int, m map[reflect.Type]apl.Numeric) {
+	f := ""
+	if pp[0] == 0 {
+		f = fmt.Sprintf("%%.%dG", pp[1])
+	} else {
+		f = fmt.Sprintf("%%%d.%dF", pp[0], pp[1])
+	}
+	if pp == [2]int{0, 0} {
+		f = ""
+	}
+	t := reflect.TypeOf(Rat{})
+	n := m[t]
+	n.Format = f
+	m[t] = n
 }
 
 // SetPreciseTower sets the numerical tower to Float->Complex with the given precision.
@@ -63,9 +80,29 @@ func SetPreciseTower(a *apl.Apl, prec uint) {
 			return Float{big.NewFloat(float64(n)).SetPrec(prec)}
 		},
 		Uniform: func(v []apl.Value) (apl.Value, bool) { return nil, false },
+		SetPP:   func(pp [2]int) { setPrecisePP(pp, m) },
 	}
 	if err := a.SetTower(t); err != nil {
 		panic(err)
+	}
+}
+
+func setPrecisePP(pp [2]int, m map[reflect.Type]apl.Numeric) {
+	f := ""
+	if pp[0] == 0 {
+		f = fmt.Sprintf("%%.%dG", pp[1])
+	} else {
+		f = fmt.Sprintf("%%%d.%dF", pp[0], pp[1])
+	}
+	if pp == [2]int{0, 0} {
+		f = ""
+	}
+	types := []reflect.Type{reflect.TypeOf(Float{}), reflect.TypeOf(Complex{})}
+	formats := []string{f, f + "J" + f}
+	for i, t := range types {
+		n := m[t]
+		n.Format = formats[i]
+		m[t] = n
 	}
 }
 

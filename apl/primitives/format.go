@@ -16,6 +16,12 @@ func init() {
 			return apl.String(R.String(a)), nil
 		},
 	})
+	register(primitive{
+		symbol: "⍕",
+		doc:    "format, convert to string",
+		Domain: Dyadic(nil),
+		fn:     format,
+	})
 	// TODO: dyadic ⍕: format with specification.
 
 	register(primitive{
@@ -25,6 +31,35 @@ func init() {
 		fn:     execute,
 	})
 	// TODO: dyadic ⍎: execute with namespace.
+}
+
+// Format converts the argument to string.
+// If L is a number it is used as the precision.
+// If L is two numbers, it is used as width and precision.
+func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	// With 1 or 2 integers, set temporarily set PP.
+	toIdx := ToIndexArray(nil)
+	ia, ok := toIdx.To(a, L)
+	if _, isempty := ia.(apl.EmptyArray); isempty {
+		return nil, fmt.Errorf("format: left argument is empty")
+	}
+	if ok {
+		idx := ia.(apl.IndexArray).Ints
+		var pp [2]int
+		if len(idx) == 1 {
+			pp[1] = int(idx[0])
+		} else if len(idx) == 2 {
+			pp[0] = int(idx[0])
+			pp[1] = int(idx[1])
+		} else {
+			return nil, fmt.Errorf("format: left argument has wrong number of integers")
+		}
+		a.Tower.SetPP(pp)
+		defer func() {
+			a.Tower.SetPP(pp)
+		}()
+	}
+	return apl.String(R.String(a)), nil
 }
 
 // Execute evaluates the string in R.

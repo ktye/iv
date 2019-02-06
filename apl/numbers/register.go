@@ -59,6 +59,7 @@ func newTower() apl.Tower {
 			return Integer(n)
 		},
 		Uniform: makeUniform,
+		SetPP:   func(pp [2]int) { setpp(pp, m) },
 	}
 	return t
 }
@@ -77,6 +78,27 @@ func makeUniform(v []apl.Value) (apl.Value, bool) {
 	return nil, false
 }
 
+// Setpp sets default width and precision for numeric types.
+func setpp(pp [2]int, m map[reflect.Type]apl.Numeric) {
+	f := ""
+	if pp[0] == 0 {
+		f = fmt.Sprintf("%%.%dG", pp[1])
+	} else {
+		f = fmt.Sprintf("%%%d.%dF", pp[0], pp[1])
+	}
+	if pp == [2]int{0, 0} {
+		f = ""
+	}
+	types := []reflect.Type{reflect.TypeOf(Float(0)), reflect.TypeOf(Complex(0))}
+	formats := []string{f, f + "J" + f}
+	for i, t := range types {
+		n := m[t]
+		n.Format = formats[i]
+		m[t] = n
+	}
+}
+
+/* TODO remove
 type setformat struct{}
 
 func (s setformat) String(a *apl.Apl) string { return "fmt" }
@@ -102,3 +124,4 @@ func (_ setformat) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	a.Tower.Numbers[t] = num
 	return apl.String(fmt.Sprintf("%T: %q\n", n, s)), nil
 }
+*/

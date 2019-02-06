@@ -9,6 +9,7 @@ type Tower struct {
 	Numbers   map[reflect.Type]Numeric
 	FromIndex func(int) Number
 	Uniform   func([]Value) (Value, bool) // Values must already be uniform.
+	SetPP     func([2]int)
 	idx       []*Numeric
 }
 
@@ -28,6 +29,9 @@ func (a *Apl) SetTower(t Tower) error {
 		if p == nil {
 			return fmt.Errorf("not a valid tower: class %d is missing", c)
 		}
+	}
+	if t.SetPP != nil {
+		t.SetPP(a.PP)
 	}
 	a.Tower = t
 	return nil
