@@ -5,14 +5,16 @@ import (
 	"io"
 	"io/ioutil"
 	"reflect"
+	"strconv"
 )
 
 type String string
 
-// String formats s with %s by default.
-// The format can be changed in Format.String.
+// String prints a string.
+// Non-printable runes are escaped, but the enclosing quotation marks are omitted.
 func (s String) String(a *Apl) string {
-	return string(s)
+	q := strconv.Quote(string(s))
+	return string(q[1 : len(q)-1])
 }
 
 func (s String) Eval(a *Apl) (Value, error) {

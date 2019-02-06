@@ -604,7 +604,7 @@ var testCases = []struct {
 	{"⍝ Enclose, string catenation, join strings, newline", "apl/primitives/enclose.go", 0},
 	{`⊂'alpha'`, "alpha", 0},
 	{`"+"⊂'alpha'`, "a+l+p+h+a", 0},
-	{`⎕NL⊂"alpha" "beta" "gamma"`, "alpha\nbeta\ngamma", 0},
+	{`⎕NL⊂"alpha" "beta" "gamma"`, `alpha\nbeta\ngamma`, 0},
 	{"`alpha`beta`gamma", "alpha beta gamma", 0},
 	{"(`alpha`beta`gamma)", "alpha beta gamma", 0},
 	{"`alpha`beta`gamma⋄", "alpha beta gamma", 0},
