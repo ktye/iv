@@ -3,6 +3,7 @@ package scan
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"strconv"
 	"strings"
@@ -168,14 +169,27 @@ func PrintTokens(t []Token) string {
 	return "[" + strings.Join(v, ",") + "]"
 }
 
-func (s *Scanner) nextRune() rune {
+func (s *Scanner) ReadRune() (rune, int, error) {
+	r, w := s.nextRune()
+	if r == -1 {
+		return -1, 0, io.EOF
+	}
+	return r, w, nil
+}
+
+func (s *Scanner) UnreadRune() error {
+	s.unreadRune()
+	return nil
+}
+
+func (s *Scanner) nextRune() (rune, int) {
 	if s.pos >= len(s.input) {
-		return -1
+		return -1, 0
 	}
 	r, w := utf8.DecodeRuneInString(s.input[s.pos:])
 	s.pos += w
 	s.width = w
-	return r
+	return r, w
 }
 
 // unreadRune can be called once to set the position to the last state.
@@ -195,7 +209,7 @@ func (s *Scanner) peek() rune {
 
 func (s *Scanner) nextToken() (Token, error) {
 	for {
-		r := s.nextRune()
+		r, _ := s.nextRune()
 		if r == -1 {
 			return Token{T: Endl}, nil
 		}
@@ -269,7 +283,7 @@ func (s *Scanner) nextToken() (Token, error) {
 func (s *Scanner) scanNumber(cmplx bool) (Token, error) {
 	var buf strings.Builder
 	for {
-		r := s.nextRune()
+		r, _ := s.nextRune()
 		if r == -1 {
 			return Token{T: Number, S: buf.String()}, nil
 		} else if r >= '0' && r <= '9' {
@@ -293,48 +307,15 @@ func (s *Scanner) scanNumber(cmplx bool) (Token, error) {
 // " scans the string as charstr and ' as chars.
 // There is currently no way to escape newlines etc.
 func (s *Scanner) scanString(quoteChar rune) (Token, error) {
-	var str strings.Builder
-	if quoteChar == '`' {
-	loop:
-		for {
-			r := s.nextRune()
-			switch r {
-			case '`', '}', ']', ')', ' ', '⋄', '#':
-				s.unreadRune()
-				break loop
-			case -1:
-				break loop
-			default:
-				str.WriteRune(r)
-			}
-		}
-		return Token{T: String, S: str.String()}, nil
+	s.unreadRune()
+	str, err := ReadString(s)
+	if err != nil {
+		return Token{}, err
 	}
-
-	for {
-		r := s.nextRune()
-		if r == -1 {
-			return Token{}, fmt.Errorf("unquoted string: %q", str.String())
-		}
-
-		if r == quoteChar {
-			// Two quotes escapes a single one.
-			if s.peek() == quoteChar {
-				r = s.nextRune()
-				str.WriteRune(r)
-				continue
-			} else {
-				// The quotes are not part of token.s.
-				if quoteChar == '"' {
-					return Token{T: String, S: str.String()}, nil
-				} else {
-					return Token{T: Chars, S: str.String()}, nil
-				}
-			}
-		} else {
-			str.WriteRune(r)
-		}
+	if quoteChar == '\'' {
+		return Token{T: Chars, S: str}, nil
 	}
+	return Token{T: String, S: str}, nil
 }
 
 // An identifier may start with _ or a unicode letter.
@@ -345,7 +326,7 @@ func (s *Scanner) scanIdentifier() (Token, error) {
 	first := true
 	arrow := false
 	for {
-		r := s.nextRune()
+		r, _ := s.nextRune()
 		if AllowedInVarname(r, first) {
 			buf.WriteRune(r)
 		} else if r == '→' && arrow == false {
@@ -390,4 +371,97 @@ func (s *Scanner) applyCmds(t []Token) []Token {
 		}
 	}
 	return t
+}
+
+// ReadString parses the next string from the Reader.
+// The first rune must be ", ' or `.
+// Double quote parses a quoted string in the format of strconv.Quote.
+// Single quote parses verbatim until the next single quote, that is not followed by another single quote.
+// Two single quotes are interpreted as one. APL splits single-quoted strings them into a rune array.
+// Backtick parses verbatim until the next `}])⋄# or a unicode whitespace rune.
+func ReadString(s io.RuneScanner) (string, error) {
+	r, _, err := s.ReadRune()
+	if err != nil {
+		return "", err
+	}
+	if strings.ContainsRune("`'\"", r) == false {
+		return "", fmt.Errorf("not a string")
+	}
+	quoteChar := r
+
+	var str strings.Builder
+	if quoteChar == '`' {
+	loop:
+		for {
+			r, _, err := s.ReadRune()
+			if err == io.EOF {
+				break loop
+			} else if err != nil {
+				return "", err
+			}
+			if unicode.IsSpace(r) {
+				s.UnreadRune()
+				break loop
+			}
+			switch r {
+			case '`', '}', ']', ')', '⋄', '#':
+				s.UnreadRune()
+				break loop
+			default:
+				str.WriteRune(r)
+			}
+		}
+		return str.String(), nil
+	} else if quoteChar == '\'' {
+		for {
+			r, _, err := s.ReadRune()
+			if err == io.EOF {
+				return "", fmt.Errorf("unquoted string: %q", str.String())
+			} else if err != nil {
+				return "", err
+			}
+			if r == quoteChar {
+				// Two quotes escapes a single one.
+				r, _, err := s.ReadRune()
+				if err == io.EOF {
+					return str.String(), nil
+				}
+				if err == nil && r == quoteChar {
+					str.WriteRune(r)
+					continue
+				} else {
+					s.UnreadRune()
+					return str.String(), nil
+				}
+			}
+			str.WriteRune(r)
+		}
+	} else {
+		quoted := false
+		str.WriteRune('"')
+		for {
+			r, _, err := s.ReadRune()
+			if err == io.EOF {
+				return "", fmt.Errorf("unquoted string: %q", str.String())
+			} else if err != nil {
+				return "", err
+			}
+			str.WriteRune(r)
+			if quoted && r != '\\' {
+				quoted = false
+				if r == '"' {
+					continue
+				}
+			} else if r == '\\' {
+				quoted = !quoted
+			}
+			if quoted == false && r == '"' {
+				q, err := strconv.Unquote(str.String())
+				if err != nil {
+					return "", fmt.Errorf("%q: %s", str.String(), err)
+				}
+				return q, nil
+			}
+		}
+	}
 }

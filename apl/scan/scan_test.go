@@ -1,11 +1,11 @@
 package scan
 
 import (
+	"strings"
 	"testing"
 )
 
 func TestScan(t *testing.T) {
-
 	// Symbols are registered only when importing funcs/.
 	// This does not happen when running the test, so we set them manually.
 	symbols := make(map[rune]string)
@@ -37,7 +37,7 @@ func TestScan(t *testing.T) {
 			Token{T: Symbol, S: "+"},
 			Token{T: Number, S: "8.2"},
 		}},
-		{`+ alpha ≥3.23 "x""yz"`, []Token{
+		{`+ alpha ≥3.23 "x\"yz"`, []Token{
 			Token{T: Symbol, S: "+"},
 			Token{T: Identifier, S: "alpha"},
 			Token{T: Symbol, S: "≥"},
@@ -79,17 +79,63 @@ func TestScan(t *testing.T) {
 	scn.SetSymbols(symbols)
 	for _, tc := range testCases {
 		if got, err := scn.Scan(tc.input); err != nil {
-			t.Fatalf("%s: %s", tc.input, err)
+			t.Fatalf("%q: %s", tc.input, err)
 		} else {
 			if len(got) != len(tc.exp) {
-				t.Fatalf("got %d Tokens, expected %d", len(got), len(tc.exp))
+				t.Fatalf("%q: got %d Tokens, expected %d", tc.input, len(got), len(tc.exp))
 			}
 			for i, e := range tc.exp {
 				g := got[i]
 				if g.T != e.T || g.S != e.S {
-					t.Fatalf("got %+v, expected %+v", g, e)
+					t.Fatalf("%q: got %+v, expected %+v", tc.input, g, e)
 				}
 			}
+		}
+	}
+}
+
+func TestScanString(t *testing.T) {
+	testCases := [][2]string{
+		// Double quoted strings with backslash escapes.
+		{`"alpha"`, `alpha`},
+		{`"alpha beta"`, `alpha beta`},
+		{`"alpha\nbeta"`, "alpha\nbeta"},
+		{`"alpha\\beta"`, "alpha\\beta"},
+		{`"alpha\nbeta\r"`, "alpha\nbeta\r"},
+		{`"alpha\nbeta\r"trailing`, "alpha\nbeta\r"},
+		{`"al\"ha"`, `al"ha`},
+		{`"\u263a"`, "☺"},
+
+		// Single quoted strings, with double escapes.
+		{`'a'`, "a"},
+		{`'a'trail`, "a"},
+		{`'alpha'`, `alpha`},
+		{`'al''pha'`, `al'pha`},
+		{`'al''p\nha'`, `al'p\nha`},
+		{`'al''p\nha'trailing`, `al'p\nha`},
+
+		// Backtick strings.
+		{"`alpha", "alpha"},
+		{"`alpha trailing", "alpha"},
+		{"`alpha`trailing", "alpha"},
+		{"`alpha}trailing", "alpha"},
+		{"`alpha]trailing", "alpha"},
+		{"`alpha⋄trailing", "alpha"},
+		{"`alpha#trailing", "alpha"},
+		{"`alpha\nbeta", "alpha"},
+		{"`alpha\tbeta", "alpha"},
+		{"`alpha\rbeta", "alpha"},
+		{"`a\\l\"'", "a\\l\"'"},
+	}
+	for _, tc := range testCases {
+		in := tc[0]
+		exp := tc[1]
+		got, err := ReadString(strings.NewReader(in))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != exp {
+			t.Fatalf("expected %q, got %q", exp, got)
 		}
 	}
 }
