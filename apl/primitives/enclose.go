@@ -26,6 +26,12 @@ func init() {
 		Domain: Monadic(IsString(nil)),
 		fn:     runesplit,
 	})
+	register(primitive{
+		symbol: "⊃",
+		doc:    "split string",
+		Domain: Dyadic(Split(IsString(nil), IsString(nil))),
+		fn:     strsplit,
+	})
 }
 
 // strvec accepts an array if all elements are strings.
@@ -75,6 +81,21 @@ func runesplit(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	v := make([]string, len(r))
 	for i, s := range r {
 		v[i] = string(s)
+	}
+	return apl.StringArray{Dims: []int{len(v)}, Strings: v}, nil
+}
+
+// split a string to an string vector
+// If L is a string, use it as the separator for strings.Split
+// If L is "", use strings.Field
+func strsplit(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	l := L.(apl.String)
+	r := R.(apl.String)
+	var v []string
+	if l == "" {
+		v = strings.Fields(string(r))
+	} else {
+		v = strings.Split(string(r), string(l))
 	}
 	return apl.StringArray{Dims: []int{len(v)}, Strings: v}, nil
 }

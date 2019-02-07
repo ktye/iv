@@ -617,13 +617,16 @@ var testCases = []struct {
 	{"⎕IO←0⋄⍴1 0 2⍉3 2 4⍴⍳24", "2 3 4", 0},
 	{"A←3 3⍴⍳9⋄(1 1⍉A)←10 20 30⋄A", "10 2 3\n4 20 6\n7 8 30", 0},
 
-	{"⍝ Enclose, string catenation, join strings, newline", "apl/primitives/enclose.go", 0},
+	{"⍝ Enclose, string catenation, join strings, disclose, split", "apl/primitives/enclose.go", 0},
 	{`⊂'alpha'`, "alpha", 0},
 	{`"+"⊂'alpha'`, "a+l+p+h+a", 0},
 	{`"\n"⊂"alpha" "beta" "gamma"`, "alpha\nbeta\ngamma", 0},
 	{"`alpha`beta`gamma", "alpha beta gamma", 0},
 	{"(`alpha`beta`gamma)", "alpha beta gamma", 0},
 	{"`alpha`beta`gamma⋄", "alpha beta gamma", 0},
+	{`⊃"alpha"`, "a l p h a", 0},
+	{`'p'⊃"alpha"`, "al ha", 0},
+	{`⍴','⊃"a,,b,c"`, "4", 0},
 
 	{"⍝ Domino, solve linear system", "apl/primitives/domino.go", 0},
 	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", 0},
