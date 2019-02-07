@@ -105,6 +105,7 @@ var testCases = []struct {
 	{"⎕IO←0 ⋄ ⎕IO", "0", 0},
 	{"⎕PP←1 ⋄ ⎕PP", "1", 0},
 	{"⎕PP←1 2⋄ ⎕PP", "1 2", 0},
+	{"⎕PP←1 ⋄ 1.23456789", "1", 0},
 	{"⎕PP←3 ⋄ 1.23456789", "1.23", 0},
 
 	{"⍝ Type, typeof", "apl/primitives/type.go", 0},

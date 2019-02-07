@@ -1,0 +1,39 @@
+Default table format:
+Time                    Name   Mark Count Number  Comp Mult
+2019.02.07T13.25.01.000 Peter  1    100   100     1J1  1.2 2.1 3
+2019.02.07T13.25.02.000 Jack   0    200   50      1J2  
+2019.02.07T13.25.03.000 Thomas 1    300   33.3333 1J3  7.89123
+
+PP set to 2:
+Time                    Name   Mark Count Number Comp Mult
+2019.02.07T13.25.01.000 Peter  1    100   1E+02  1J1  1.2 2.1 3
+2019.02.07T13.25.02.000 Jack   0    200   50     1J2  
+2019.02.07T13.25.03.000 Thomas 1    300   33     1J3  7.9
+
+Parsable table format:
+Time                    Name     Mark Count Number  Comp Mult
+2019.02.07T13.25.01.000 "Peter"  1    100   100     1J1  [1.2 2.1 3]
+2019.02.07T13.25.02.000 "Jack"   0    200   50      1J2  []
+2019.02.07T13.25.03.000 "Thomas" 1    300   33.3333 1J3  [7.89123]
+
+csv format:
+Time,Name,Mark,Count,Number,Comp,Mult
+2019.02.07T13.25.01.000,Peter,1,100,100,1J1,1.2 2.1 3
+2019.02.07T13.25.02.000,Jack,0,200,50,1J2,
+2019.02.07T13.25.03.000,Thomas,1,300,33.3333,1J3,7.89123
+
+custom format:
+Time:  2006-01-02T15:04
+Count: 0x%x
+Comp:  %.3f@%.1f
+Time             Name   Mark Count Number  Comp       Mult
+2019-02-07T13:25 Peter  1    0x64  100     1.414@45.0 1.2 2.1 3
+2019-02-07T13:25 Jack   0    0xc8  50      2.236@63.4 
+2019-02-07T13:25 Thomas 1    0x12c 33.3333 3.162@71.6 7.89123
+
+custom format with csv:
+Time,Name,Mark,Count,Number,Comp,Mult
+2019-02-07T13:25,Peter,1,0x64,100,1.414@45.0,1.2 2.1 3
+2019-02-07T13:25,Jack,0,0xc8,50,2.236@63.4,
+2019-02-07T13:25,Thomas,1,0x12c,33.3333,3.162@71.6,7.89123
+

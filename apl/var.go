@@ -227,49 +227,51 @@ func isVarname(s string) (ok, isfunc bool) {
 }
 
 func (a *Apl) SetPP(R Value) error {
-	if num, ok := R.(Number); ok {
+	pp, err := a.toPP(R)
+	if err != nil {
+		return err
+	}
+	a.PP = pp
+	a.Tower.SetPP(a.PP)
+	return nil
+}
+func (a *Apl) toPP(V Value) ([2]int, error) {
+	var pp [2]int
+	if num, ok := V.(Number); ok {
 		if i, ok := num.ToIndex(); ok {
-			a.PP = [2]int{0, i}
-			a.Tower.SetPP(a.PP)
-			return nil
+			return [2]int{0, i}, nil
 		} else {
-			return fmt.Errorf("PP: number must be integer")
+			return pp, fmt.Errorf("PP: number must be integer")
 		}
 	}
-	if _, ok := R.(EmptyArray); ok {
-		a.PP = [2]int{0, 6} // default value.
-		a.Tower.SetPP(a.PP)
-		return nil
+	if _, ok := V.(EmptyArray); ok {
+		return [2]int{0, 6}, nil // default value.
 	}
-	ar, ok := R.(Array)
+	ar, ok := V.(Array)
 	if ok == false {
-		return fmt.Errorf("PP: argument must be 1 or 2 integers: %T", R)
+		return pp, fmt.Errorf("PP: argument must be 1 or 2 integers: %T", V)
 	}
 
 	n := ar.Size()
 	if n < 1 || n > 2 {
-		return fmt.Errorf("PP: argument must be 1 or 2 integers: %T", R)
+		return pp, fmt.Errorf("PP: argument must be 1 or 2 integers: %T", V)
 	}
 
-	var pp [2]int
 	for i := 0; i < n; i++ {
 		v := ar.At(i)
 		if num, ok := v.(Number); ok {
 			if n, ok := num.ToIndex(); ok {
 				pp[i] = n
 			} else {
-				return fmt.Errorf("PP: numbers must be integers: %T", v)
+				return pp, fmt.Errorf("PP: numbers must be integers: %T", v)
 			}
 		} else {
-			fmt.Errorf("PP: argument must be 1 or 2 integers: %T", R)
+			return pp, fmt.Errorf("PP: argument must be 1 or 2 integers: %T", V)
 		}
 	}
 	if n == 1 {
 		pp[1] = pp[0]
 		pp[0] = 0
 	}
-
-	a.PP = pp
-	a.Tower.SetPP(a.PP)
-	return nil
+	return pp, nil
 }

@@ -2,7 +2,6 @@ package primitives
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
@@ -159,29 +158,6 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 // transposeObject returns a Table by transposing an object.
 func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	o := R.(apl.Object)
-	uniform := func(v apl.Value) (bool, int) {
-		ar, ok := v.(apl.Array)
-		if ok == false {
-			return true, 1
-		}
-		shape := ar.Shape()
-		if len(shape) != 1 {
-			return false, 0
-		}
-		if _, ok := v.(apl.Uniform); ok {
-			return true, shape[0]
-		}
-		if shape[0] < 2 {
-			return true, shape[0]
-		}
-		t := reflect.TypeOf(ar.At(0))
-		for i := 1; i < shape[0]; i++ {
-			if reflect.TypeOf(ar.At(i)) != t {
-				return false, 0
-			}
-		}
-		return true, shape[0]
-	}
 	tab := apl.Table{Dict: &apl.Dict{}}
 	keys := o.Keys()
 	n := 0
@@ -190,12 +166,18 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		if col == nil {
 			return nil, fmt.Errorf("table: column %s does not exist", k.String(a))
 		}
-		ok, size := uniform(col)
-		if ok == false {
-			return nil, fmt.Errorf("table: column %s has mixed types", k.String(a))
-		}
-		if size == -1 {
-			size = 1
+		size := 1
+		if ar, ok := col.(apl.Array); ok {
+			if shape := ar.Shape(); len(shape) != 1 {
+				return nil, fmt.Errorf("table: column %s has rank != 1", k.String(a))
+			} else {
+				size = shape[0]
+			}
+			col, ok = a.Unify(ar, true)
+			if ok == false {
+				return nil, fmt.Errorf("table: column %s has mixed types", k.String(a))
+			}
+		} else {
 			col = apl.List{col}
 		}
 		if i == 0 {

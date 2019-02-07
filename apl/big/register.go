@@ -55,10 +55,13 @@ func setBigPP(pp [2]int, m map[reflect.Type]apl.Numeric) {
 	if pp == [2]int{0, 0} {
 		f = ""
 	}
-	t := reflect.TypeOf(Rat{})
-	n := m[t]
-	n.Format = f
-	m[t] = n
+	formats := map[reflect.Type]string{
+		reflect.TypeOf(Rat{}): f,
+	}
+	for t, n := range m {
+		n.Format = formats[t]
+		m[t] = n
+	}
 }
 
 // SetPreciseTower sets the numerical tower to Float->Complex with the given precision.
@@ -97,11 +100,12 @@ func setPrecisePP(pp [2]int, m map[reflect.Type]apl.Numeric) {
 	if pp == [2]int{0, 0} {
 		f = ""
 	}
-	types := []reflect.Type{reflect.TypeOf(Float{}), reflect.TypeOf(Complex{})}
-	formats := []string{f, f + "J" + f}
-	for i, t := range types {
-		n := m[t]
-		n.Format = formats[i]
+	formats := map[reflect.Type]string{
+		reflect.TypeOf(Float{}):   f,
+		reflect.TypeOf(Complex{}): f + "J" + f,
+	}
+	for t, n := range m {
+		n.Format = formats[t]
 		m[t] = n
 	}
 }

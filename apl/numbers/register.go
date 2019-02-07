@@ -15,13 +15,6 @@ func Register(a *apl.Apl) {
 	if err := a.SetTower(newTower()); err != nil {
 		panic(err)
 	}
-
-	/* TODO: this should not be a package.
-	pkg := map[string]apl.Value{
-		"f": setformat{},
-	}
-	a.RegisterPackage("n", pkg)
-	*/
 }
 
 func newTower() apl.Tower {
@@ -89,39 +82,12 @@ func setpp(pp [2]int, m map[reflect.Type]apl.Numeric) {
 	if pp == [2]int{0, 0} {
 		f = ""
 	}
-	types := []reflect.Type{reflect.TypeOf(Float(0)), reflect.TypeOf(Complex(0))}
-	formats := []string{f, f + "J" + f}
-	for i, t := range types {
-		n := m[t]
-		n.Format = formats[i]
+	formats := map[reflect.Type]string{
+		reflect.TypeOf(Float(0)):   f,
+		reflect.TypeOf(Complex(0)): f + "J" + f,
+	}
+	for t, n := range m {
+		n.Format = formats[t]
 		m[t] = n
 	}
 }
-
-/* TODO remove
-type setformat struct{}
-
-func (s setformat) String(a *apl.Apl) string { return "fmt" }
-
-func (_ setformat) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	if L == nil {
-		return nil, fmt.Errorf("fmt must be called dyadically")
-	}
-	n, ok := L.(apl.Number)
-	if ok == false {
-		return nil, fmt.Errorf("fmt: left argument must be a number")
-	}
-	s, ok := R.(apl.String)
-	if ok == false {
-		return nil, fmt.Errorf("fmt: right argument must be a string")
-	}
-	t := reflect.TypeOf(n)
-	num, ok := a.Tower.Numbers[t]
-	if ok == false {
-		return nil, fmt.Errorf("fmt: %T is not a member of the current tower", n)
-	}
-	num.Format = string(s)
-	a.Tower.Numbers[t] = num
-	return apl.String(fmt.Sprintf("%T: %q\n", n, s)), nil
-}
-*/
