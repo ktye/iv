@@ -12,7 +12,7 @@ func TestParse(t *testing.T) {
 		s string
 		n apl.Number
 	}{
-		{"1", Integer(1)},
+		{"1", apl.Bool(true)},
 		{"¯2", Integer(-2)},
 		{"¯2.0", Float(-2)},
 		{"3J¯2.0", Complex(complex(3, -2))},

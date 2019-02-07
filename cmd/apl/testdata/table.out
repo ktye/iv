@@ -12,9 +12,9 @@ Time                    Name   Mark Count Number Comp Mult
 
 Parsable table format:
 Time                    Name     Mark Count Number  Comp Mult
-2019.02.07T13.25.01.000 "Peter"  1    100   100     1J1  [1.2 2.1 3]
-2019.02.07T13.25.02.000 "Jack"   0    200   50      1J2  []
-2019.02.07T13.25.03.000 "Thomas" 1    300   33.3333 1J3  [7.89123]
+2019.02.07T13.25.01.000 "Peter"  1b   100   100     1J1  [1.2 2.1 3]
+2019.02.07T13.25.02.000 "Jack"   0b   200   50      1J2  []
+2019.02.07T13.25.03.000 "Thomas" 1b   300   33.3333 1J3  [7.89123]
 
 csv format:
 Time,Name,Mark,Count,Number,Comp,Mult

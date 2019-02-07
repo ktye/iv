@@ -61,7 +61,11 @@ func makeUniform(v []apl.Value) (apl.Value, bool) {
 	if len(v) == 0 {
 		return nil, false
 	}
-	if t := reflect.TypeOf(v[0]); t == reflect.TypeOf(Float(0.0)) {
+	if t := reflect.TypeOf(v[0]); t == reflect.TypeOf(apl.Index(0)) {
+		return makeIndexArray(v), true
+	} else if t := reflect.TypeOf(v[0]); t == reflect.TypeOf(Integer(0)) {
+		return makeIntegerArray(v), true
+	} else if t == reflect.TypeOf(Float(0.0)) {
 		return makeFloatArray(v), true
 	} else if t == reflect.TypeOf(Complex(0)) {
 		return makeComplexArray(v), true

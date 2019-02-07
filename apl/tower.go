@@ -3,6 +3,7 @@ package apl
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 type Tower struct {
@@ -39,6 +40,18 @@ func (a *Apl) SetTower(t Tower) error {
 
 // Parse tries to parse a string as a Number, starting with the lowest number type.
 func (t Tower) Parse(s string) (NumExpr, error) {
+	// Bool and Index can be parsed directly.
+	switch s {
+	case "1", "1b":
+		return NumExpr{Bool(true)}, nil
+	case "0", "0b":
+		return NumExpr{Bool(false)}, nil
+	default:
+		if i, err := strconv.Atoi(s); err == nil {
+			return NumExpr{Index(i)}, nil
+		}
+	}
+
 	if t.Numbers == nil || len(t.idx) != len(t.Numbers) {
 		return NumExpr{}, fmt.Errorf("numeric tower is not initialized")
 	}
@@ -61,6 +74,29 @@ func (t Tower) SameType(a, b Number) (Number, Number, error) {
 	if at == bt {
 		return a, b, nil
 	}
+
+	// Handle Bool and Index.
+	if _, ok := a.(Bool); ok {
+		if _, ok := b.(Index); ok {
+			return indexFromBool(a.(Bool)), b, nil
+		}
+		a = t.FromBool(a.(Bool))
+		at = reflect.TypeOf(a)
+	} else if _, ok := a.(Index); ok {
+		a = t.FromIndex(int(a.(Index)))
+		at = reflect.TypeOf(a)
+	}
+	if _, ok := b.(Bool); ok {
+		if _, ok := a.(Index); ok {
+			return a, indexFromBool(b.(Bool)), nil
+		}
+		b = t.FromBool(b.(Bool))
+		bt = reflect.TypeOf(b)
+	} else if _, ok := b.(Index); ok {
+		b = t.FromIndex(int(b.(Index)))
+		bt = reflect.TypeOf(b)
+	}
+
 	na, ok := t.Numbers[at]
 	if ok == false {
 		return nil, nil, fmt.Errorf("numeric tower: unknown number type %T", a)
@@ -88,6 +124,13 @@ func (t Tower) SameType(a, b Number) (Number, Number, error) {
 		pb = t.idx[i+1]
 	}
 	return a, b, nil
+}
+
+func indexFromBool(b Bool) Index {
+	if b {
+		return Index(1)
+	}
+	return Index(0)
 }
 
 func (t *Tower) FromBool(b Bool) Number {

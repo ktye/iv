@@ -7,7 +7,7 @@ import (
 
 // Unify tries to convert the array to a uniform array, if possible.
 // If uptype is true, it uptypes numeric values, if that helps.
-func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
+func (a *Apl) Unify(A Array, uptype bool) (resultarray Array, resultok bool) {
 	if _, ok := A.(EmptyArray); ok {
 		return A, false // An empty array is defined to be not uniform.
 	}
@@ -15,25 +15,20 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 		return A, true
 	}
 
+	noNumber := -10
 	boolType := reflect.TypeOf(Bool(false))
 	indexType := reflect.TypeOf(Index(0))
 	class := func(t reflect.Type) int {
 		n, ok := a.Tower.Numbers[t]
 		if ok == false {
-			if t == boolType || t == indexType {
-				return 0 // This should always be ok.
+			if t == indexType {
+				return -1
+			} else if t == boolType {
+				return -2
 			}
-			return -1
+			return noNumber
 		}
 		return n.Class
-	}
-	tonumber := func(v Value) Number {
-		if b, ok := v.(Bool); ok {
-			return a.Tower.FromBool(b)
-		} else if i, ok := v.(Index); ok {
-			return a.Tower.FromIndex(int(i))
-		}
-		return v.(Number)
 	}
 
 	// If all values of the array are the same type, it is uniform.
@@ -46,8 +41,8 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 	t0 := reflect.TypeOf(v0)
 	max := class(t0)
 	var maxnumber Number
-	if max != -1 {
-		maxnumber = tonumber(v0)
+	if max != noNumber {
+		maxnumber = v0.(Number)
 	}
 	sametype := true
 	for i := 1; i < size; i++ {
@@ -59,12 +54,12 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 				return A, false
 			}
 		}
-		if max != -1 {
-			if c := class(t); c == -1 {
-				max = -1
+		if max != noNumber {
+			if c := class(t); c == noNumber {
+				max = noNumber
 			} else if c > max {
 				max = c
-				maxnumber = tonumber(v)
+				maxnumber = v.(Number)
 			}
 		}
 	}
@@ -74,7 +69,7 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 	if sametype {
 		// Some uniform types are defined in the numeric implementation.
 		// E.g. numbers/{FloatArray;ComplexArray;TimeArray}.
-		if max != -1 {
+		if max != noNumber {
 			var values []Value
 			switch v := A.(type) {
 			case MixedArray:
@@ -115,7 +110,7 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 		}
 		// Unknown uniform type is returnd as it is.
 		return A, true
-	} else if max == -1 {
+	} else if max == noNumber {
 		// If values are not of the same type, and not identified by
 		// the current tower, there is no chance to make them equal.
 		return A, false
@@ -126,7 +121,7 @@ func (a *Apl) Unify(A Array, uptype bool) (Array, bool) {
 	var err error
 	for i := 0; i < size; i++ {
 		v := A.At(i)
-		values[i], _, err = a.Tower.SameType(tonumber(v), maxnumber)
+		values[i], _, err = a.Tower.SameType(v.(Number), maxnumber)
 		if err != nil {
 			fmt.Println(err)
 			return A, false

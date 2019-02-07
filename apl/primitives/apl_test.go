@@ -27,6 +27,7 @@ var testCases = []struct {
 
 	{"⍝ Basic numbers and arithmetics", "", 0},
 	{"1", "1", 0},
+	{"1b", "1", 0},
 	{"1+1", "2", 0},
 	{"1-2", "¯1", 0}, // negative number
 	{"¯1", "¯1", 0},
@@ -626,7 +627,8 @@ var testCases = []struct {
 	{"`alpha`beta`gamma⋄", "alpha beta gamma", 0},
 	{`⊃"alpha"`, "a l p h a", 0},
 	{`'p'⊃"alpha"`, "al ha", 0},
-	{`⍴','⊃"a,,b,c"`, "4", 0},
+	{`⍴','⊃",a,,b,c"`, "5", 0},
+	{`⍴""⊃" a  b c\tc "`, "4", 0},
 
 	{"⍝ Domino, solve linear system", "apl/primitives/domino.go", 0},
 	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", 0},
@@ -932,57 +934,57 @@ var testCases = []struct {
 
 	{"⍝ Table, transpose a dict to create a table", "apl/primitives/transpose.go", 0},
 	{"⍉`a`b#1 2", "a b\n1 2", 0},
-	{"⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n2 5 8\n3 6 9", 0},
-	{"⍉⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a: 1 2 3\nb: 4 5 6\nc: 7 8 9", 0},
+	{"⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n2 5 8\n3 6 9", small},
+	{"⍉⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a: 1 2 3\nb: 4 5 6\nc: 7 8 9", small},
 	{"⍴`a`b#(1 2 3;4 5 6;)", "2", 0},
-	{"⍴⍉`a`b#(1 2 3;4 5 6;)", "3 2", 0},
+	{"⍴⍉`a`b#(1 2 3;4 5 6;)", "3 2", small},
 
 	{"⍝ Indexing tables", "apl/primitives/index.go", 0},
-	{"T←⍉`a`b#1 2⋄T[1]", "a b\n1 2", 0},
-	{"T←⍉`a`b#(1;3;)⋄T[1]", "a b\n1 3", 0},
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a b\n1 3", 0},             // single row as a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1;]", "(1;3;)", 0},              // single row as a list
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3]", "a b\n1 3\n3 5", 0},      // multiple rows as a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3;]", "a b\n1 3\n3 5", 0},     // multiple rows are always a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[0 1]", "a b\n3 5\n1 3", 0},      // 0 or negative indexes
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;`b]", "b\n4\n5\n6", 0}, // single column table
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", 0},    // single column table as a vector
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", 0}, // subtable if any index is multiple
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", 0},        // single value
+	{"T←⍉`a`b#1 2⋄T[1]", "a b\n1 2", small},
+	{"T←⍉`a`b#(1;3;)⋄T[1]", "a b\n1 3", small},
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a b\n1 3", small},             // single row as a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1;]", "(1;3;)", small},              // single row as a list
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3]", "a b\n1 3\n3 5", small},      // multiple rows as a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3;]", "a b\n1 3\n3 5", small},     // multiple rows are always a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[0 1]", "a b\n3 5\n1 3", small},      // 0 or negative indexes
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;`b]", "b\n4\n5\n6", small}, // single column table
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", small},    // single column table as a vector
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", small}, // subtable if any index is multiple
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", small},        // single value
 	{"⍝ TODO: Assignment on tables, updates", "", 0},
 
 	{"⍝ Elementary functions on dicts and tables", "apl/primitives/elementary.go", 0},
-	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄-A", "a b\n¯1 ¯3\n¯2 ¯4", 0},
-	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(9 8;7 6;)⋄B-A", "a: 8 6\nb: 4 2", 0},
-	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(9 8;7 6;)⋄B-A", "b: 6 4\nc: 7 6\na: ¯1 ¯2", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`b`c#(9 8;7 6;)⋄B-A", "b c a\n6 7 ¯1\n4 6 ¯2", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄A-3", "a b\n¯2 0\n¯1 1", 0},
-	{"A←`a`b#(1 2;3 4;)⋄A-5 7", "a: ¯4 ¯5\nb: ¯2 ¯3", 0},
-	{"A←`a`b#(1 2;3 4;)⋄3-A", "a: 2 1\nb: 0 ¯1", 0},
+	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄-A", "a b\n¯1 ¯3\n¯2 ¯4", small},
+	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(9 8;7 6;)⋄B-A", "a: 8 6\nb: 4 2", small},
+	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(9 8;7 6;)⋄B-A", "b: 6 4\nc: 7 6\na: ¯1 ¯2", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`b`c#(9 8;7 6;)⋄B-A", "b c a\n6 7 ¯1\n4 6 ¯2", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄A-3", "a b\n¯2 0\n¯1 1", small},
+	{"A←`a`b#(1 2;3 4;)⋄A-5 7", "a: ¯4 ¯5\nb: ¯2 ¯3", small},
+	{"A←`a`b#(1 2;3 4;)⋄3-A", "a: 2 1\nb: 0 ¯1", small},
 
 	{"⍝ Catenate tables or objects", "apl/primitives/comma.go", 0},
-	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A,B", "a: 1 2 5 6\nb: 3 4 7 8", 0},
-	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(5 6;7 8;)⋄A,B", "a: 1 2\nb: 3 4 5 6\nc: 7 8", 0},
-	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A⍪B", "a: 5 6\nb: 7 8", 0},
-	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(5 6;7 8;)⋄A⍪B", "a: 1 2\nb: 5 6\nc: 7 8", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A,B", "a b\n5 7\n6 8", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`b`c#(5 6;7 8;)⋄A,B", "a b c\n1 5 7\n2 6 8", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A⍪B", "a b\n1 3\n2 4\n5 7\n6 8", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄A⍪5", "a b\n1 3\n2 4\n5 5", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄A,5 6", "a b\n1 3\n2 4\n5 5\n6 6", 0},
-	{"A←⍉`a`b#(1 2;3 4;)⋄5 6,A", "a b\n5 5\n6 6\n1 3\n2 4", 0},
-	{"A←`a`b#(1 2;3 4;)⋄A,5", "a: 1 2 5\nb: 3 4 5", 0},
-	{"A←`a`b#(1 2;3 4;)⋄5 6⍪A", "a: 5 6 1 2\nb: 5 6 3 4", 0},
+	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A,B", "a: 1 2 5 6\nb: 3 4 7 8", small},
+	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(5 6;7 8;)⋄A,B", "a: 1 2\nb: 3 4 5 6\nc: 7 8", small},
+	{"A←`a`b#(1 2;3 4;)⋄B←`a`b#(5 6;7 8;)⋄A⍪B", "a: 5 6\nb: 7 8", small},
+	{"A←`a`b#(1 2;3 4;)⋄B←`b`c#(5 6;7 8;)⋄A⍪B", "a: 1 2\nb: 5 6\nc: 7 8", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A,B", "a b\n5 7\n6 8", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`b`c#(5 6;7 8;)⋄A,B", "a b c\n1 5 7\n2 6 8", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A⍪B", "a b\n1 3\n2 4\n5 7\n6 8", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄A⍪5", "a b\n1 3\n2 4\n5 5", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄A,5 6", "a b\n1 3\n2 4\n5 5\n6 6", small},
+	{"A←⍉`a`b#(1 2;3 4;)⋄5 6,A", "a b\n5 5\n6 6\n1 3\n2 4", small},
+	{"A←`a`b#(1 2;3 4;)⋄A,5", "a: 1 2 5\nb: 3 4 5", small},
+	{"A←`a`b#(1 2;3 4;)⋄5 6⍪A", "a: 5 6 1 2\nb: 5 6 3 4", small},
 
 	{"⍝ Reduction over objects and tables", "apl/operators/reduce.go", 0},
-	{"+/`a`b`c#(1 2 3;4 6;7;)", "a: 6\nb: 10\nc: 7", 0},
-	{"+\\`a`b`c#(1 2 3;4 6;7;)", "a: 1 3 6\nb: 4 10\nc: 7", 0},
-	{"+/⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n6 15 24", 0},
-	{"+\\⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n3 9 15\n6 15 24", 0},
-	{"2+/`a`b#(1 2 3;4 6 7;)", "a: 3 5\nb: 10 13", 0},
-	{"2+/⍉`a`b#(1 2 3;4 6 7;)", "a b\n3 10\n5 13", 0},
-	// TODO {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", 0}, // table with avg value.
+	{"+/`a`b`c#(1 2 3;4 6;7;)", "a: 6\nb: 10\nc: 7", small},
+	{"+\\`a`b`c#(1 2 3;4 6;7;)", "a: 1 3 6\nb: 4 10\nc: 7", small},
+	{"+/⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n6 15 24", small},
+	{"+\\⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n3 9 15\n6 15 24", small},
+	{"2+/`a`b#(1 2 3;4 6 7;)", "a: 3 5\nb: 10 13", small},
+	{"2+/⍉`a`b#(1 2 3;4 6 7;)", "a b\n3 10\n5 13", small},
+	// TODO {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", small}, // table with avg value.
 
 	{"⍝ Object, go example", "apl/xgo/register.go", 0},
 	{"X←go→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},

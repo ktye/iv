@@ -13,6 +13,13 @@ func (b Bool) String(a *Apl) string {
 	return "0"
 }
 
+func (b Bool) Marshal(a *Apl) string {
+	if b {
+		return "1b"
+	}
+	return "0b"
+}
+
 func (i Bool) Less(v Value) (Bool, bool) {
 	j, ok := v.(Bool)
 	if ok == false {
