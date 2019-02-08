@@ -36,8 +36,6 @@ func FromAPL(a *apl.Apl, v apl.Value) (*kdb.K, error) {
 			return encodeArray(a, v)
 		}
 		return kdb.SymbolV(x.Strings), nil
-	case numbers.Integer:
-		return kdb.Long(int64(x)), nil
 	case numbers.Float:
 		return kdb.Float(float64(x)), nil
 	case numbers.FloatArray:
@@ -182,7 +180,7 @@ func ToAPL(data *kdb.K) (apl.Value, error) {
 	case -kdb.KI, -kdb.KD, -kdb.KU, -kdb.KV:
 		return apl.Index(k.(int32)), nil
 	case -kdb.KJ:
-		return numbers.Integer(k.(int64)), nil
+		return apl.Index(int(k.(int64))), nil
 	case -kdb.KS:
 		return apl.String(k.(string)), nil
 	case -kdb.KF, -kdb.KZ:
