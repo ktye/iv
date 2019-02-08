@@ -75,7 +75,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 				if major < 0 || major >= rs[0] {
 					return nil, fmt.Errorf("at: selected major cell is out of range %d: [1, %d]", major+1, rs[0])
 				}
-				off := n * major
+				off := n * int(major)
 				for i := 0; i < n; i++ {
 					mask[off+i] = true
 				}

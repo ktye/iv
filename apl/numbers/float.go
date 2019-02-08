@@ -77,11 +77,11 @@ func (f Float) Sub2(R apl.Value) (apl.Value, bool) {
 
 func (f Float) Mul() (apl.Value, bool) {
 	if f > 0 {
-		return Integer(1), true
+		return apl.Index(1), true
 	} else if f < 0 {
-		return Integer(-1), true
+		return apl.Index(-1), true
 	}
-	return Integer(0), true
+	return apl.Index(0), true
 }
 func (f Float) Mul2(R apl.Value) (apl.Value, bool) {
 	return f * R.(Float), true

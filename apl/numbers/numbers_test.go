@@ -15,7 +15,7 @@ func TestParse(t *testing.T) {
 	}{
 		{"1", apl.Index(1)},
 		{"1b", apl.Bool(true)},
-		{"¯2", Integer(-2)},
+		{"¯2", apl.Index(-2)},
 		{"¯2.0", Float(-2)},
 		{"2.", Float(2)},
 		{"3J¯2.0", Complex(complex(3, -2))},
@@ -57,17 +57,21 @@ func TestSameType(t *testing.T) {
 		a, b apl.Number
 		c, d apl.Number
 	}{
-		{Integer(1), Integer(2), Integer(1), Integer(2)},
-		{Integer(0), Float(3), Float(0), Float(3)},
-		{Float(3), Integer(4), Float(3), Float(4)},
-		{Integer(2), Complex(3 + 1i), Complex(2), Complex(3 + 1i)},
+		{apl.Bool(false), apl.Bool(true), apl.Bool(false), apl.Bool(true)},
+		{apl.Bool(false), apl.Index(1), apl.Index(0), apl.Index(1)},
+		{apl.Index(1), apl.Bool(false), apl.Index(1), apl.Index(0)},
+		{apl.Index(1), apl.Index(2), apl.Index(1), apl.Index(2)},
+		{apl.Bool(true), Float(3), Float(1), Float(3)},
+		{apl.Index(0), Float(3), Float(0), Float(3)},
+		{Float(3), apl.Index(4), Float(3), Float(4)},
+		{apl.Index(2), Complex(3 + 1i), Complex(2), Complex(3 + 1i)},
 		{Complex(1 + 2i), Float(3), Complex(1 + 2i), Complex(3)},
 	}
 
-	for _, tc := range testCases {
+	for n, tc := range testCases {
 		c, d, err := a.Tower.SameType(tc.a, tc.b)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("#%d: %s", n, err)
 		}
 		if reflect.TypeOf(c) != reflect.TypeOf(d) {
 			t.Fatalf("not the same type: %T %T", c, d)
@@ -81,19 +85,23 @@ func TestSameType(t *testing.T) {
 	}
 }
 
-func TestFromIndex(t *testing.T) {
+func TestImport(t *testing.T) {
 	a := apl.New(nil)
 	Register(a)
 
 	testCases := []struct {
-		i int
+		i apl.Number
 		n apl.Number
 	}{
-		{0, Integer(0)},
-		{-1, Integer(-1)},
+		{apl.Bool(false), Float(0)},
+		{apl.Bool(true), Float(1)},
+		{apl.Index(0), Float(0)},
+		{apl.Index(1), Float(1)},
+		{apl.Index(2), Float(2)},
+		{apl.Index(-1), Float(-1)},
 	}
 	for _, tc := range testCases {
-		n := a.Tower.FromIndex(tc.i)
+		n := a.Tower.Import(tc.i)
 		if reflect.TypeOf(n) != reflect.TypeOf(tc.n) {
 			t.Fatal("wrong type")
 		}

@@ -3,7 +3,6 @@ package xgo
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
@@ -24,50 +23,36 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 		}
 	}
 
-	number := func(from apl.Value, to apl.Number) (apl.Number, error) {
-		src, ok := from.(apl.Number)
-		if ok == false {
-			return nil, fmt.Errorf("not a number: %T", from)
+	/*
+		number := func(from apl.Value, to apl.Number) (apl.Number, error) {
+			src, ok := from.(apl.Number)
+			if ok == false {
+				return nil, fmt.Errorf("not a number: %T", from)
+			}
+			n, _, err := a.Tower.SameType(src, to)
+			if err != nil {
+				return nil, err
+			}
+			if reflect.TypeOf(to) != reflect.TypeOf(n) {
+				return nil, fmt.Errorf("cannot convert to %T", to)
+			}
+			return n, nil
 		}
-		n, _, err := a.Tower.SameType(src, to)
-		if err != nil {
-			return nil, err
-		}
-		if reflect.TypeOf(to) != reflect.TypeOf(n) {
-			return nil, fmt.Errorf("cannot convert to %T", to)
-		}
-		return n, nil
-	}
+	*/
 	zero := reflect.Value{}
 	switch t.Kind() {
 
 	case reflect.Int:
-		if n, err := number(v, numbers.Integer(0)); err != nil {
-			return zero, err
-		} else {
-			return reflect.ValueOf(int(n.(numbers.Integer))), nil
-		}
+		return reflect.ValueOf(int(v.(apl.Index))), nil
 
 	case reflect.Float64:
-		if n, err := number(v, numbers.Float(0)); err != nil {
-			return zero, err
-		} else {
-			return reflect.ValueOf(float64(n.(numbers.Float))), nil
-		}
+		return reflect.ValueOf(float64(v.(numbers.Float))), nil
 
 	case reflect.Complex128:
-		if n, err := number(v, numbers.Complex(0)); err != nil {
-			return zero, err
-		} else {
-			return reflect.ValueOf(complex128(n.(numbers.Complex))), nil
-		}
+		return reflect.ValueOf(complex128(v.(numbers.Complex))), nil
 
 	case reflect.String:
-		if s, ok := v.(apl.String); ok == false {
-			return zero, fmt.Errorf("expected string")
-		} else {
-			return reflect.ValueOf(string(s)), nil
-		}
+		return reflect.ValueOf(string(v.(apl.String))), nil
 
 	case reflect.Slice:
 		ar, ok := v.(apl.Array)
@@ -98,12 +83,8 @@ func Convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
 	case reflect.Int:
 		return apl.Index(int(v.Int())), nil
 
-	case reflect.Uint64:
-		u := uint64(v.Uint())
-		if u > 1<<63-1 {
-			return apl.String(strconv.FormatUint(u, 10) + " overflows int64"), nil
-		}
-		return numbers.Integer(int64(v.Uint())), nil
+	case reflect.Uint:
+		return apl.Index(int(v.Uint())), nil
 
 	case reflect.Float64:
 		return numbers.Float(v.Float()), nil

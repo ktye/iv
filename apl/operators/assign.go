@@ -196,7 +196,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 	if scalar != nil {
 		// Scalar or 1-element assignment.
 		for _, d := range idx.Ints {
-			if err := modAssign(d, scalar); err != nil {
+			if err := modAssign(int(d), scalar); err != nil {
 				return err
 			}
 		}
@@ -237,7 +237,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 			if err := apl.ArrayBounds(src, i); err != nil {
 				return err
 			}
-			if err := modAssign(d, src.At(i)); err != nil {
+			if err := modAssign(int(d), src.At(i)); err != nil {
 				return err
 			}
 		}
@@ -263,7 +263,7 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IndexArray, f apl.Function
 	}
 	keys := obj.Keys()
 	for i := 0; i < len(idx.Ints); i++ {
-		n := idx.Ints[i] - a.Origin
+		n := int(idx.Ints[i] - a.Origin)
 		if n < 0 || n >= len(keys) {
 			return fmt.Errorf("assign object: index out of range")
 		}

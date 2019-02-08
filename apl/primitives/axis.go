@@ -29,7 +29,7 @@ func splitAxis(a *apl.Apl, R apl.Value) (apl.Value, []int, error) {
 	}
 	x := make([]int, len(ar.Ints))
 	for i, n := range ar.Ints {
-		x[i] = n - a.Origin
+		x[i] = int(n - a.Origin)
 	}
 	return ax.R, x, nil
 }
@@ -102,12 +102,12 @@ func splitCatAxis(a *apl.Apl, L, R apl.Value) (apl.Value, int, bool, error) {
 		} else if i, ok := fnum.(apl.Number).ToIndex(); ok == false {
 			return nil, 0, false, fmt.Errorf("|axis is not an index")
 		} else {
-			n = i
+			n = int(i)
 		}
 	}
 
 	// Substract index origin.
-	n -= a.Origin
+	n -= int(a.Origin)
 
 	// x must be between -1 and max.
 	if n < -1 || n > max {

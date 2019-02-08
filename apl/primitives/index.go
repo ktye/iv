@@ -70,10 +70,10 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// Special case, if the result is a scalar.
 	if len(idx.Ints) == 1 && len(idx.Dims) == 0 {
-		if err := apl.ArrayBounds(ar, idx.Ints[0]); err != nil {
+		if err := apl.ArrayBounds(ar, int(idx.Ints[0])); err != nil {
 			return nil, err
 		}
-		return ar.At(idx.Ints[0]), nil
+		return ar.At(int(idx.Ints[0])), nil
 	}
 
 	res := apl.MixedArray{

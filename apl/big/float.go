@@ -96,8 +96,7 @@ func (f Float) Mul2(R apl.Value) (apl.Value, bool) {
 }
 
 func (f Float) Div() (apl.Value, bool) {
-	one := Float{f.cpy().SetInt64(1)}
-	return one.Div2(f)
+	return Float{big.NewFloat(1)}.Div2(f)
 }
 func (f Float) Div2(R apl.Value) (apl.Value, bool) {
 	if f.Float.IsInf() {

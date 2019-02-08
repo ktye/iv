@@ -3,14 +3,13 @@ package apl
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 )
 
 type Tower struct {
-	Numbers   map[reflect.Type]Numeric
-	FromIndex func(int) Number
-	Uniform   func([]Value) (Value, bool) // Values must already be uniform.
-	idx       []*Numeric
+	Numbers map[reflect.Type]*Numeric
+	Import  func(v Number) Number       // Import Bool or Int
+	Uniform func([]Value) (Value, bool) // Values must already be uniform.
+	idx     []*Numeric
 }
 
 // SetTower sets the numerical tower.
@@ -21,7 +20,7 @@ func (a *Apl) SetTower(t Tower) error {
 		for _, n := range t.Numbers {
 			if n.Class == i {
 				m := n
-				t.idx[i] = &m
+				t.idx[i] = m
 			}
 		}
 	}
@@ -36,6 +35,7 @@ func (a *Apl) SetTower(t Tower) error {
 
 // Parse tries to parse a string as a Number, starting with the lowest number type.
 func (t Tower) Parse(s string) (NumExpr, error) {
+
 	// Bool and Index can be parsed directly.
 	switch s {
 	case "1b":
@@ -43,8 +43,8 @@ func (t Tower) Parse(s string) (NumExpr, error) {
 	case "0b":
 		return NumExpr{Bool(false)}, nil
 	default:
-		if i, err := strconv.Atoi(s); err == nil {
-			return NumExpr{Index(i)}, nil
+		if n, ok := ParseInt(s); ok {
+			return NumExpr{n}, nil
 		}
 	}
 
@@ -72,24 +72,26 @@ func (t Tower) SameType(a, b Number) (Number, Number, error) {
 	}
 
 	// Handle Bool and Index.
-	if _, ok := a.(Bool); ok {
+	if ab, ok := a.(Bool); ok {
 		if _, ok := b.(Index); ok {
-			return indexFromBool(a.(Bool)), b, nil
+			return bool2int(ab), b, nil
 		}
-		a = t.FromBool(a.(Bool))
-		at = reflect.TypeOf(a)
-	} else if _, ok := a.(Index); ok {
-		a = t.FromIndex(int(a.(Index)))
+		a = t.Import(a)
 		at = reflect.TypeOf(a)
 	}
-	if _, ok := b.(Bool); ok {
+	if bb, ok := b.(Bool); ok {
 		if _, ok := a.(Index); ok {
-			return a, indexFromBool(b.(Bool)), nil
+			return a, bool2int(bb), nil
 		}
-		b = t.FromBool(b.(Bool))
+		b = t.Import(b)
 		bt = reflect.TypeOf(b)
-	} else if _, ok := b.(Index); ok {
-		b = t.FromIndex(int(b.(Index)))
+	}
+	if _, ok := a.(Index); ok {
+		a = t.Import(a)
+		at = reflect.TypeOf(a)
+	}
+	if _, ok := b.(Index); ok {
+		b = t.Import(b)
 		bt = reflect.TypeOf(b)
 	}
 
@@ -101,40 +103,40 @@ func (t Tower) SameType(a, b Number) (Number, Number, error) {
 	if ok == false {
 		return nil, nil, fmt.Errorf("numeric tower: unknown number type %T", b)
 	}
-	pa := &na
-	pb := &nb
 	for i := na.Class; i < nb.Class; i++ {
-		a, ok = pa.Uptype(a)
+		a, ok = na.Uptype(a)
 		if ok == false {
 			// Uptype should return the original number if it fails.
 			return nil, nil, fmt.Errorf("cannot uptype %T", a)
 		}
-		pa = t.idx[i+1]
+		na = t.idx[i+1]
 	}
 	for i := nb.Class; i < na.Class; i++ {
-		b, ok = pb.Uptype(b)
+		b, ok = nb.Uptype(b)
 		if ok == false {
 			// Uptype should return the original number if it fails.
 			return nil, nil, fmt.Errorf("cannot uptype %T", b)
 		}
-		pb = t.idx[i+1]
+		nb = t.idx[i+1]
 	}
 	return a, b, nil
 }
 
-func indexFromBool(b Bool) Index {
+func bool2int(b Bool) Index {
 	if b {
 		return Index(1)
 	}
 	return Index(0)
 }
 
-func (t *Tower) FromBool(b Bool) Number {
-	if b {
-		return t.FromIndex(1)
+func (a *Apl) IsZero(n Number) bool {
+	b, ok := a.Tower.ToBool(n)
+	if ok == false {
+		return false
 	}
-	return t.FromIndex(0)
+	return b == false
 }
+
 func (t *Tower) ToBool(n Number) (Bool, bool) {
 	if idx, ok := n.ToIndex(); ok == false {
 		return false, false
@@ -145,6 +147,32 @@ func (t *Tower) ToBool(n Number) (Bool, bool) {
 	} else {
 		return true, true
 	}
+}
+
+func (t *Tower) ToNumeric(v Number) *Numeric {
+	if _, ok := v.(Bool); ok {
+		return &Numeric{
+			Class: -2,
+			Uptype: func(n Number) (Number, bool) {
+				if b := n.(Bool); b {
+					return Index(1), true
+				}
+				return Index(0), true
+			},
+		}
+	}
+	if _, ok := v.(Index); ok {
+		return &Numeric{
+			Class: -1,
+			Uptype: func(n Number) (Number, bool) {
+				return t.Import(n), true
+			},
+		}
+	}
+	if num, ok := t.Numbers[reflect.TypeOf(v)]; ok {
+		return num
+	}
+	return nil
 }
 
 // Numeric is a member of the tower.

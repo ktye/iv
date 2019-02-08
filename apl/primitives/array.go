@@ -213,7 +213,7 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 		copy(x, X.Ints)
 		sort.Ints(x)
 		for i := range x {
-			x[i] -= a.Origin
+			x[i] -= int(a.Origin)
 		}
 
 		// (⍴L)[X] ←→ (⍴R).

@@ -435,7 +435,7 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			}
 		}
 	}
-	shape[axis] = count
+	shape[axis] = int(count)
 	res := apl.MixedArray{Dims: shape}
 	res.Values = make([]apl.Value, apl.ArraySize(res))
 	ic, idx := apl.NewIdxConverter(rs)
@@ -446,7 +446,7 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			res.Values[i] = apl.Index(0) // TODO: When is a Fill value different from 0?
 		} else {
 			copy(idx, dst)
-			idx[axis] = n
+			idx[axis] = int(n)
 			res.Values[i] = ar.At(ic.Index(idx)) // TODO copy
 		}
 		apl.IncArrayIndex(dst, shape)
@@ -479,7 +479,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 				fmt.Println("ar is index array: dims:", ir.Dims)
 			}
 
-			ax := axis
+			ax := int(axis)
 			if ax < 0 {
 				ax = len(rs) + ax
 			}
@@ -521,7 +521,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			sum++
 		}
 	}
-	shape[axis] = sum
+	shape[axis] = int(sum)
 
 	res := apl.MixedArray{Dims: shape}
 	n := apl.ArraySize(res)
@@ -540,7 +540,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			if k > 0 {
 				idx[axis] = j
 				j++
-				for m := 0; m < k; m++ {
+				for m := 0; m < int(k); m++ {
 					dst[axis] = d
 					d++
 					res.Values[dic.Index(dst)] = ar.At(ic.Index(idx)) // TODO copy
@@ -550,7 +550,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 				d++
 				res.Values[dic.Index(dst)] = apl.Index(0)
 			} else if k < 0 {
-				for m := 0; m < (-k); m++ {
+				for m := 0; m < int(-k); m++ {
 					dst[axis] = d
 					d++
 					res.Values[dic.Index(dst)] = apl.Index(0)
@@ -641,7 +641,7 @@ func compress(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	shape := apl.CopyShape(ar)
 	count := 0
 	for _, b := range ai.Ints {
-		count += b
+		count += int(b)
 	}
 	shape[axis] = count
 

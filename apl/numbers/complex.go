@@ -119,7 +119,7 @@ func (c Complex) ToIndex() (int, bool) {
 	r := real(complex128(c))
 	n := int(r)
 	if float64(n) == r {
-		return n, true
+		return int(n), true
 	}
 	return 0, false
 }

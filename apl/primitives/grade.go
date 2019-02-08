@@ -110,9 +110,9 @@ func gradeSetup(a *apl.Apl, R apl.Value) (sortIndexes, error) {
 				v := b[i][k]
 				var num apl.Number
 				if n, ok := v.(apl.Index); ok {
-					num = a.Tower.FromIndex(int(n))
+					num = a.Tower.Import(apl.Index(n))
 				} else if n, ok := v.(apl.Bool); ok {
-					num = a.Tower.FromBool(n)
+					num = a.Tower.Import(n)
 				} else if n, ok := v.(apl.Number); ok {
 					num = n
 				} else {

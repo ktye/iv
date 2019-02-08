@@ -21,21 +21,29 @@ func Register(a *apl.Apl, name string) {
 
 // SetBigTower sets the numerical tower to Int->Rat.
 func SetBigTower(a *apl.Apl) {
-	m := make(map[reflect.Type]apl.Numeric)
-	m[reflect.TypeOf(Int{})] = apl.Numeric{
+	m := make(map[reflect.Type]*apl.Numeric)
+	m[reflect.TypeOf(Int{})] = &apl.Numeric{
 		Class:  0,
 		Parse:  ParseInt,
 		Uptype: intToRat,
 	}
-	m[reflect.TypeOf(Rat{})] = apl.Numeric{
+	m[reflect.TypeOf(Rat{})] = &apl.Numeric{
 		Class:  1,
 		Parse:  ParseRat,
 		Uptype: func(n apl.Number) (apl.Number, bool) { return n, false },
 	}
 	t := apl.Tower{
 		Numbers: m,
-		FromIndex: func(n int) apl.Number {
-			return Int{big.NewInt(int64(n))}
+		Import: func(n apl.Number) apl.Number {
+			if b, ok := n.(apl.Bool); ok {
+				if b {
+					return Int{big.NewInt(1)}
+				}
+				return Int{big.NewInt(0)}
+			} else if n, ok := n.(apl.Index); ok {
+				return Int{big.NewInt(int64(n))}
+			}
+			return n
 		},
 		Uniform: func(v []apl.Value) (apl.Value, bool) { return nil, false },
 	}
@@ -46,21 +54,30 @@ func SetBigTower(a *apl.Apl) {
 
 // SetPreciseTower sets the numerical tower to Float->Complex with the given precision.
 func SetPreciseTower(a *apl.Apl, prec uint) {
-	m := make(map[reflect.Type]apl.Numeric)
-	m[reflect.TypeOf(Float{})] = apl.Numeric{
+	m := make(map[reflect.Type]*apl.Numeric)
+	m[reflect.TypeOf(Float{})] = &apl.Numeric{
 		Class:  0,
 		Parse:  func(s string) (apl.Number, bool) { return ParseFloat(s, prec) },
 		Uptype: floatToComplex,
 	}
-	m[reflect.TypeOf(Complex{})] = apl.Numeric{
+	m[reflect.TypeOf(Complex{})] = &apl.Numeric{
 		Class:  1,
 		Parse:  func(s string) (apl.Number, bool) { return ParseComplex(s, prec) },
 		Uptype: func(n apl.Number) (apl.Number, bool) { return n, false },
 	}
 	t := apl.Tower{
 		Numbers: m,
-		FromIndex: func(n int) apl.Number {
-			return Float{big.NewFloat(float64(n)).SetPrec(prec)}
+		Import: func(n apl.Number) apl.Number {
+			if b, ok := n.(apl.Bool); ok {
+				if b {
+					return Float{big.NewFloat(1).SetPrec(prec)}
+				}
+				return Float{big.NewFloat(0).SetPrec(prec)}
+			} else if n, ok := n.(apl.Index); ok {
+				f := Float{big.NewFloat(float64(n)).SetPrec(prec)}
+				return f
+			}
+			return n
 		},
 		Uniform: func(v []apl.Value) (apl.Value, bool) { return nil, false },
 	}

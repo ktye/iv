@@ -3,7 +3,6 @@ package apl
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 )
@@ -330,25 +329,6 @@ func (e EmptyArray) Reshape(s []int) Value {
 		res.Ints[i] = 0
 	}
 	return res
-}
-
-type Index int
-
-func (i Index) String(a *Apl) string {
-	s := strconv.Itoa(int(i))
-	return strings.Replace(s, "-", "¯", 1)
-}
-
-func (i Index) ToIndex() (int, bool) {
-	return int(i), true
-}
-
-func (i Index) Less(v Value) (Bool, bool) {
-	j, ok := v.(Index)
-	if ok == false {
-		return false, false
-	}
-	return i < j, true
 }
 
 // IntdexArray is an array implementation which has only int values.

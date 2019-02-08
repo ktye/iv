@@ -182,8 +182,8 @@ func (d brack) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IndexArray,
 func (d brack) Doc() string { return "bracket operator" }
 
 func newTower() Tower {
-	m := make(map[reflect.Type]Numeric)
-	m[reflect.TypeOf(Index(0))] = Numeric{
+	m := make(map[reflect.Type]*Numeric)
+	m[reflect.TypeOf(Index(0))] = &Numeric{
 		Class: 0,
 		Parse: func(s string) (Number, bool) {
 			s = strings.Replace(s, "¯", "-", -1)

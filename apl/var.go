@@ -247,7 +247,7 @@ func (a *Apl) SetPP(R Value) error {
 		}
 	} else if n, ok := R.(Number); ok {
 		if i, ok := n.ToIndex(); ok {
-			a.PP = int(i)
+			a.PP = i
 			return nil
 		}
 	}

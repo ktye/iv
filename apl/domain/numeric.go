@@ -1,10 +1,6 @@
 package domain
 
-import (
-	"reflect"
-
-	"github.com/ktye/iv/apl"
-)
+import "github.com/ktye/iv/apl"
 
 // ToNumber accepts scalars and single size arrays.
 // and converts them to scalars if they contain one of the types:
@@ -25,7 +21,12 @@ type number struct {
 }
 
 func (n number) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
-	v := V
+	if _, ok := V.(apl.Number); ok {
+		return propagate(a, V, n.child)
+	}
+	if n.convert == false {
+		return V, false
+	}
 	if ar, ok := V.(apl.Array); ok {
 		if n.convert == false {
 			return V, false
@@ -33,16 +34,10 @@ func (n number) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		if n := apl.ArraySize(ar); n != 1 {
 			return V, false
 		}
-		v = ar.At(0)
-	}
-	if b, ok := V.(apl.Bool); ok {
-		return a.Tower.FromBool(b), true
-	}
-	if i, ok := V.(apl.Index); ok {
-		return a.Tower.FromIndex(int(i)), true
-	}
-	if _, ok := a.Tower.Numbers[reflect.TypeOf(v)]; ok {
-		return v, true
+		v := ar.At(0)
+		if _, ok := v.(apl.Number); ok {
+			return propagate(a, v, n.child)
+		}
 	}
 	return V, false
 }

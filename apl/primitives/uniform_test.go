@@ -67,7 +67,7 @@ func TestUnify(t *testing.T) {
 
 		// Mixed but uptypable.
 		{
-			apl.MixedArray{Dims: []int{4}, Values: []apl.Value{apl.Bool(false), apl.Index(0), numbers.Integer(1), numbers.Float(1)}},
+			apl.MixedArray{Dims: []int{4}, Values: []apl.Value{apl.Bool(false), apl.Index(0), apl.Index(1), numbers.Float(1)}},
 			reflect.TypeOf(apl.MixedArray{}), false,
 			reflect.TypeOf(numbers.FloatArray{}), true,
 		},

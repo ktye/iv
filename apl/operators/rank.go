@@ -31,11 +31,11 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		if n := apl.ArraySize(ai); n < 1 || n > 3 {
 			return nil, fmt.Errorf("rank: RO vector has %d elements, must be between 1..3", n)
 		} else if n == 1 {
-			p, q, r = ai.Ints[0], ai.Ints[0], ai.Ints[0]
+			p, q, r = int(ai.Ints[0]), int(ai.Ints[0]), int(ai.Ints[0])
 		} else if n == 2 {
-			p, q, r = ai.Ints[1], ai.Ints[0], ai.Ints[1]
+			p, q, r = int(ai.Ints[1]), int(ai.Ints[0]), int(ai.Ints[1])
 		} else if n == 3 {
-			p, q, r = ai.Ints[0], ai.Ints[1], ai.Ints[2]
+			p, q, r = int(ai.Ints[0]), int(ai.Ints[1]), int(ai.Ints[2])
 		}
 
 		ar, ok := R.(apl.Array)
@@ -221,7 +221,9 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 				if diffshape {
 					idx := apl.IndexArray{Dims: []int{len(common)}}
 					idx.Ints = make([]int, len(common))
-					copy(idx.Ints, common)
+					for i := range common {
+						idx.Ints[i] = int(common[i])
+					}
 					var err error
 					vr, err = Take(a, idx, vr, nil)
 					if err != nil {
@@ -283,7 +285,7 @@ func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array, x []int) (apl.Array, erro
 		shape[i] = rs[i]
 	}
 	for i, k := range x {
-		shape[k] = ai.Ints[i]
+		shape[k] = int(ai.Ints[i])
 		if shape[k] < 0 {
 			shape[k] = -shape[k]
 		}
@@ -295,7 +297,7 @@ func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array, x []int) (apl.Array, erro
 		if i < len(ai.Ints) {
 			if n := ai.Ints[i]; n < 0 {
 				k := x[i]
-				off[k] = rs[k] + n
+				off[k] = rs[k] + int(n)
 			}
 		}
 	}

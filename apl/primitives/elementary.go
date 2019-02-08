@@ -103,24 +103,15 @@ func arith1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 			return res, nil
 		}
 
-		if v, ok := R.(apl.Index); ok {
-			R = a.Tower.FromIndex(int(v))
-		} else if v, ok := R.(apl.Bool); ok {
-			R = a.Tower.FromBool(v)
-		}
-
-		// Uptype and call the function.
 		n, ok := R.(apl.Number)
 		if ok == false {
 			return nil, fmt.Errorf("%s: not a numeric type %T", symbol, R)
 		}
-
-		num, ok := a.Tower.Numbers[reflect.TypeOf(n)]
-		if ok == false {
+		num := a.Tower.ToNumeric(n)
+		if num == nil {
 			return nil, fmt.Errorf("%s: unknown numeric type %T", symbol, n)
 		}
-
-		for i := num.Class; i < len(a.Tower.Numbers); i++ {
+		for i := num.Class; ; i++ {
 			if res, ok := fn(a, n); ok {
 				return res, nil
 			}
@@ -147,17 +138,6 @@ func arith2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 			}
 		}
 
-		if v, ok := L.(apl.Index); ok {
-			L = a.Tower.FromIndex(int(v))
-		} else if v, ok := L.(apl.Bool); ok {
-			L = a.Tower.FromBool(v)
-		}
-		if v, ok := R.(apl.Index); ok {
-			R = a.Tower.FromIndex(int(v))
-		} else if v, ok := R.(apl.Bool); ok {
-			R = a.Tower.FromBool(v)
-		}
-
 		ln, ok := L.(apl.Number)
 		if ok == false {
 			return nil, fmt.Errorf("%s: left argument is not a numeric type %T", symbol, L)
@@ -166,13 +146,17 @@ func arith2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 		if ok == false {
 			return nil, fmt.Errorf("%s: right argument is not a numeric type %T", symbol, R)
 		}
+
 		var err error
 		ln, rn, err = a.Tower.SameType(ln, rn)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", symbol, err)
 		}
+		num := a.Tower.ToNumeric(ln)
+		if num == nil {
+			return nil, fmt.Errorf("%s: unknown numeric type %T", symbol, ln)
+		}
 
-		num := a.Tower.Numbers[reflect.TypeOf(ln)]
 		for i := num.Class; i < len(a.Tower.Numbers); i++ {
 			if res, ok := fn(a, ln, rn); ok {
 				return res, nil
@@ -330,7 +314,7 @@ func abs(a *apl.Apl, R apl.Value) (apl.Value, bool) {
 	if a, ok := R.(abser); ok {
 		return a.Abs()
 	}
-	zero, r, err := a.Tower.SameType(a.Tower.FromIndex(0), R.(apl.Number))
+	zero, r, err := a.Tower.SameType(a.Tower.Import(apl.Index(0)), R.(apl.Number))
 	if err != nil {
 		return nil, false
 	}
@@ -344,19 +328,11 @@ func abs(a *apl.Apl, R apl.Value) (apl.Value, bool) {
 }
 func abs2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	// R-L×⌊R÷L+0=L
-	zero, _, err := a.Tower.SameType(a.Tower.FromIndex(0), L.(apl.Number))
+	// L0 ← L=0
+
+	L0, _, err := a.Tower.SameType(apl.Bool(a.IsZero(L.(apl.Number))), L.(apl.Number))
 	if err != nil {
 		return nil, false
-	}
-	L0 := zero // 0=L
-	if Lzero, ok := equals(L.(apl.Number), zero); ok == false {
-		return nil, false
-	} else if Lzero {
-		one, _, err := a.Tower.SameType(a.Tower.FromIndex(1), L.(apl.Number))
-		if err != nil {
-			return nil, false
-		}
-		L0 = one
 	}
 	x, ok := add2(a, L, L0)
 	if ok == false {
@@ -375,7 +351,6 @@ func abs2(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	if err != nil {
 		return nil, false
 	}
-
 	x, ok = mul2(a, L, x)
 	if ok == false {
 		return nil, false
@@ -483,19 +458,10 @@ type gcder interface {
 
 func lcm(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	// lcm(R, L) = abs(L times R) / gcd(L, R)
-
 	// If any of L or R is 0, return 0
-	zero, _, err := a.Tower.SameType(a.Tower.FromIndex(0), L.(apl.Number))
-	if err != nil {
-		return nil, false
+	if a.IsZero(L.(apl.Number)) || a.IsZero(R.(apl.Number)) {
+		return apl.Index(0), true
 	}
-	if is0, ok := equals(L.(apl.Number), zero); ok && bool(is0) {
-		return zero, true
-	}
-	if is0, ok := equals(R.(apl.Number), zero); ok && bool(is0) {
-		return zero, true
-	}
-
 	p, ok := mul2(a, L, R)
 	if ok == false {
 		return nil, false
@@ -512,17 +478,12 @@ func lcm(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 }
 func gcd(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	// If any of L or R is 0, return the other.
-	zero, _, err := a.Tower.SameType(a.Tower.FromIndex(0), L.(apl.Number))
-	if err != nil {
-		return nil, false
-	}
-	if is0, ok := equals(L.(apl.Number), zero); ok && bool(is0) {
+	if a.IsZero(L.(apl.Number)) {
 		return R, true
 	}
-	if is0, ok := equals(R.(apl.Number), zero); ok && bool(is0) {
+	if a.IsZero(R.(apl.Number)) {
 		return L, true
 	}
-
 	if g, ok := L.(gcder); ok {
 		return g.Gcd(R)
 	}

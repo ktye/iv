@@ -72,7 +72,7 @@ func rollNumber(a *apl.Apl, n apl.Number) (apl.Number, error) {
 		f := rand.Float64()
 		return numbers.Float(f), nil // This only works with the default tower.
 	} else {
-		return a.Tower.FromIndex(rand.Intn(m) + a.Origin), nil
+		return a.Tower.Import(apl.Index(rand.Intn(m) + a.Origin)), nil
 	}
 }
 

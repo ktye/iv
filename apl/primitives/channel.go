@@ -27,7 +27,7 @@ func channelSource(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	if ax != nil {
 		n = ax[0]
 	}
-	n += a.Origin // splitAxis substracts the origin.
+	n += int(a.Origin) // splitAxis substracts the origin.
 
 	c := apl.NewChannel()
 	if n == 0 {

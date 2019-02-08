@@ -11,7 +11,6 @@ func init() {
 	// Register types for communication.
 	gob.Register(apl.Bool(false))
 	gob.Register(apl.Index(0))
-	gob.Register(numbers.Integer(0))
 	gob.Register(numbers.Float(0.0))
 	gob.Register(numbers.Complex(0))
 	gob.Register(apl.String(""))
