@@ -15,7 +15,10 @@ type Integer int64
 // The format string is passed to fmt and - is replaced by ¯,
 // except if the first rune is -.
 func (i Integer) String(a *apl.Apl) string {
-	format, minus := getformat(a, i, "%d")
+	format, minus := getformat(a, i)
+	if format == "" {
+		format = "%v"
+	}
 	s := fmt.Sprintf(format, int64(i))
 	if minus == false {
 		s = strings.Replace(s, "-", "¯", 1)

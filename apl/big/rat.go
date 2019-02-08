@@ -18,11 +18,11 @@ type Rat struct {
 }
 
 func (r Rat) String(a *apl.Apl) string {
-	format, minus := getformat(a, r, "")
+	format, minus := getformat(a, r)
 	if format == "" {
 		s := r.Rat.String()
 		if minus == false {
-			s = strings.Replace(s, "¯", "-", -1)
+			s = strings.Replace(s, "-", "¯", -1)
 		}
 		if strings.HasSuffix(s, "/1") {
 			return s[:len(s)-2]

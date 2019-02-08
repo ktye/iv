@@ -2,7 +2,6 @@ package primitives
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -32,9 +31,9 @@ var testCases = []struct {
 	{"1-2", "¯1", 0}, // negative number
 	{"¯1", "¯1", 0},
 	{"1-¯2", "3", 0},
-	{"1a90", "0J1", cmplx}, // a complex number
-	{"1a60+1a300", "1J0", cmplx},
-	{"1J1", "1J1", cmplx},
+	{"1a90", "0J1", float}, // a complex number
+	{"1a60+1a300", "1J0", float},
+	{"1J1", "1J1", float},
 
 	{"⍝ Vectors", "", 0},
 	{"1 2 3", "1 2 3", 0},
@@ -58,7 +57,7 @@ var testCases = []struct {
 	{"2 4 6 8 10<6", "1 1 0 0 0", 0},          // less than
 	{"2 4 6 8 10≤6", "1 1 1 0 0", 0},          // less or equal
 	{"1 2 3 ≠ 1.1 2 3", "1 0 0", 0},           // not equal
-	{"3=3.1 3 ¯2 ¯3 3J0", "0 1 0 0 1", cmplx}, // equal
+	{"3=3.1 3 ¯2 ¯3 3J0", "0 1 0 0 1", float}, // equal
 	{"2+2=2", "3", 0},                         // calculating with boolean values
 	{"2×1 2 3=4 2 1", "0 2 0", 0},             // dyadic array
 	{"-3<4", "¯1", 0},                         // monadic scalar
@@ -105,9 +104,10 @@ var testCases = []struct {
 	{"⎕IO", "1", 0},
 	{"⎕IO←0 ⋄ ⎕IO", "0", 0},
 	{"⎕PP←1 ⋄ ⎕PP", "1", 0},
-	{"⎕PP←1 2⋄ ⎕PP", "1 2", 0},
-	{"⎕PP←1 ⋄ 1.23456789", "1", 0},
-	{"⎕PP←3 ⋄ 1.23456789", "1.23", 0},
+	{"⎕PP←0 ⋄ 1.23456789", "1.23457", small},
+	{"⎕PP←¯1 ⋄ 1.23456789", "1.23456789", small},
+	{"⎕PP←1 ⋄ 1.23456789", "1", small},
+	{"⎕PP←3 ⋄ 1.23456789", "1.23", small},
 
 	{"⍝ Type, typeof", "apl/primitives/type.go", 0},
 	{"⌶'a'", "apl.String", 0},
@@ -129,7 +129,7 @@ var testCases = []struct {
 	{"⍝ Scalar primitives with axis", "apl/primitives/array.go", 0},
 	{"(2 3⍴⍳6)+[2]1 2 3", "2 4 6\n5 7 9", 0},
 	{"1 2 3 +[2] 2 3⍴⍳6", "2 4 6\n5 7 9", 0},
-	{"K←2 3⍴.1×⍳6⋄J←2 3 4⍴⍳24⋄N←J+[1 2]K⋄⍴N⋄N[1;2;3]⋄N[2;3;4]", "2 3 4\n7.2\n24.6", 0},
+	{"K←2 3⍴.1×⍳6⋄J←2 3 4⍴⍳24⋄N←J+[1 2]K⋄⍴N⋄N[1;2;3]⋄N[2;3;4]", "2 3 4\n7.2\n24.6", small},
 
 	{"⍝ Iota", "apl/primitives/iota.go", 0},
 	{"⍳5", "1 2 3 4 5", 0}, // index generation
@@ -202,36 +202,36 @@ var testCases = []struct {
 	{"4 5 6⍷3 3⍴⍳9", "0 0 0\n1 0 0\n0 0 0", 0},
 
 	{"⍝ Magnitude, Residue, Ceil, Floor, Min, Max", "apl/primitives/elementary.go", 0},
-	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", cmplx},              // magnitude
-	{"3 3 ¯3 ¯3|¯5 5 ¯4 4", "1 2 ¯1 ¯2", 0},                  // residue
-	{"0.5|3.12 ¯1 ¯0.6", "0.12 0 0.4", 0},                    // residue
-	{"¯1 0 1|¯5.25 0 2.41", "¯0.25 0 0.41", 0},               // residue
-	{"1j2|2j3 3j4 5j6", "1J1 ¯1J1 0J1", cmplx},               // complex residue
-	{"4J6|7J10", "3J4", cmplx},                               // complex residue
-	{"¯10 7J10 .3|17 5 10", "¯3 ¯5J7 0.1", cmplx},            // residue
-	{"⌊¯2.3 0.1 100 3.3", "¯3 0 100 3", 0},                   // floor
-	{"⌊0.5 + 0.4 0.5 0.6", "0 1 1", 0},                       // floor
-	{"⌊1j3.2 3.3j2.5 ¯3.3j¯2.5", "1J3 3J2 ¯3J¯3", cmplx},     // complex floor
-	{"⌊1.5J2.5", "2J2", cmplx},                               // complex floor
-	{"⌊1J2 1.2J2.5 ¯1.2J¯2.5", "1J2 1J2 ¯1J¯3", cmplx},       // complex floor
-	{"⌈¯2.7 3 .5", "¯2 3 1", 0},                              // ceil
-	{"⌈1.5J2.5", "1J3", cmplx},                               // complex ceil
-	{"⌈1J2 1.2J2.5 ¯1.2J¯2.5", "1J2 1J3 ¯1J¯2", cmplx},       // complex ceil
-	{"⌈¯2.3 0.1 100 3.3", "¯2 1 100 4", 0},                   // ceil
-	{"⌈1.2j2.5 1.2j¯2.5", "1J3 1J¯2", cmplx},                 // ceil
-	{"5⌊4 5 7", "4 5 5", 0},                                  // min
-	{"¯2⌊¯3", "¯3", 0},                                       // min
-	{"3.3 0 ¯6.7⌊3.1 ¯4 ¯5", "3.1 ¯4 ¯6.7", 0},               // min
-	{"¯2.1 0.1 15.3 ⌊ ¯3.2 1 22", "¯3.2 0.1 15.3", 0},        // min
-	{"5⌈4 5 7", "5 5 7", 0},                                  // max
-	{"¯2⌈¯3", "¯2", 0},                                       // max
-	{"3.3 0 ¯6.7⌈3.1 ¯4 ¯5", "3.3 0 ¯5", 0},                  // max
-	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", 0}, // max
+	{"|1 ¯2 ¯3.2 2.2a20", "1 2 3.2 2.2", float},                  // magnitude
+	{"3 3 ¯3 ¯3|¯5 5 ¯4 4", "1 2 ¯1 ¯2", 0},                      // residue
+	{"0.5|3.12 ¯1 ¯0.6", "0.12 0 0.4", small},                    // residue
+	{"¯1 0 1|¯5.25 0 2.41", "¯0.25 0 0.41", small},               // residue
+	{"1j2|2j3 3j4 5j6", "1J1 ¯1J1 0J1", float},                   // complex residue
+	{"4J6|7J10", "3J4", float},                                   // complex residue
+	{"¯10 7J10 .3|17 5 10", "¯3 ¯5J7 0.1", float},                // residue
+	{"⌊¯2.3 0.1 100 3.3", "¯3 0 100 3", 0},                       // floor
+	{"⌊0.5 + 0.4 0.5 0.6", "0 1 1", 0},                           // floor
+	{"⌊1j3.2 3.3j2.5 ¯3.3j¯2.5", "1J3 3J2 ¯3J¯3", float},         // complex floor
+	{"⌊1.5J2.5", "2J2", float},                                   // complex floor
+	{"⌊1J2 1.2J2.5 ¯1.2J¯2.5", "1J2 1J2 ¯1J¯3", float},           // complex floor
+	{"⌈¯2.7 3 .5", "¯2 3 1", 0},                                  // ceil
+	{"⌈1.5J2.5", "1J3", float},                                   // complex ceil
+	{"⌈1J2 1.2J2.5 ¯1.2J¯2.5", "1J2 1J3 ¯1J¯2", float},           // complex ceil
+	{"⌈¯2.3 0.1 100 3.3", "¯2 1 100 4", 0},                       // ceil
+	{"⌈1.2j2.5 1.2j¯2.5", "1J3 1J¯2", float},                     // ceil
+	{"5⌊4 5 7", "4 5 5", 0},                                      // min
+	{"¯2⌊¯3", "¯3", 0},                                           // min
+	{"3.3 0 ¯6.7⌊3.1 ¯4 ¯5", "3.1 ¯4 ¯6.7", small},               // min
+	{"¯2.1 0.1 15.3 ⌊ ¯3.2 1 22", "¯3.2 0.1 15.3", small},        // min
+	{"5⌈4 5 7", "5 5 7", 0},                                      // max
+	{"¯2⌈¯3", "¯2", 0},                                           // max
+	{"3.3 0 ¯6.7⌈3.1 ¯4 ¯5", "3.3 0 ¯5", small},                  // max
+	{"¯2.01 0.1 15.3 ⌈ ¯3.2 ¯1.1 22.7", "¯2.01 0.1 22.7", small}, // max
 
 	{"⍝ Factorial, gamma, binomial", "apl/primitives/elementary.go", 0},
-	{"!4", "24", sfloat},                                  // factorial
-	{"!1 2 3 4 5", "1 2 6 24 120", sfloat},                // factorial
-	{"!3J2", "¯3.0115J1.7702", cmplx | small},             // complex gamma
+	{"!4", "24", small},                                   // factorial
+	{"!1 2 3 4 5", "1 2 6 24 120", small},                 // factorial
+	{"!3J2", "¯3.01154J1.77017", small},                   // complex gamma
 	{"!.5 ¯.05", "0.886227 1.03145", small},               // real gamma (APL2 doc: "0.0735042656 1.031453317"?)
 	{"2!5", "10", small},                                  // binomial
 	{"3.2!5.2", "10.92", small},                           // binomial, floats with beta function
@@ -240,7 +240,7 @@ var testCases = []struct {
 	{"2 3 4!6 18 24", "15 816 10626", small},              // binomial
 	{"3!.05 2.5 ¯3.6", "0.0154375 0.3125 ¯15.456", small}, // binomial
 	{"0 1 2 3!3", "1 3 3 1", small},                       // binomial coefficients
-	{"2!3J2", "1J5", small | cmplx},                       // binomial complex
+	{"2!3J2", "1J5", small},                               // binomial complex
 
 	{"⍝ Match, Not match, tally, depth", "apl/primitives/match.go", 0},
 	{"≡5", "0", 0},          // depth
@@ -329,7 +329,7 @@ var testCases = []struct {
 	{"3⊥4 3 2 1", "142", 0},
 	{"2⊥1 1 1 1", "15", 0},
 	{"1 2 3⊥3 2 1", "25", 0},
-	{"1J1⊥1 2 3 4", "5J9", cmplx},
+	{"1J1⊥1 2 3 4", "5J9", float},
 	{"24 60 60⊥2 23 12", "8592", 0},
 	{"(2 1⍴2 10)⊥3 2⍴ 1 4 0 3 1 2", "5 24\n101 432", 0},
 
@@ -339,7 +339,7 @@ var testCases = []struct {
 	{"⍴10⊤5 15 125", "3", 0},
 	{"⍴(1 1⍴10)⊤5 15 125", "1 1 3", 0},
 	{"0 10⊤5 15 125", "0 1 12\n5 5 5", 0},
-	{"0 1⊤1.25 10.5", "1 10\n0.25 0.5", 0},
+	{"0 1⊤1.25 10.5", "1 10\n0.25 0.5", small},
 	{"24 60 60⊤8592", "2 23 12", 0},
 	{"2 2 2 2 2⊤15", "0 1 1 1 1", 0},
 	{"2 2 2⊤15", "1 1 1", 0},
@@ -351,16 +351,16 @@ var testCases = []struct {
 	{"0 24 60 60⊤162507", "1 21 8 27", 0},
 	{"10 10 10⊤215 345 7", "2 3 0\n1 4 0\n5 5 7", 0},
 	{"(4 2⍴8 2)⊤15", "0 1\n0 1\n1 1\n7 1", 0},
-	{"3 2J3⊤2", "0J2 ¯1J2", cmplx},
-	{"0 2J3⊤2", "0J¯1 ¯1J2", cmplx},
-	{"3 2J3⊤2", "0J2 ¯1J2", cmplx},
-	{"3 2J3⊤2 1", "0J2 0J2\n¯1J2 ¯2J2", cmplx},
+	{"3 2J3⊤2", "0J2 ¯1J2", float},
+	{"0 2J3⊤2", "0J¯1 ¯1J2", float},
+	{"3 2J3⊤2", "0J2 ¯1J2", float},
+	{"3 2J3⊤2 1", "0J2 0J2\n¯1J2 ¯2J2", float},
 	{"10⊥2 2 2 2⊤15", "1111", 0},
 	{"10 10 10⊤123", "1 2 3", 0},
 	{"10 10 10⊤123 456", "1 4\n2 5\n3 6", 0},
 	{"2 2 2⊤¯1", "1 1 1", 0},
 	{"0 2 2⊤¯1", "¯1 1 1", 0},
-	{"0 1⊤3.75 ¯3.75", "3 ¯4\n0.75 0.25", 0},
+	{"0 1⊤3.75 ¯3.75", "3 ¯4\n0.75 0.25", small},
 	{"1 0⊤0", "0 0", 0},
 	{"0⊤0", "0", 0},
 	{"0⊤0 0", "0 0", 0},
@@ -472,7 +472,7 @@ var testCases = []struct {
 
 	{"⍝ Pi times, circular, trigonometric", "apl/primitives/elementary.go", 0},
 	{"○0 1 2", "0 3.14159 6.28319", small},                  // pi times
-	{"*○0J1", "¯1.00J0.00", cmplxf | small},                 // Euler identity
+	{"1E¯12>|1+*○0J1", "1", small},                          // Euler identity
 	{"0 ¯1 ○ 1", "0 1.5708", small},                         //
 	{"1○(○1)÷2 3 4", "1 0.866025 0.707107", small},          //
 	{"2○(○1)÷3", "0.5", small},                              //
@@ -554,13 +554,12 @@ var testCases = []struct {
 	{"⍝ Format as a string, Execute", "apl/primitives/format.go", 0},
 
 	{"⍕10", "10", 0},                                  // format as string
-	{"⍕10.1", "10.1", 0},                              // format as string
-	{"⍕123.45678901234", "123.457", 0},                // format as string
-	{"4⍕123.45678901234", "123.5", 0},                 // format with precision
-	{"⍴⊃(7 1⍕123.45678901234)", "7", 0},               // format with width and precision
+	{"⍕10.1", "10.1", small},                          // format as string
+	{"⍕123.45678901234", "123.457", small},            // format as string
+	{"4⍕123.45678901234", "123.5", small},             // format with precision
 	{"`%.3f@%.1f ⍕1J2", "2.236@63.4", small},          // format with string
-	{"`%.3f ⍕¯1.23456", "¯1.235", 0},                  // format with string
-	{"`-%.3f ⍕¯1.23456", "-1.235", 0},                 // format with string (normal minus sign)
+	{"`%.3f ⍕¯1.23456", "¯1.235", small},              // format with string
+	{"`-%.3f ⍕¯1.23456", "-1.235", small},             // format with string (normal minus sign)
 	{`⍕"alpha"`, `alpha`, 0},                          // format with default stringer
 	{`¯1⍕"alpha"`, `"alpha"`, 0},                      // format with text marshaler
 	{`¯1⍕"al\npha"`, `"al\npha"`, 0},                  // format with text marshaler
@@ -631,9 +630,9 @@ var testCases = []struct {
 	{`⍴""⊃" a  b c\tc "`, "4", 0},
 
 	{"⍝ Domino, solve linear system", "apl/primitives/domino.go", 0},
-	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", 0},
+	{"⌹2 2⍴2 0 0 1", "0.5 0\n0 1", small},
 	// TODO: this fails for big.Float. Remove sfloat and debug
-	{"(1 ¯2 0)⌹3 3⍴3 2 ¯1 2 ¯2 4 ¯1 .5 ¯1", "1\n¯2\n¯2", sfloat},
+	{"(1 ¯2 0)⌹3 3⍴3 2 ¯1 2 ¯2 4 ¯1 .5 ¯1", "1\n¯2\n¯2", small},
 	// A←2a30
 	// B←1a10
 	// RHS←A+B**(¯1+⍳6)×○1÷3
@@ -719,7 +718,7 @@ var testCases = []struct {
 
 	{"⍝ Commute, duplicate", "apl/operators/commute.go", 0},
 	{"∘.≤⍨1 2 3", "1 1 1\n0 1 1\n0 0 1", 0},
-	{"+/∘(÷∘⍴⍨)⍳10", "5.5", 0}, // mean value
+	{"+/∘(÷∘⍴⍨)⍳10", "5.5", small}, // mean value
 	{"⍴⍨3", "3 3 3", 0},
 	{"3-⍨4", "1", 0},
 	{"+/2*⍨2 2⍴4 7 1 8", "65 65", 0},
@@ -728,7 +727,7 @@ var testCases = []struct {
 	{"⍝ Composition", "apl/operators/jot.go", 0},
 	{"+/∘⍳¨2 4 6", "3 10 21", 0}, // Form I
 	{"1∘○ 10 20 30", "¯0.544021 0.912945 ¯0.988032", small},
-	{"+∘÷/40⍴1", "1.61803", 0},         // Form IV, golden ratio (continuous-fraction)
+	{"+∘÷/40⍴1", "1.61803", small},     // Form IV, golden ratio (continuous-fraction)
 	{"(*∘0.5)4 16 25", "2 4 5", float}, // Form III
 
 	{"⍝ Power operator", "apl/operators/power.go", 0},
@@ -751,27 +750,27 @@ var testCases = []struct {
 	{"(10 20@2 4)⍳5", "1 10 3 20 5", 0},
 	{"10 20@2 4⍳5", "1 10 3 20 5", 0},
 	{"((2 3⍴10 20)@2 4)4 3⍴⍳12", "1 2 3\n10 20 10\n7 8 9\n20 10 20", 0},
-	{"⍴@(0.5∘<)3 3⍴1 4 0.2 0.3 0.3 4", "5 5 0.2\n0.3 0.3 5\n5 5 0.2", 0},
-	{"÷@2 4 ⍳5", "1 0.5 3 0.25 5", 0},
+	{"⍴@(0.5∘<)3 3⍴1 4 0.2 0.3 0.3 4", "5 5 0.2\n0.3 0.3 5\n5 5 0.2", small},
+	{"÷@2 4 ⍳5", "1 0.5 3 0.25 5", small},
 	{"⌽@2 4 ⍳5", "1 4 3 2 5", 0},
 	{"10×@2 4⍳5", "1 20 3 40 5", 0},
 	{`(+\@2 4)4 3⍴⍳12`, "1 2 3\n4 9 15\n7 8 9\n10 21 33", 0},
 	{"0@(2∘|)⍳5", "0 2 0 4 0", 0},
-	{"÷@(2∘|)⍳5", "1 2 0.333333 4 0.2", 0},
+	{"÷@(2∘|)⍳5", "1 2 0.333333 4 0.2", small},
 	{"⌽@(2∘|)⍳5", "5 2 3 4 1", 0},
 
 	{"⍝ Stencil", "apl/operators/stencil.go", 0},
 	{"{⌈/⌈/⍵}⌺(3 3) ⊢3 3⍴⍳25", "5 6 6\n8 9 9\n8 9 9", 0},
 
 	{"⍝ Assignment, specification", "apl/operators/assign.go", 0},
-	{"X←3", "", 0},          // assign a number
-	{"-X←3", "¯3", 0},       // assign a value and use it
-	{"X←3⋄X←4", "", 0},      // assign and overwrite
-	{"X←3⋄⎕←X", "3", 0},     // assign and check
-	{"f←+", "", 0},          // assign a function
-	{"f←+⋄⎕←3 f 3", "6", 0}, // assign a function and apply
-	{"X←4⋄⎕←÷X", "0.25", 0}, // assign and use it in another expr
-	{"A←2 3 ⋄ A", "2 3", 0}, // assign a vector
+	{"X←3", "", 0},              // assign a number
+	{"-X←3", "¯3", 0},           // assign a value and use it
+	{"X←3⋄X←4", "", 0},          // assign and overwrite
+	{"X←3⋄⎕←X", "3", 0},         // assign and check
+	{"f←+", "", 0},              // assign a function
+	{"f←+⋄⎕←3 f 3", "6", 0},     // assign a function and apply
+	{"X←4⋄⎕←÷X", "0.25", small}, // assign and use it in another expr
+	{"A←2 3 ⋄ A", "2 3", 0},     // assign a vector
 
 	{"⍝ Indexed assignment", "apl/operators/assign.go", 0},
 	{"A←2 3 4 ⋄ A[1]←1 ⋄ A", "1 3 4", 0},
@@ -865,8 +864,8 @@ var testCases = []struct {
 	{"{⍵>1000:⍵⋄∇⍵+1}1", "1001", 0},
 
 	{"⍝ Trains, forks, atops", "apl/train.go", 0},
-	{"-,÷ 5", "¯0.2", 0},
-	{"(-,÷)5", "¯5 0.2", 0},
+	{"-,÷ 5", "¯0.2", float},
+	{"(-,÷)5", "¯5 0.2", float},
 	{"3(+×-)1", "8", 0},
 	{"(+⌿÷≢)3+⍳13", "10", 0},
 	{"(⍳{⍺/⍵}⍳)3", "1 2 2 3 3 3", 0},
@@ -877,10 +876,10 @@ var testCases = []struct {
 	{"(*-)1", "0.367879", float},
 	{"2(*-)1", "2.71828", float},
 	{"1(*-)2", "0.367879", float},
-	{"3(÷+×-)1", "0.125", 0},
-	{"(÷+×-)4", "¯0.0625", 0},
-	{"(⌊÷+×-)4", "¯0.25", 0},
-	{"6(⌊÷+×-)4", "0.2", 0},
+	{"3(÷+×-)1", "0.125", float},
+	{"(÷+×-)4", "¯0.0625", float},
+	{"(⌊÷+×-)4", "¯0.25", float},
+	{"6(⌊÷+×-)4", "0.2", float},
 	{"(3+*)4", "57.5982", float}, // Agh fork
 	//{"(⍳(/∘⊢)⍳)3", "1 2 2 3 3 3", 0}, // The hybrid token does not parse.
 
@@ -1013,8 +1012,8 @@ var testCases = []struct {
 
 	{"⍝ π", "", 0},
 	{".5*⍨6×+/÷2*⍨⍳1000", "3.14064", float},
-	{"4×-/÷¯1+2×⍳100", "3.13159", 0},
-	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.12159", 0},
+	{"4×-/÷¯1+2×⍳100", "3.13159", float},
+	{"4×+/{(⍵ ⍴ 1 0 ¯1 0)÷⍳⍵}100", "3.12159", float},
 
 	{"⍝ Conway-completeness", "", 0},
 	{"A←5 5⍴(23⍴2)⊤1215488⋄l←{3=S-⍵∧4=S←({+/,⍵}⌺3 3)⍵}⋄(l⍣8)A", "0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 1\n0 0 1 0 1\n0 0 0 1 1", 0},
@@ -1062,11 +1061,8 @@ func testCompare(got, exp string) bool {
 }
 
 const (
-	float  int = 1 << iota // only for floating point towers
-	small                  // normal tower only
-	sfloat                 // short float only
-	cmplx                  // short %g complex format
-	cmplxf                 // short %f complex format
+	float int = 1 << iota // only for floating point towers
+	small                 // normal tower only
 )
 
 func TestNormal(t *testing.T) {
@@ -1077,14 +1073,14 @@ func TestBig(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	testApl(t, big.SetBigTower, cmplx|small|float)
+	testApl(t, big.SetBigTower, small|float)
 }
 
 func TestPrecise(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	testApl(t, func(a *apl.Apl) { big.SetPreciseTower(a, 256) }, small|sfloat)
+	testApl(t, func(a *apl.Apl) { big.SetPreciseTower(a, 256) }, small)
 }
 
 func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
@@ -1150,22 +1146,6 @@ func testApl(t *testing.T, tower func(*apl.Apl), skip int) {
 		operators.Register(a)
 		aplstrings.Register(a, "s")
 		xgo.Register(a, "go")
-
-		// Set numeric formats.
-		m := make(map[reflect.Type]string)
-		if tc.flag&cmplx != 0 {
-			m[reflect.TypeOf(numbers.Complex(0))] = "%.5gJ%.5g"
-			m[reflect.TypeOf(big.Complex{})] = "%.5gJ%.5g"
-		}
-		if tc.flag&cmplxf != 0 {
-			m[reflect.TypeOf(numbers.Complex(0))] = "%.2fJ%.2f"
-		}
-		for t, f := range m {
-			if num, ok := a.Tower.Numbers[t]; ok {
-				num.Format = f
-				a.Tower.Numbers[t] = num
-			}
-		}
 
 		mustfail := strings.HasPrefix(tc.exp, "fail:")
 		lines := strings.Split(tc.in, "\n")

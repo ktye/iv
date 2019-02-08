@@ -7,17 +7,16 @@ import (
 type Bool bool
 
 func (b Bool) String(a *Apl) string {
+	if a.PP < 0 {
+		if b {
+			return "1b"
+		}
+		return "0b"
+	}
 	if b {
 		return "1"
 	}
 	return "0"
-}
-
-func (b Bool) Marshal(a *Apl) string {
-	if b {
-		return "1b"
-	}
-	return "0b"
 }
 
 func (i Bool) Less(v Value) (Bool, bool) {

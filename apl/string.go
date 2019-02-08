@@ -5,19 +5,22 @@ import (
 	"io"
 	"io/ioutil"
 	"reflect"
-	"strconv"
 )
 
 type String string
 
-// String returns the raw string.
-// To quote a string, use format (⍕S).
+// String prints a string.
 func (s String) String(a *Apl) string {
-	return string(s)
-}
-
-func (s String) Marshal(a *Apl) string {
-	return strconv.Quote(string(s))
+	f := a.Fmt[reflect.TypeOf(s)]
+	if f == "" {
+		if a.PP == -1 {
+			f = "%q"
+		}
+	}
+	if f == "" {
+		return string(s)
+	}
+	return fmt.Sprintf("%q", string(s))
 }
 
 func (s String) Eval(a *Apl) (Value, error) {

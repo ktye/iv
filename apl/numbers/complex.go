@@ -22,7 +22,16 @@ type Complex complex128
 // Examples:
 //	"%.3f", "%ga%.0f", "-%v", "%.5fJ%.5f"
 func (c Complex) String(a *apl.Apl) string {
-	format, minus := getformat(a, c, "%va%v")
+	format, minus := getformat(a, c)
+	if format == "" {
+		if a.PP < 0 {
+			format = "%vJ%v"
+		} else if a.PP == 0 {
+			format = "%.6GJ%.6G"
+		} else {
+			format = fmt.Sprintf("%%.%dGJ%%.%dG", a.PP, a.PP)
+		}
+	}
 	var s string
 	if strings.Count(format, "%") == 1 {
 		s = fmt.Sprintf(format, complex128(c))

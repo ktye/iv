@@ -2,6 +2,7 @@ package apl
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 	"unicode"
@@ -90,10 +91,7 @@ func (a *Apl) LookupEnv(name string) (Value, *env) {
 	if name == "⎕IO" {
 		return Index(a.Origin), nil
 	} else if name == "⎕PP" {
-		if a.PP[0] == 0 {
-			return Index(a.PP[1]), nil
-		}
-		return IndexArray{Dims: []int{2}, Ints: []int{a.PP[0], a.PP[1]}}, nil
+		return Index(a.PP), nil
 	}
 
 	if idx := strings.Index(name, "→"); idx != -1 {
@@ -226,52 +224,32 @@ func isVarname(s string) (ok, isfunc bool) {
 	return true, upper == false
 }
 
+// SetPP is called when a value is assigned to Quad-PP.
+// If R is an integer, PP is set to this value.
+// If R is a dict that maps from values to string, the format strings of the types are set.
+// If R is the empty array, all format strings are removed and PP is reset.
 func (a *Apl) SetPP(R Value) error {
-	pp, err := a.toPP(R)
-	if err != nil {
-		return err
-	}
-	a.PP = pp
-	a.Tower.SetPP(a.PP)
-	return nil
-}
-func (a *Apl) toPP(V Value) ([2]int, error) {
-	var pp [2]int
-	if num, ok := V.(Number); ok {
-		if i, ok := num.ToIndex(); ok {
-			return [2]int{0, i}, nil
-		} else {
-			return pp, fmt.Errorf("PP: number must be integer")
+	if _, ok := R.(EmptyArray); ok {
+		a.PP = 0
+		for k := range a.Fmt {
+			delete(a.Fmt, k)
 		}
-	}
-	if _, ok := V.(EmptyArray); ok {
-		return [2]int{0, 6}, nil // default value.
-	}
-	ar, ok := V.(Array)
-	if ok == false {
-		return pp, fmt.Errorf("PP: argument must be 1 or 2 integers: %T", V)
-	}
-
-	n := ar.Size()
-	if n < 1 || n > 2 {
-		return pp, fmt.Errorf("PP: argument must be 1 or 2 integers: %T", V)
-	}
-
-	for i := 0; i < n; i++ {
-		v := ar.At(i)
-		if num, ok := v.(Number); ok {
-			if n, ok := num.ToIndex(); ok {
-				pp[i] = n
-			} else {
-				return pp, fmt.Errorf("PP: numbers must be integers: %T", v)
+		return nil
+	} else if d, ok := R.(Object); ok {
+		keys := d.Keys()
+		for _, k := range keys {
+			v := d.At(a, k)
+			if v != nil {
+				if s, ok := v.(String); ok {
+					a.Fmt[reflect.TypeOf(k)] = string(s)
+				}
 			}
-		} else {
-			return pp, fmt.Errorf("PP: argument must be 1 or 2 integers: %T", V)
+		}
+	} else if n, ok := R.(Number); ok {
+		if i, ok := n.ToIndex(); ok {
+			a.PP = int(i)
+			return nil
 		}
 	}
-	if n == 1 {
-		pp[1] = pp[0]
-		pp[0] = 0
-	}
-	return pp, nil
+	return fmt.Errorf("illegal type for PP: %T", R)
 }

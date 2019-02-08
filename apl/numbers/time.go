@@ -49,7 +49,10 @@ func (t Time) String(a *apl.Apl) string {
 		return t1.Sub(y0).String()
 	}
 
-	format, _ := getformat(a, t, "2006.01.02T15.04.05.000")
+	format, _ := getformat(a, t)
+	if format == "" {
+		format = "2006.01.02T15.04.05.000"
+	}
 	return time.Time(t).Format(format)
 }
 

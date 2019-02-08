@@ -3,7 +3,6 @@
 package numbers
 
 import (
-	"fmt"
 	"reflect"
 	"time"
 
@@ -52,7 +51,6 @@ func newTower() apl.Tower {
 			return Integer(n)
 		},
 		Uniform: makeUniform,
-		SetPP:   func(pp [2]int) { setpp(pp, m) },
 	}
 	return t
 }
@@ -75,23 +73,13 @@ func makeUniform(v []apl.Value) (apl.Value, bool) {
 	return nil, false
 }
 
-// Setpp sets default width and precision for numeric types.
-func setpp(pp [2]int, m map[reflect.Type]apl.Numeric) {
-	f := ""
-	if pp[0] == 0 {
-		f = fmt.Sprintf("%%.%dG", pp[1])
-	} else {
-		f = fmt.Sprintf("%%%d.%dF", pp[0], pp[1])
+func getformat(a *apl.Apl, num apl.Value) (string, bool) {
+	if a == nil {
+		return "", false
 	}
-	if pp == [2]int{0, 0} {
-		f = ""
+	s := a.Fmt[reflect.TypeOf(num)]
+	if len(s) > 0 && s[0] == '-' {
+		return s[1:], true
 	}
-	formats := map[reflect.Type]string{
-		reflect.TypeOf(Float(0)):   f,
-		reflect.TypeOf(Complex(0)): f + "J" + f,
-	}
-	for t, n := range m {
-		n.Format = formats[t]
-		m[t] = n
-	}
+	return s, false
 }

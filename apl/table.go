@@ -38,22 +38,11 @@ func (t Table) String(a *Apl) string {
 	return string(b.Bytes())
 }
 
-// Marshal formats a table in a parsable but human readable form using a tabwriter.
-// It is called by ¯1⍕T and formats each value by ¯1⍕V.
-func (t Table) Marshal(a *Apl) string {
-	var b bytes.Buffer
-	if err := t.WriteFormatted(a, Index(-1), &b); err != nil {
-		return ""
-	}
-	return string(b.Bytes())
-}
-
 // Csv writes a table in csv format.
 // If L is nil, it uses ⍕V on each value.
 // If L is a dict with conforming keys, it uses the values as left arguments to format (L[Key])⍕V
 // for columns of the corresponding keys.
-// If L is not a dict, it is used as the left argument to format for each key.
-func (t Table) Csv(a *Apl, L Value, w io.Writer) error {
+func (t Table) Csv(a *Apl, L Object, w io.Writer) error {
 	f := t.newFormatter(a, L)
 	defer f.Close()
 
@@ -67,7 +56,7 @@ func (t Table) Csv(a *Apl, L Value, w io.Writer) error {
 
 // WriteFormatted writes the table with a tablwriter.
 // The format of the values is given by L in the same way as for Csv.
-func (t Table) WriteFormatted(a *Apl, L Value, w io.Writer) error {
+func (t Table) WriteFormatted(a *Apl, L Object, w io.Writer) error {
 	f := t.newFormatter(a, L)
 	defer f.Close()
 
@@ -92,34 +81,17 @@ func (t Table) write(a *Apl, f *tableFormatter, rw rowWriter) error {
 		return err
 	}
 
-	marshal := func(v Value) string {
-		if f.marshal {
-			if m, ok := v.(Marshaler); ok {
-				return m.Marshal(a)
-			}
-		}
-		return v.String(a)
-	}
 	setnumformat := func(v, k Value) {
 		if f.fmt == nil {
 			return
 		}
-		// Reset default values for unspecified fields.
-		a.Tower.SetPP(a.PP)
-
+		t := reflect.TypeOf(v)
 		s, ok := f.fmt[k]
 		if ok == false {
-			return
+			s = f.rst[t]
 		}
-		if _, ok := v.(Number); ok {
-			t := reflect.TypeOf(v)
-			if num, ok := a.Tower.Numbers[reflect.TypeOf(v)]; ok {
-				num.Format = s
-				a.Tower.Numbers[t] = num
-			}
-		}
+		a.Fmt[t] = s
 	}
-
 	for n := 0; n < t.Rows; n++ {
 		for i, k := range keys {
 			v := t.At(a, k).(Array).At(n)
@@ -130,14 +102,14 @@ func (t Table) write(a *Apl, f *tableFormatter, rw rowWriter) error {
 				for j := 0; j < size; j++ {
 					e := ar.At(j)
 					setnumformat(e, k)
-					vec[j] = marshal(e)
+					vec[j] = e.String(a)
 				}
 				r[i] = strings.Join(vec, " ")
-				if f.marshal {
+				if a.PP < 0 {
 					r[i] = "[" + r[i] + "]"
 				}
 			} else {
-				r[i] = marshal(v)
+				r[i] = v.String(a)
 			}
 		}
 		if err := rw.writeRow(r); err != nil {
@@ -166,33 +138,21 @@ func (w wsTable) writeRow(records []string) error {
 	return err
 }
 
-func (t Table) newFormatter(a *Apl, L Value) *tableFormatter {
+func (t Table) newFormatter(a *Apl, L Object) *tableFormatter {
 	var f tableFormatter
 	if L == nil {
 		return &f
 	}
 	f.a = a
-	f.pp = a.PP[:]                        // save pp
-	f.num = make(map[reflect.Type]string) // save numeric formats
-	for t, num := range a.Tower.Numbers {
-		f.num[t] = num.Format
-	}
-
-	pp, err := a.toPP(L)
-	if err == nil && pp[0] == 0 && pp[1] == -1 {
-		f.marshal = true
-	} else if err == nil {
-		a.SetPP(IndexArray{Dims: []int{2}, Ints: pp[:]})
-	}
-	d, ok := L.(Object)
-	if err == nil || ok == false {
-		return &f
+	f.rst = make(map[reflect.Type]string)
+	for t, s := range a.Fmt {
+		f.rst[t] = s
 	}
 
 	f.fmt = make(map[Value]string)
-	keys := d.Keys()
+	keys := L.Keys()
 	for _, k := range keys {
-		v := d.At(a, k)
+		v := L.At(a, k)
 		if s, ok := v.(String); ok {
 			f.fmt[k] = string(s)
 		}
@@ -201,22 +161,13 @@ func (t Table) newFormatter(a *Apl, L Value) *tableFormatter {
 }
 
 type tableFormatter struct {
-	a       *Apl
-	pp      []int
-	marshal bool
-	fmt     map[Value]string
-	num     map[reflect.Type]string
+	a   *Apl
+	rst map[reflect.Type]string
+	fmt map[Value]string
 }
 
 func (f *tableFormatter) Close() {
-	if f.pp != nil {
-		f.a.SetPP(IndexArray{Dims: []int{2}, Ints: f.pp})
-	}
-	if f.num != nil {
-		for t, s := range f.num {
-			num := f.a.Tower.Numbers[t]
-			num.Format = s
-			f.a.Tower.Numbers[t] = num
-		}
+	if f.a != nil {
+		f.a.Fmt = f.rst
 	}
 }

@@ -10,7 +10,6 @@ type Tower struct {
 	Numbers   map[reflect.Type]Numeric
 	FromIndex func(int) Number
 	Uniform   func([]Value) (Value, bool) // Values must already be uniform.
-	SetPP     func([2]int)
 	idx       []*Numeric
 }
 
@@ -31,9 +30,6 @@ func (a *Apl) SetTower(t Tower) error {
 			return fmt.Errorf("not a valid tower: class %d is missing", c)
 		}
 	}
-	if t.SetPP != nil {
-		t.SetPP(a.PP)
-	}
 	a.Tower = t
 	return nil
 }
@@ -42,9 +38,9 @@ func (a *Apl) SetTower(t Tower) error {
 func (t Tower) Parse(s string) (NumExpr, error) {
 	// Bool and Index can be parsed directly.
 	switch s {
-	case "1", "1b":
+	case "1b":
 		return NumExpr{Bool(true)}, nil
-	case "0", "0b":
+	case "0b":
 		return NumExpr{Bool(false)}, nil
 	default:
 		if i, err := strconv.Atoi(s); err == nil {
@@ -157,7 +153,6 @@ type Numeric struct {
 	Class  int
 	Parse  func(string) (Number, bool)
 	Uptype func(Number) (Number, bool)
-	Format string
 }
 
 // Number is the interface that a numeric type must implement.

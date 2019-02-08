@@ -16,7 +16,16 @@ type Float struct {
 }
 
 func (f Float) String(a *apl.Apl) string {
-	format, minus := getformat(a, f, "%v")
+	format, minus := getformat(a, f)
+	if format == "" {
+		if a.PP < 0 {
+			format = "%v"
+		} else if a.PP == 0 {
+			format = "%.6G"
+		} else {
+			format = fmt.Sprintf("%%.%dG", a.PP)
+		}
+	}
 	s := fmt.Sprintf(format, f.Float)
 	if s == "-0" {
 		s = "0"

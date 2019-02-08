@@ -28,12 +28,6 @@ type Value interface {
 	// or serialize optionally if a Value implements an Encoder?
 }
 
-// Marshaler is used for serialization with ¯1⍕V.
-// Values may implement it as a preference over String.
-type Marshaler interface {
-	Marshal(a *Apl) string
-}
-
 // VarReader is implemented by Values that are able to parse from a Reader.
 // The ReadFrom method must return a new value of the same type.
 // The function should be able to parse the format of it's String method.

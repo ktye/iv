@@ -16,10 +16,18 @@ type Complex struct {
 // String formats a complex as a string. The polar form is not supported.
 func (c Complex) String(a *apl.Apl) string {
 	// TODO parse MAGaDEG
-	def := "%vJ%v"
-	format, minus := getformat(a, c, "%vJ%v")
+	format, minus := getformat(a, c)
+	if format == "" {
+		if a.PP < 0 {
+			format = "%vJ%v"
+		} else if a.PP == 0 {
+			format = "%.6GJ%.6G"
+		} else {
+			format = fmt.Sprintf("%%.%dGJ%%.%dG", a.PP, a.PP)
+		}
+	}
 	if strings.Count(format, "%") != 2 {
-		format = def
+		format = "%.6GJ%.6G"
 	}
 	s := fmt.Sprintf(format, c.re, c.im)
 	if minus == false {

@@ -1,7 +1,7 @@
 ⍝ Create a table
 D ← 2019.02.07T13.25 + ⍳3
 N ← `Peter`Jack`Thomas
-B ← 1 0 1
+B ← 1b 0b 1b
 I ← 100 × ⍳3
 F ← 100÷⍳3
 C ← 1+0J1×⍳3

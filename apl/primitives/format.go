@@ -44,62 +44,29 @@ func init() {
 
 // Format converts the argument to string.
 // If L is a number it is used as the precision (sets PP).
-// If L is two numbers, it is used as width and precision (sets PP).
 // If L is the string "csv", csv encoding is used.
-// If L is a string and R a Number or uniform numeric array, L is used as a format string.
-// If L is ¯1, R is formatted with Marshal, if it implements an Marshaler.
+// If L is a string L is used as a format string.
 func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	textenc := false
-
-	// With 1 or 2 integers, set temporarily set PP.
-	toIdx := ToIndexArray(nil)
-	if ia, ok := toIdx.To(a, L); ok {
-		if idx, ok := ia.(apl.IndexArray); ok && len(idx.Ints) == 1 && idx.Ints[0] == -1 {
-			textenc = true
-		} else {
-			save := a.PP
-			defer func() {
-				a.PP = save
-				a.Tower.SetPP(save)
-			}()
-			if err := a.SetPP(L); err != nil {
-				return nil, err
-			}
+	pp := a.PP
+	defer func() {
+		a.PP = pp
+	}()
+	if n, ok := L.(apl.Number); ok {
+		if i, ok := n.ToIndex(); ok {
+			a.PP = i
 		}
-	}
-
-	// L string, R numeric: set format numeric format.
-	if s, ok := L.(apl.String); ok {
+	} else if s, ok := L.(apl.String); ok {
 		if s == "csv" {
 			return formatCsv(a, nil, R)
-		}
-		var n apl.Number
-		if num, ok := R.(apl.Number); ok {
-			n = num
-		} else if u, ok := R.(apl.Uniform); ok {
-			z := u.Zero()
-			if num, ok := z.(apl.Number); ok {
-				n = num
-			}
-		}
-		if n != nil {
-			t := reflect.TypeOf(n)
-			if numeric, ok := a.Tower.Numbers[t]; ok {
-				save := numeric.Format
-				numeric.Format = string(s)
-				a.Tower.Numbers[t] = numeric
-				defer func() {
-					numeric.Format = save
-					a.Tower.Numbers[t] = numeric
-				}()
-			}
+		} else {
+			t := reflect.TypeOf(R)
+			f := a.Fmt[t]
+			defer func() {
+				a.Fmt[t] = f
+			}()
+			a.Fmt[t] = string(s)
 		}
 	}
-
-	if m, ok := R.(apl.Marshaler); ok && textenc {
-		return apl.String(m.Marshal(a)), nil
-	}
-
 	return apl.String(R.String(a)), nil
 }
 
@@ -110,7 +77,7 @@ func formatTable(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	t := R.(apl.Table)
 	d := L.(apl.Object)
 	if d.At(a, apl.String("CSV")) != nil {
-		return formatCsv(a, L, R)
+		return formatCsv(a, d, R)
 	}
 	var b bytes.Buffer
 	if err := t.WriteFormatted(a, d, &b); err != nil {
@@ -122,7 +89,7 @@ func formatTable(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // formatCSV formats R in csv format.
 // R must be a rank 2 array or a table.
 // If L with corresponding keys.
-func formatCsv(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+func formatCsv(a *apl.Apl, L apl.Object, R apl.Value) (apl.Value, error) {
 	var b bytes.Buffer
 	w := csv.NewWriter(&b)
 

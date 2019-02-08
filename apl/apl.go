@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/ktye/iv/apl/scan"
 	// _ "github.com/ktye/iv/apl/funcs" // Register default funcs
@@ -16,7 +17,8 @@ func New(w io.Writer) *Apl {
 		stdout:     w,
 		env:        newEnv(),
 		Origin:     1,
-		PP:         [2]int{0, 6},
+		PP:         0,
+		Fmt:        make(map[reflect.Type]string),
 		primitives: make(map[Primitive][]PrimitiveHandler),
 		operators:  make(map[string][]Operator),
 		symbols:    make(map[rune]string),
@@ -33,7 +35,8 @@ type Apl struct {
 	stdout     io.Writer
 	Tower      Tower
 	Origin     int
-	PP         [2]int
+	PP         int
+	Fmt        map[reflect.Type]string
 	env        *env
 	primitives map[Primitive][]PrimitiveHandler
 	operators  map[string][]Operator

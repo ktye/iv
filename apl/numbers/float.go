@@ -16,7 +16,17 @@ type Float float64
 // The format string is passed to fmt and - is replaced by ¯,
 // except if the first rune is -.
 func (n Float) String(a *apl.Apl) string {
-	format, minus := getformat(a, n, "%v")
+	format, minus := getformat(a, n)
+	if format == "" {
+		prec := a.PP
+		if prec < 0 {
+			format = "%v"
+		} else if prec == 0 {
+			format = "%.6G"
+		} else {
+			format = fmt.Sprintf("%%.%dG", prec)
+		}
+	}
 	s := fmt.Sprintf(format, float64(n))
 	if minus == false {
 		s = strings.Replace(s, "-", "¯", -1)
@@ -25,9 +35,10 @@ func (n Float) String(a *apl.Apl) string {
 }
 
 // ParseFloat parses a Float. It replaces ¯ with -, then uses ParseFloat.
+// A trailing . is stripped, so that "2." is parsed as a float.
 func ParseFloat(s string) (apl.Number, bool) {
 	s = strings.Replace(s, "¯", "-", -1)
-	if n, err := strconv.ParseFloat(s, 64); err == nil {
+	if n, err := strconv.ParseFloat(strings.TrimSuffix(s, "."), 64); err == nil {
 		return Float(n), true
 	}
 	return Float(0), false
