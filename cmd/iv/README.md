@@ -11,3 +11,11 @@ Usage
 
 Monadic `<0` is defined to return a Channel that read lines of input from stdin.
 Otherwise only the standard packages are included.
+
+Monadic `<"FILE"` reads lines from a file.
+To simplify reading a library, there is the l command.
+These two lines are equivalent:
+```
+	cat data | iv '⍎¨<`FILE ⋄ COMMANDS'
+	cat data | iv '/l`FILE COMMANDS'
+```

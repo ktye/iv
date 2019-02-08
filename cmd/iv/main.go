@@ -15,7 +15,10 @@ import (
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
+	"github.com/ktye/iv/apl/scan"
 )
+
+var stdin io.ReadCloser = os.Stdin
 
 func main() {
 	if len(os.Args) < 2 {
@@ -29,7 +32,13 @@ func iv(p string, w io.Writer) error {
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
+	a.AddCommands(map[string]scan.Command{"l": load{}})
 
+	a.RegisterPrimitive("<", apl.ToHandler(
+		read,
+		domain.Monadic(domain.IsString(nil)),
+		"read file",
+	))
 	a.RegisterPrimitive("<", apl.ToHandler(
 		readfd,
 		domain.Monadic(domain.ToIndex(nil)),
@@ -38,9 +47,15 @@ func iv(p string, w io.Writer) error {
 	return a.ParseAndEval(p)
 }
 
-var stdin io.ReadCloser = os.Stdin
+func fatal(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
 
-// readfd is copied from apl/io.
+// copied from apl/io.
+
 func readfd(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	fd := int(R.(apl.Int))
 	if fd != 0 {
@@ -48,10 +63,29 @@ func readfd(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 	return apl.LineReader(stdin), nil
 }
-
-func fatal(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+func read(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	name, ok := R.(apl.String)
+	if ok == false {
+		return nil, fmt.Errorf("read: expect file name %T", R)
 	}
+	f, err := os.Open(string(name))
+	if err != nil {
+		return nil, err
+	}
+	return apl.LineReader(f), nil // LineReader closes the file.
+}
+
+type load struct{}
+
+func (c load) Rewrite(t []scan.Token) []scan.Token {
+	if len(t) < 2 {
+		return t
+	}
+	return append([]scan.Token{
+		scan.Token{T: scan.Symbol, S: "⍎"},
+		scan.Token{T: scan.Symbol, S: "¨"},
+		scan.Token{T: scan.Symbol, S: "<"},
+		t[0],
+		scan.Token{T: scan.Diamond, S: "⋄"},
+	}, t[1:]...)
 }
