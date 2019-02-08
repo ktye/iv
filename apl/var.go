@@ -89,9 +89,9 @@ func (a *Apl) Lookup(name string) Value {
 // where it was found.
 func (a *Apl) LookupEnv(name string) (Value, *env) {
 	if name == "⎕IO" {
-		return Index(a.Origin), nil
+		return Int(a.Origin), nil
 	} else if name == "⎕PP" {
-		return Index(a.PP), nil
+		return Int(a.PP), nil
 	}
 
 	if idx := strings.Index(name, "→"); idx != -1 {

@@ -74,7 +74,7 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 
 	// Monadic transpose: reverse axis.
 	if L == nil {
-		l := apl.IndexArray{
+		l := apl.IntArray{
 			Dims: []int{len(rs)},
 			Ints: make([]int, len(rs)),
 		}
@@ -84,7 +84,7 @@ func transposeIndexes(a *apl.Apl, L, R apl.Value) ([]int, []int, error) {
 		}
 		L = l
 	}
-	al := L.(apl.IndexArray)
+	al := L.(apl.IntArray)
 	ls := al.Shape()
 
 	if len(ls) != 1 {

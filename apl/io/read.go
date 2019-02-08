@@ -28,7 +28,7 @@ func read(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 // readfd reads from a file descriptor (Index). Only 0 is allowed.
 func readfd(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	fd := int(R.(apl.Index))
+	fd := int(R.(apl.Int))
 	if fd != 0 {
 		return nil, fmt.Errorf("io readfd: argument must be 0 (stdin)")
 	}

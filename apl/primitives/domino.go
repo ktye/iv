@@ -45,7 +45,7 @@ func domino(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 
 	n := rs[0]
-	I := apl.IndexArray{Dims: []int{n, n}}
+	I := apl.IntArray{Dims: []int{n, n}}
 	I.Ints = make([]int, n*n)
 	for i := 0; i < n; i++ {
 		I.Ints[i*n+i] = 1
@@ -173,7 +173,7 @@ func lu(a *apl.Apl, A [][]apl.Value) ([]int, error) {
 	for i := 0; i < n; i++ {
 
 		// Find row max.
-		max = apl.Index(0)
+		max = apl.Int(0)
 		imax := i
 		for k := i; k < n; k++ {
 			absA, err := fabs(a, nil, A[k][i])
@@ -191,7 +191,7 @@ func lu(a *apl.Apl, A [][]apl.Value) ([]int, error) {
 		}
 
 		// We do not compare against a tolerance, but against 0.
-		if isEqual(a, apl.Index(0), max) {
+		if isEqual(a, apl.Int(0), max) {
 			return nil, fmt.Errorf("matrix is singular")
 		}
 

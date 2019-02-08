@@ -13,9 +13,9 @@ func TestParse(t *testing.T) {
 		s string
 		n apl.Number
 	}{
-		{"1", apl.Index(1)},
+		{"1", apl.Int(1)},
 		{"1b", apl.Bool(true)},
-		{"¯2", apl.Index(-2)},
+		{"¯2", apl.Int(-2)},
 		{"¯2.0", Float(-2)},
 		{"2.", Float(2)},
 		{"3J¯2.0", Complex(complex(3, -2))},
@@ -58,13 +58,13 @@ func TestSameType(t *testing.T) {
 		c, d apl.Number
 	}{
 		{apl.Bool(false), apl.Bool(true), apl.Bool(false), apl.Bool(true)},
-		{apl.Bool(false), apl.Index(1), apl.Index(0), apl.Index(1)},
-		{apl.Index(1), apl.Bool(false), apl.Index(1), apl.Index(0)},
-		{apl.Index(1), apl.Index(2), apl.Index(1), apl.Index(2)},
+		{apl.Bool(false), apl.Int(1), apl.Int(0), apl.Int(1)},
+		{apl.Int(1), apl.Bool(false), apl.Int(1), apl.Int(0)},
+		{apl.Int(1), apl.Int(2), apl.Int(1), apl.Int(2)},
 		{apl.Bool(true), Float(3), Float(1), Float(3)},
-		{apl.Index(0), Float(3), Float(0), Float(3)},
-		{Float(3), apl.Index(4), Float(3), Float(4)},
-		{apl.Index(2), Complex(3 + 1i), Complex(2), Complex(3 + 1i)},
+		{apl.Int(0), Float(3), Float(0), Float(3)},
+		{Float(3), apl.Int(4), Float(3), Float(4)},
+		{apl.Int(2), Complex(3 + 1i), Complex(2), Complex(3 + 1i)},
 		{Complex(1 + 2i), Float(3), Complex(1 + 2i), Complex(3)},
 	}
 
@@ -95,10 +95,10 @@ func TestImport(t *testing.T) {
 	}{
 		{apl.Bool(false), Float(0)},
 		{apl.Bool(true), Float(1)},
-		{apl.Index(0), Float(0)},
-		{apl.Index(1), Float(1)},
-		{apl.Index(2), Float(2)},
-		{apl.Index(-1), Float(-1)},
+		{apl.Int(0), Float(0)},
+		{apl.Int(1), Float(1)},
+		{apl.Int(2), Float(2)},
+		{apl.Int(-1), Float(-1)},
 	}
 	for _, tc := range testCases {
 		n := a.Tower.Import(tc.i)

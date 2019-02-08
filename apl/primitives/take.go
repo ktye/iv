@@ -63,11 +63,11 @@ func drop(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return takedrop(a, L, R, false)
 }
 
-func takeSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+func takeSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	v, err := takeDropSelection(a, L, R, true)
 	return v, err
 }
-func dropSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+func dropSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	return takeDropSelection(a, L, R, false)
 }
 
@@ -85,7 +85,7 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 		return nil, err
 	}
 
-	ai := L.(apl.IndexArray)
+	ai := L.(apl.IntArray)
 	if len(ai.Dims) > 1 {
 		return nil, fmt.Errorf("take/drop: L must be a vector")
 	}
@@ -97,7 +97,7 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 			if n < 0 {
 				n = -n
 			}
-			return apl.IndexArray{
+			return apl.IntArray{
 				Ints: make([]int, n),
 				Dims: []int{n},
 			}, nil
@@ -177,22 +177,22 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 	return operators.Take(a, ai, ar, x)
 }
 
-func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IndexArray, error) {
+func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IntArray, error) {
 	var x []int
 	var err error
 	R, x, err = splitAxis(a, R)
 	if err != nil {
-		return apl.IndexArray{}, err
+		return apl.IntArray{}, err
 	}
 
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		return apl.IndexArray{}, fmt.Errorf("cannot select from non-array: %T", R)
+		return apl.IntArray{}, fmt.Errorf("cannot select from non-array: %T", R)
 	}
 
 	// Take/drop from an index array instead of R of the same shape.
 	// Take/drop fills with zeros, so count with origin 1 temporarily.
-	r := apl.IndexArray{Dims: apl.CopyShape(ar)}
+	r := apl.IntArray{Dims: apl.CopyShape(ar)}
 	r.Ints = make([]int, apl.ArraySize(r))
 	for i := range r.Ints {
 		r.Ints[i] = i + 1
@@ -203,10 +203,10 @@ func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IndexArray, e
 		for i := range x {
 			x[i] += a.Origin
 		}
-		R = apl.Axis{R: r, A: apl.IndexArray{Dims: []int{len(x)}, Ints: x}}
+		R = apl.Axis{R: r, A: apl.IntArray{Dims: []int{len(x)}, Ints: x}}
 	}
 
-	var ai apl.IndexArray
+	var ai apl.IntArray
 	res, err := takedrop(a, L, R, take)
 	if err != nil {
 		return ai, err
@@ -216,7 +216,7 @@ func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IndexArray, e
 	if v, ok := to.To(a, res); ok == false {
 		return ai, fmt.Errorf("could not convert selection to index array: %T", res)
 	} else {
-		ai = v.(apl.IndexArray)
+		ai = v.(apl.IntArray)
 	}
 
 	for i := range ai.Ints {
@@ -235,7 +235,7 @@ func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IndexArray, e
 // This is similar to _ in q.
 // Indexes may be negative.
 func cut(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	ai := L.(apl.IndexArray)
+	ai := L.(apl.IntArray)
 	r := R.(apl.List)
 	if len(ai.Shape()) != 1 {
 		return nil, fmt.Errorf("cut: left argument must be an index vector")
@@ -278,7 +278,7 @@ func takeChannel1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 // takeChannel2 takes multiple values from channel R and reshapes according to L.
 func takeChannel2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	ai := L.(apl.IndexArray)
+	ai := L.(apl.IntArray)
 	if len(ai.Shape()) != 1 {
 		return nil, fmt.Errorf("take channel: L must be an index vector")
 	}
@@ -313,5 +313,5 @@ func sendChannel(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // closeChannel closes the channel R and returns 1.
 func closeChannel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	R.(apl.Channel).Close()
-	return apl.Index(1), nil
+	return apl.Int(1), nil
 }

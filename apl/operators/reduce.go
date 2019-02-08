@@ -395,7 +395,7 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	// If L is a 1-element vector (or was a scalar), extend it to match the axis of R.
 	if ai.Dims[0] == 1 && rs[axis] > 1 {
 		n := ai.Ints[0]
-		ai = apl.IndexArray{
+		ai = apl.IntArray{
 			Dims: []int{rs[axis]},
 		}
 		ai.Ints = make([]int, apl.ArraySize(ai))
@@ -443,7 +443,7 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	for i := range res.Values {
 		k := dst[axis]
 		if n := axismap[k]; n == -1 {
-			res.Values[i] = apl.Index(0) // TODO: When is a Fill value different from 0?
+			res.Values[i] = apl.Int(0) // TODO: When is a Fill value different from 0?
 		} else {
 			copy(idx, dst)
 			idx[axis] = int(n)
@@ -475,7 +475,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			return apl.EmptyArray{}, nil
 		} else {
 			rs := ar.Shape()
-			if ir, ok := ar.(apl.IndexArray); ok {
+			if ir, ok := ar.(apl.IntArray); ok {
 				fmt.Println("ar is index array: dims:", ir.Dims)
 			}
 
@@ -484,7 +484,7 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 				ax = len(rs) + ax
 			}
 			if ax >= 0 && len(rs) >= ax && rs[ax] == 0 {
-				return apl.IndexArray{
+				return apl.IntArray{
 					Dims: apl.CopyShape(ar),
 				}, nil
 			}
@@ -548,12 +548,12 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			} else if k == 0 {
 				dst[axis] = d
 				d++
-				res.Values[dic.Index(dst)] = apl.Index(0)
+				res.Values[dic.Index(dst)] = apl.Int(0)
 			} else if k < 0 {
 				for m := 0; m < int(-k); m++ {
 					dst[axis] = d
 					d++
-					res.Values[dic.Index(dst)] = apl.Index(0)
+					res.Values[dic.Index(dst)] = apl.Int(0)
 				}
 			}
 		}
@@ -564,8 +564,8 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 }
 
 // commonReplExp is the common input preprocessing for replicate and expand.
-func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IndexArray, apl.Array, int, error) {
-	ai := L.(apl.IndexArray)
+func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IntArray, apl.Array, int, error) {
+	ai := L.(apl.IntArray)
 	if len(ai.Dims) != 1 {
 		return ai, nil, axis, fmt.Errorf("LO must be a vector")
 	}
@@ -634,7 +634,7 @@ func commonReplExp(a *apl.Apl, L, R apl.Value, axis int) (apl.IndexArray, apl.Ar
 // L is an index vector with boolean values.
 // R is an array.
 func compress(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
-	ai := L.(apl.IndexArray)
+	ai := L.(apl.IntArray)
 	ar := R.(apl.Array)
 	rs := ar.Shape()
 
@@ -784,7 +784,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 	if idx, ok := to.To(a, L); ok == false {
 		return nil, fmt.Errorf("nwise reduction: left argument must be a scalar integer: %T", L)
 	} else {
-		n = int(idx.(apl.Index))
+		n = int(idx.(apl.Int))
 		if n < 0 {
 			n = -n
 			neg = true
@@ -806,7 +806,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 
 	if _, ok := R.(apl.EmptyArray); ok {
 		if n == 0 {
-			return apl.IndexArray{Dims: []int{1}, Ints: []int{0}}, nil
+			return apl.IntArray{Dims: []int{1}, Ints: []int{0}}, nil
 		} else if n == 1 {
 			return apl.EmptyArray{}, nil
 		} else {

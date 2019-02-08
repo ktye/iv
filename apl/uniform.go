@@ -17,7 +17,7 @@ func (a *Apl) Unify(A Array, uptype bool) (resultarray Array, resultok bool) {
 
 	noNumber := -10
 	boolType := reflect.TypeOf(Bool(false))
-	indexType := reflect.TypeOf(Index(0))
+	indexType := reflect.TypeOf(Int(0))
 	class := func(t reflect.Type) int {
 		n, ok := a.Tower.Numbers[t]
 		if ok == false {
@@ -100,11 +100,11 @@ func (a *Apl) Unify(A Array, uptype bool) (resultarray Array, resultok bool) {
 				ar.(BoolArray).Bools[i] = bool(v.(Bool))
 			}
 			return ar, true
-		} else if t0 == reflect.TypeOf(Index(0)) {
-			ar := IndexArray{}.Make(CopyShape(A))
+		} else if t0 == reflect.TypeOf(Int(0)) {
+			ar := IntArray{}.Make(CopyShape(A))
 			for i := 0; i < A.Size(); i++ {
 				v := A.At(i)
-				ar.(IndexArray).Ints[i] = int(v.(Index))
+				ar.(IntArray).Ints[i] = int(v.(Int))
 			}
 			return ar, true
 		}

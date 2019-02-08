@@ -28,11 +28,11 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 		f := f.(apl.Function)
 
 		// RO is a 2 x rank R index array with rows that indicate stencil shape and movement.
-		var ai apl.IndexArray
+		var ai apl.IntArray
 		if _, ok := RO.(apl.EmptyArray); ok {
-			ai = apl.IndexArray{}
+			ai = apl.IntArray{}
 		} else {
-			ai = RO.(apl.IndexArray)
+			ai = RO.(apl.IntArray)
 		}
 		is := ai.Shape()
 		if len(is) > 2 {
@@ -50,7 +50,7 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 		}
 
 		// Default RO matrix.
-		def := apl.IndexArray{Dims: []int{2, len(rs)}}
+		def := apl.IntArray{Dims: []int{2, len(rs)}}
 		def.Ints = make([]int, 2*len(rs))
 		for i := range def.Ints {
 			def.Ints[i] = 1
@@ -61,7 +61,7 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 		}
 		ic, idx := apl.NewIdxConverter(is)
 		for i := 0; i < apl.ArraySize(ai); i++ {
-			def.Ints[ic.Index(idx)] = int(ai.At(i).(apl.Index))
+			def.Ints[ic.Index(idx)] = int(ai.At(i).(apl.Int))
 			apl.IncArrayIndex(idx, is)
 		}
 		ai = def
@@ -79,7 +79,7 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 
 		// lvec is the left vector for the stencil function application,
 		// which indicates the number of fill elements per axis.
-		lvec := apl.IndexArray{Dims: []int{len(rs)}}
+		lvec := apl.IntArray{Dims: []int{len(rs)}}
 		vec := make([]int, len(rs))
 		lvec.Ints = vec
 
@@ -111,7 +111,7 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 					}
 				}
 				if out {
-					tmp.Values[k] = apl.Index(0)
+					tmp.Values[k] = apl.Int(0)
 				} else {
 					tmp.Values[k] = ar.At(ic.Index(dst)) // TODO copy?
 				}

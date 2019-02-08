@@ -13,7 +13,7 @@ func FromAPL(a *apl.Apl, v apl.Value) (*kdb.K, error) {
 	switch x := v.(type) {
 	case apl.Bool:
 		return &kdb.K{-kdb.KB, kdb.NONE, bool(x)}, nil
-	case apl.Index:
+	case apl.Int:
 		return kdb.Long(int64(x)), nil
 	case apl.String:
 		return kdb.Symbol(string(x)), nil
@@ -22,7 +22,7 @@ func FromAPL(a *apl.Apl, v apl.Value) (*kdb.K, error) {
 			return encodeArray(a, v)
 		}
 		return &kdb.K{kdb.KB, kdb.NONE, x.Bools}, nil
-	case apl.IndexArray:
+	case apl.IntArray:
 		if len(x.Dims) != 1 {
 			return encodeArray(a, v)
 		}
@@ -176,11 +176,11 @@ func ToAPL(data *kdb.K) (apl.Value, error) {
 	case -kdb.KB:
 		return apl.Bool(k.(bool)), nil
 	case -kdb.KH:
-		return apl.Index(k.(int16)), nil
+		return apl.Int(k.(int16)), nil
 	case -kdb.KI, -kdb.KD, -kdb.KU, -kdb.KV:
-		return apl.Index(k.(int32)), nil
+		return apl.Int(k.(int32)), nil
 	case -kdb.KJ:
-		return apl.Index(int(k.(int64))), nil
+		return apl.Int(int(k.(int64))), nil
 	case -kdb.KS:
 		return apl.String(k.(string)), nil
 	case -kdb.KF, -kdb.KZ:
@@ -194,21 +194,21 @@ func ToAPL(data *kdb.K) (apl.Value, error) {
 		for i := range vec {
 			ints[i] = int(vec[i])
 		}
-		return apl.IndexArray{Dims: []int{len(ints)}, Ints: ints}, nil
+		return apl.IntArray{Dims: []int{len(ints)}, Ints: ints}, nil
 	case kdb.KI:
 		vec := k.([]int32)
 		ints := make([]int, len(vec))
 		for i := range vec {
 			ints[i] = int(vec[i])
 		}
-		return apl.IndexArray{Dims: []int{len(ints)}, Ints: ints}, nil
+		return apl.IntArray{Dims: []int{len(ints)}, Ints: ints}, nil
 	case kdb.KJ:
 		vec := k.([]int64)
 		ints := make([]int, len(vec))
 		for i := range vec {
 			ints[i] = int(vec[i])
 		}
-		return apl.IndexArray{Dims: []int{len(ints)}, Ints: ints}, nil
+		return apl.IntArray{Dims: []int{len(ints)}, Ints: ints}, nil
 	case kdb.KF:
 		vec := k.([]float64)
 		return numbers.FloatArray{Dims: []int{len(vec)}, Floats: vec}, nil

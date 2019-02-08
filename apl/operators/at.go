@@ -60,11 +60,11 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			if ok == false {
 				ag = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{g}}
 			}
-			var gi apl.IndexArray
+			var gi apl.IntArray
 			if v, ok := ToIndexArray(nil).To(a, ag); ok == false {
 				return nil, fmt.Errorf("at: g is not an index array")
 			} else {
-				gi = v.(apl.IndexArray)
+				gi = v.(apl.IntArray)
 			}
 			if len(gi.Dims) != 1 {
 				return nil, fmt.Errorf("at: g should have rank 1: %d", len(gi.Dims))

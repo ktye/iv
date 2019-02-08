@@ -27,9 +27,9 @@ func TestUnify(t *testing.T) {
 			reflect.TypeOf(apl.BoolArray{}), true,
 		},
 		{
-			apl.IndexArray{Dims: []int{2}, Ints: []int{1, 2}},
-			reflect.TypeOf(apl.IndexArray{}), true,
-			reflect.TypeOf(apl.IndexArray{}), true,
+			apl.IntArray{Dims: []int{2}, Ints: []int{1, 2}},
+			reflect.TypeOf(apl.IntArray{}), true,
+			reflect.TypeOf(apl.IntArray{}), true,
 		},
 		{
 			apl.StringArray{Dims: []int{2}, Strings: []string{"a", "b"}},
@@ -60,23 +60,23 @@ func TestUnify(t *testing.T) {
 
 		// Truely mixed arrays.
 		{
-			apl.MixedArray{Dims: []int{1}, Values: []apl.Value{apl.Index(0), apl.String("")}},
+			apl.MixedArray{Dims: []int{1}, Values: []apl.Value{apl.Int(0), apl.String("")}},
 			reflect.TypeOf(apl.MixedArray{}), false,
 			reflect.TypeOf(apl.MixedArray{}), false,
 		},
 
 		// Mixed but uptypable.
 		{
-			apl.MixedArray{Dims: []int{4}, Values: []apl.Value{apl.Bool(false), apl.Index(0), apl.Index(1), numbers.Float(1)}},
+			apl.MixedArray{Dims: []int{4}, Values: []apl.Value{apl.Bool(false), apl.Int(0), apl.Int(1), numbers.Float(1)}},
 			reflect.TypeOf(apl.MixedArray{}), false,
 			reflect.TypeOf(numbers.FloatArray{}), true,
 		},
 
 		// Mixed but uptypable.
 		{
-			apl.MixedArray{Dims: []int{3}, Values: []apl.Value{apl.Bool(false), apl.Index(0), apl.Index(3)}},
+			apl.MixedArray{Dims: []int{3}, Values: []apl.Value{apl.Bool(false), apl.Int(0), apl.Int(3)}},
 			reflect.TypeOf(apl.MixedArray{}), false,
-			reflect.TypeOf(apl.IndexArray{}), true,
+			reflect.TypeOf(apl.IntArray{}), true,
 		},
 
 		// Non-uniform list.
@@ -96,7 +96,7 @@ func TestUnify(t *testing.T) {
 		// List of lists, reports as uniform, but does not implement apl.Uniform.
 		// This is a special case for tables.
 		{
-			apl.List{apl.List{apl.Index(1)}, apl.List{}},
+			apl.List{apl.List{apl.Int(1)}, apl.List{}},
 			reflect.TypeOf(apl.List{}), true,
 			reflect.TypeOf(apl.List{}), true,
 		},

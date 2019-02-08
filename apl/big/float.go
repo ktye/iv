@@ -88,7 +88,7 @@ func (f Float) Sub2(R apl.Value) (apl.Value, bool) {
 }
 
 func (f Float) Mul() (apl.Value, bool) {
-	return apl.Index(f.Float.Sign()), true
+	return apl.Int(f.Float.Sign()), true
 }
 func (f Float) Mul2(R apl.Value) (apl.Value, bool) {
 	z := f.cpy()

@@ -130,8 +130,8 @@ type dummyPrimitive struct{}
 func (d dummyPrimitive) Call(a *Apl, l, r Value) (Value, error) {
 	return EmptyArray{}, nil
 }
-func (d dummyPrimitive) Select(a *Apl, l, r Value) (IndexArray, error) {
-	return IndexArray{}, fmt.Errorf("not supported")
+func (d dummyPrimitive) Select(a *Apl, l, r Value) (IntArray, error) {
+	return IntArray{}, fmt.Errorf("not supported")
 }
 func (d dummyPrimitive) To(a *Apl, l, r Value) (Value, Value, bool) {
 	return l, r, true
@@ -143,7 +143,7 @@ var dummyfunc dummyFunction
 
 type dummyFunction struct{}
 
-func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Index(1), nil }
+func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Int(1), nil }
 
 // Monadic operators.
 type mop struct{}
@@ -152,8 +152,8 @@ func (r mop) To(a *Apl, LO, RO Value) (Value, Value, bool) { return LO, RO, true
 func (r mop) String(a *Apl) string                         { return "any" }
 func (r mop) DyadicOp() bool                               { return false }
 func (r mop) Derived(a *Apl, lo, ro Value) Function        { return dummyfunc }
-func (r mop) Select(a *Apl, l Value, lo Value, ro Value, R Value) (IndexArray, error) {
-	return IndexArray{}, nil
+func (r mop) Select(a *Apl, l Value, lo Value, ro Value, R Value) (IntArray, error) {
+	return IntArray{}, nil
 }
 func (r mop) Doc() string { return "reduce" }
 
@@ -165,8 +165,8 @@ func (d dot) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
 func (d dot) String(a *Apl) string                       { return "any" }
 func (d dot) DyadicOp() bool                             { return true }
 func (d dot) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
-func (d dot) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IndexArray, error) {
-	return IndexArray{}, nil
+func (d dot) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IntArray, error) {
+	return IntArray{}, nil
 }
 func (d dot) Doc() string { return "dot" }
 
@@ -176,14 +176,14 @@ func (d brack) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
 func (d brack) String(a *Apl) string                       { return "any" }
 func (d brack) DyadicOp() bool                             { return true }
 func (d brack) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
-func (d brack) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IndexArray, error) {
-	return IndexArray{}, nil
+func (d brack) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IntArray, error) {
+	return IntArray{}, nil
 }
 func (d brack) Doc() string { return "bracket operator" }
 
 func newTower() Tower {
 	m := make(map[reflect.Type]*Numeric)
-	m[reflect.TypeOf(Index(0))] = &Numeric{
+	m[reflect.TypeOf(Int(0))] = &Numeric{
 		Class: 0,
 		Parse: func(s string) (Number, bool) {
 			s = strings.Replace(s, "¯", "-", -1)
@@ -191,7 +191,7 @@ func newTower() Tower {
 			if err != nil {
 				return nil, false
 			}
-			return Index(n), true
+			return Int(n), true
 		},
 		Uptype: func(n Number) (Number, bool) { return nil, false },
 	}

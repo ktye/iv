@@ -24,7 +24,7 @@ type Operator interface {
 	Domain
 	DyadicOp() bool
 	Derived(*Apl, Value, Value) Function
-	Select(*Apl, Value, Value, Value, Value) (IndexArray, error)
+	Select(*Apl, Value, Value, Value, Value) (IntArray, error)
 	Doc() string
 }
 
@@ -33,9 +33,9 @@ type Operator interface {
 type derived struct {
 	op string
 	// operands of the derived expression
-	lo  expr                                         // left operand
-	ro  expr                                         // right operand
-	sel func(*Apl, Value, Value) (IndexArray, error) // selection function for reduce and scan
+	lo  expr                                       // left operand
+	ro  expr                                       // right operand
+	sel func(*Apl, Value, Value) (IntArray, error) // selection function for reduce and scan
 }
 
 func (d *derived) Eval(a *Apl) (Value, error) {

@@ -64,11 +64,11 @@ type index struct {
 func (idx index) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	if b, ok := V.(apl.Bool); ok {
 		if b == true {
-			return apl.Index(1), true
+			return apl.Int(1), true
 		}
-		return apl.Index(0), true
+		return apl.Int(0), true
 	}
-	if n, ok := V.(apl.Index); ok {
+	if n, ok := V.(apl.Int); ok {
 		return n, true
 	}
 	if n, ok := V.(apl.Number); ok == false {
@@ -77,7 +77,7 @@ func (idx index) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		if i, ok := n.ToIndex(); ok == false {
 			return V, false
 		} else {
-			return propagate(a, apl.Index(i), idx.child)
+			return propagate(a, apl.Int(i), idx.child)
 		}
 	}
 }

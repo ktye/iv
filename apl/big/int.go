@@ -164,7 +164,7 @@ func (i Int) Gamma() (apl.Value, bool) {
 	if ok == false {
 		return nil, false
 	} else if m == 0 {
-		return apl.Index(1), true
+		return apl.Int(1), true
 	} else if m < 0 || m > 300 { // where should be the limit?
 		return nil, false
 	}

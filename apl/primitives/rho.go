@@ -31,7 +31,7 @@ var reshape = primitive{
 func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	// Report a table as a two dimensional array.
 	if t, ok := R.(apl.Table); ok == true {
-		return apl.IndexArray{
+		return apl.IntArray{
 			Dims: []int{2},
 			Ints: []int{t.Rows, len(t.K)},
 		}, nil
@@ -39,7 +39,7 @@ func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	// An object returns the number of keys.
 	if o, ok := R.(apl.Object); ok == true {
 		n := len(o.Keys())
-		return apl.IndexArray{Dims: []int{1}, Ints: []int{n}}, nil
+		return apl.IntArray{Dims: []int{1}, Ints: []int{n}}, nil
 	}
 
 	if _, ok := R.(apl.Array); ok == false {
@@ -47,11 +47,11 @@ func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 	// Shape of an empty array is 0, rank is 1
 	if _, ok := R.(apl.EmptyArray); ok {
-		return apl.IndexArray{Ints: []int{0}, Dims: []int{1}}, nil
+		return apl.IntArray{Ints: []int{0}, Dims: []int{1}}, nil
 	}
 	ar := R.(apl.Array)
 	shape := ar.Shape()
-	ret := apl.IndexArray{
+	ret := apl.IntArray{
 		Ints: make([]int, len(shape)),
 		Dims: []int{len(shape)},
 	}
@@ -72,7 +72,7 @@ func rho2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return nil, fmt.Errorf("cannot reshape %T", R)
 	}
 
-	l := L.(apl.IndexArray)
+	l := L.(apl.IntArray)
 	shape := make([]int, len(l.Ints))
 	copy(shape, l.Ints)
 

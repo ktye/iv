@@ -142,7 +142,7 @@ type indexarray struct {
 }
 
 func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
-	_, ok := V.(apl.IndexArray)
+	_, ok := V.(apl.IntArray)
 	if ia.conv == false && ok == false {
 		return V, false
 	} else if ia.conv == false && ok {
@@ -158,7 +158,7 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	if ok == false {
 		if n, ok := V.(apl.Number); ok {
 			if i, ok := n.ToIndex(); ok {
-				return propagate(a, apl.IndexArray{
+				return propagate(a, apl.IntArray{
 					Ints: []int{i},
 					Dims: []int{1},
 				}, ia.child)
@@ -170,7 +170,7 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 			if b {
 				n = 1
 			}
-			return propagate(a, apl.IndexArray{
+			return propagate(a, apl.IntArray{
 				Ints: []int{n},
 				Dims: []int{1},
 			}, ia.child)
@@ -185,7 +185,7 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	// Make a new array and try to convert all values.
-	res := apl.IndexArray{
+	res := apl.IntArray{
 		Ints: make([]int, apl.ArraySize(ar)),
 		Dims: apl.CopyShape(ar),
 	}

@@ -20,16 +20,16 @@ type operator struct {
 	symbol    string
 	doc       string
 	derived   func(*apl.Apl, apl.Value, apl.Value) apl.Function
-	selection func(*apl.Apl, apl.Value, apl.Value, apl.Value, apl.Value) (apl.IndexArray, error)
+	selection func(*apl.Apl, apl.Value, apl.Value, apl.Value, apl.Value) (apl.IntArray, error)
 }
 
 func (op operator) Doc() string { return op.doc }
 func (op operator) Derived(a *apl.Apl, LO, RO apl.Value) apl.Function {
 	return op.derived(a, LO, RO)
 }
-func (op operator) Select(a *apl.Apl, L, LO, RO, R apl.Value) (apl.IndexArray, error) {
+func (op operator) Select(a *apl.Apl, L, LO, RO, R apl.Value) (apl.IntArray, error) {
 	if op.selection == nil {
-		return apl.IndexArray{}, fmt.Errorf("operator %s cannot be used in selective assignment", op.symbol)
+		return apl.IntArray{}, fmt.Errorf("operator %s cannot be used in selective assignment", op.symbol)
 	} else {
 		return op.selection(a, L, LO, RO, R)
 	}

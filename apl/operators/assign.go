@@ -116,7 +116,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		}
 	}
 
-	idx, ok := indexes.(apl.IndexArray)
+	idx, ok := indexes.(apl.IntArray)
 	if ok == false {
 		to := ToIndexArray(nil)
 		if v, ok := to.To(a, indexes); ok == false {
@@ -124,7 +124,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		} else if _, ok := v.(apl.EmptyArray); ok {
 			return fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
 		} else {
-			idx = v.(apl.IndexArray)
+			idx = v.(apl.IntArray)
 		}
 	}
 
@@ -246,7 +246,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 }
 
 // assignObject assigns R to index keys of a object.
-func assignObject(a *apl.Apl, obj apl.Object, idx apl.IndexArray, f apl.Function, R apl.Value) error {
+func assignObject(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Function, R apl.Value) error {
 	if f != nil {
 		return fmt.Errorf("TODO: object: modified indexed assignment")
 	}
@@ -283,7 +283,7 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IndexArray, f apl.Function
 }
 
 // assignList assigns R to the depth index of a list.
-func assignList(a *apl.Apl, l apl.List, idx apl.IndexArray, f apl.Function, R apl.Value) error {
+func assignList(a *apl.Apl, l apl.List, idx apl.IntArray, f apl.Function, R apl.Value) error {
 	if f != nil {
 		v, err := l.GetDeep(idx.Ints)
 		if err != nil {

@@ -8,17 +8,17 @@ import (
 	"strings"
 )
 
-// Index is the Integer type. It is used for numbers an indexes.
-type Index int
+// Int is the Integer type. It is used for numbers an indexes.
+type Int int
 
-func (i Index) ToIndex() (int, bool) {
+func (i Int) ToIndex() (int, bool) {
 	return int(i), true
 }
 
 // String formats an integer as a string.
 // The format string is passed to fmt and - is replaced by ¯,
 // except if the first rune is -.
-func (i Index) String(a *Apl) string {
+func (i Int) String(a *Apl) string {
 	format := a.Fmt[reflect.TypeOf(i)]
 	minus := false
 	if len(format) > 1 && format[0] == '-' {
@@ -39,113 +39,113 @@ func (i Index) String(a *Apl) string {
 func ParseInt(s string) (Number, bool) {
 	s = strings.Replace(s, "¯", "-", -1)
 	if n, err := strconv.Atoi(s); err == nil {
-		return Index(n), true
+		return Int(n), true
 	}
-	return Index(0), false
+	return Int(0), false
 }
 
-func (i Index) Less(R Value) (Bool, bool) {
-	return Bool(i < R.(Index)), true
+func (i Int) Less(R Value) (Bool, bool) {
+	return Bool(i < R.(Int)), true
 }
 
-func (i Index) Add() (Value, bool) {
+func (i Int) Add() (Value, bool) {
 	return i, true
 }
-func (i Index) Add2(R Value) (Value, bool) {
-	return i + R.(Index), true
+func (i Int) Add2(R Value) (Value, bool) {
+	return i + R.(Int), true
 }
 
-func (i Index) Sub() (Value, bool) {
+func (i Int) Sub() (Value, bool) {
 	return -i, true
 }
-func (i Index) Sub2(R Value) (Value, bool) {
-	return i - R.(Index), true
+func (i Int) Sub2(R Value) (Value, bool) {
+	return i - R.(Int), true
 }
 
-func (i Index) Mul() (Value, bool) {
+func (i Int) Mul() (Value, bool) {
 	if i > 0 {
-		return Index(1), true
+		return Int(1), true
 	} else if i < 0 {
-		return Index(-1), true
+		return Int(-1), true
 	}
-	return Index(0), true
+	return Int(0), true
 }
-func (i Index) Mul2(R Value) (Value, bool) {
-	return i * R.(Index), true
+func (i Int) Mul2(R Value) (Value, bool) {
+	return i * R.(Int), true
 }
 
-func (i Index) Div() (Value, bool) {
+func (i Int) Div() (Value, bool) {
 	if i == 1 {
-		return Index(1), true
+		return Int(1), true
 	} else if i == -1 {
-		return Index(-1), true
+		return Int(-1), true
 	}
 	return nil, false
 }
-func (a Index) Div2(b Value) (Value, bool) {
-	n := int(b.(Index))
+func (a Int) Div2(b Value) (Value, bool) {
+	n := int(b.(Int))
 	if n == 0 {
 		return nil, false
 	}
 	r := int(a) / n
 	if r*n == int(a) {
-		return Index(r), true
+		return Int(r), true
 	}
 	return nil, false
 }
 
-func (i Index) Pow() (Value, bool) {
+func (i Int) Pow() (Value, bool) {
 	if i == 0 {
-		return Index(1), true
+		return Int(1), true
 	}
 	return nil, false
 }
-func (i Index) Pow2(R Value) (Value, bool) {
+func (i Int) Pow2(R Value) (Value, bool) {
 	return nil, false
 }
 
-func (i Index) Log() (Value, bool) {
+func (i Int) Log() (Value, bool) {
 	return nil, false
 }
-func (i Index) Log2() (Value, bool) {
+func (i Int) Log2() (Value, bool) {
 	return nil, false
 }
 
-func (i Index) Abs() (Value, bool) {
+func (i Int) Abs() (Value, bool) {
 	if i < 0 {
 		return -i, true
 	}
 	return i, true
 }
 
-func (i Index) Ceil() (Value, bool) {
+func (i Int) Ceil() (Value, bool) {
 	return i, true
 }
-func (i Index) Floor() (Value, bool) {
+func (i Int) Floor() (Value, bool) {
 	return i, true
 }
 
-func (i Index) Gamma() (Value, bool) {
+func (i Int) Gamma() (Value, bool) {
 	// 20 is the limit for int64.
 	if i < 0 || i > 20 {
 		return nil, false
 	} else if i == 0 {
-		return Index(1), true
+		return Int(1), true
 	}
 	n := 1
 	for k := 1; k <= int(i); k++ {
 		n *= k
 	}
-	return Index(n), true
+	return Int(n), true
 }
-func (L Index) Gamma2(r Value) (Value, bool) {
-	m1exp := func(n Index) Index {
+func (L Int) Gamma2(r Value) (Value, bool) {
+	m1exp := func(n Int) Int {
 		if n%2 == 0 {
 			return 1
 		}
 		return -1
 	}
-	R := r.(Index)
+	R := r.(Int)
 	// This is the table from APL2 p 66
 	if L >= 0 && R >= 0 && R-L >= 0 {
 		lg, ok := L.Gamma()
@@ -160,17 +160,17 @@ func (L Index) Gamma2(r Value) (Value, bool) {
 		if ok == false {
 			return nil, false
 		}
-		return rg.(Index) / (lg.(Index) * rlg.(Index)), true
+		return rg.(Int) / (lg.(Int) * rlg.(Int)), true
 	} else if L >= 0 && R >= 0 && R-L < 0 {
-		return Index(0), true
+		return Int(0), true
 	} else if L >= 0 && R < 0 && R-L < 0 {
 		v, ok := L.Gamma2(L - (1 + R))
 		if ok == false {
 			return nil, false
 		}
-		return m1exp(L) * v.(Index), true
+		return m1exp(L) * v.(Int), true
 	} else if L < 0 && R >= 0 && R-L >= 0 {
-		return Index(0), true
+		return Int(0), true
 	} else if L < 0 && R < 0 && R-L >= 0 {
 		al1 := 1 + L
 		if al1 < 0 {
@@ -180,15 +180,15 @@ func (L Index) Gamma2(r Value) (Value, bool) {
 		if ok == false {
 			return nil, false
 		}
-		return m1exp(R-L) * v.(Index), true
+		return m1exp(R-L) * v.(Int), true
 	} else if L < 0 && R < 0 && R-L < 0 {
-		return Index(0), true
+		return Int(0), true
 	}
 	return nil, false
 }
 
-func (L Index) Gcd(R Value) (Value, bool) {
+func (L Int) Gcd(R Value) (Value, bool) {
 	l := big.NewInt(int64(L))
-	r := big.NewInt(int64(R.(Index)))
-	return Index(big.NewInt(0).GCD(nil, nil, l, r).Int64()), true
+	r := big.NewInt(int64(R.(Int)))
+	return Int(big.NewInt(0).GCD(nil, nil, l, r).Int64()), true
 }

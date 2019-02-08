@@ -39,29 +39,29 @@ func init() {
 // Nested arrays are not supported, so depth is always 1 for arrays and 0 for scalars.
 func depth(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	if _, ok := R.(apl.Array); ok {
-		return apl.Index(1), nil
+		return apl.Int(1), nil
 	}
-	return apl.Index(0), nil
+	return apl.Int(0), nil
 }
 
 // tally returns the number of major cells of R.
 // It is equlivalent to {⍬⍴(⍴⍵),1}.
 func tally(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	if t, ok := R.(apl.Table); ok {
-		return apl.Index(t.Rows), nil
+		return apl.Int(t.Rows), nil
 	}
 	if o, ok := R.(apl.Object); ok {
-		return apl.Index(len(o.Keys())), nil
+		return apl.Int(len(o.Keys())), nil
 	}
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		return apl.Index(1), nil
+		return apl.Int(1), nil
 	}
 	shape := ar.Shape()
 	if len(shape) == 0 {
-		return apl.Index(0), nil
+		return apl.Int(0), nil
 	}
-	return apl.Index(shape[0]), nil
+	return apl.Int(shape[0]), nil
 }
 
 func match(a *apl.Apl, L, R apl.Value) (apl.Value, error) {

@@ -43,7 +43,7 @@ func splitAxis(a *apl.Apl, R apl.Value) (apl.Value, []int, error) {
 	if ok == false {
 		return nil, nil, fmt.Errorf("axis is not an index array")
 	}
-	ar := X.(apl.IndexArray)
+	ar := X.(apl.IntArray)
 	shape := ar.Shape()
 	if len(shape) != 1 {
 		return nil, nil, fmt.Errorf("axis has wrong shape: %d", len(shape))

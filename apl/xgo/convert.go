@@ -43,7 +43,7 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 	switch t.Kind() {
 
 	case reflect.Int:
-		return reflect.ValueOf(int(v.(apl.Index))), nil
+		return reflect.ValueOf(int(v.(apl.Int))), nil
 
 	case reflect.Float64:
 		return reflect.ValueOf(float64(v.(numbers.Float))), nil
@@ -81,10 +81,10 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 func Convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
 	switch v.Kind() {
 	case reflect.Int:
-		return apl.Index(int(v.Int())), nil
+		return apl.Int(int(v.Int())), nil
 
 	case reflect.Uint:
-		return apl.Index(int(v.Uint())), nil
+		return apl.Int(int(v.Uint())), nil
 
 	case reflect.Float64:
 		return numbers.Float(v.Float()), nil

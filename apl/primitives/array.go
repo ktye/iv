@@ -179,7 +179,7 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 	return func(a *apl.Apl, L, ax apl.Value) (apl.Value, error) {
 		axis := ax.(apl.Axis)
 		R := axis.R
-		X := axis.A.(apl.IndexArray)
+		X := axis.A.(apl.IntArray)
 
 		_, emptyL := L.(apl.EmptyArray)
 		_, emptyR := R.(apl.EmptyArray)

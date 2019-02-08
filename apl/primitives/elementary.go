@@ -314,7 +314,7 @@ func abs(a *apl.Apl, R apl.Value) (apl.Value, bool) {
 	if a, ok := R.(abser); ok {
 		return a.Abs()
 	}
-	zero, r, err := a.Tower.SameType(a.Tower.Import(apl.Index(0)), R.(apl.Number))
+	zero, r, err := a.Tower.SameType(a.Tower.Import(apl.Int(0)), R.(apl.Number))
 	if err != nil {
 		return nil, false
 	}
@@ -460,7 +460,7 @@ func lcm(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 	// lcm(R, L) = abs(L times R) / gcd(L, R)
 	// If any of L or R is 0, return 0
 	if a.IsZero(L.(apl.Number)) || a.IsZero(R.(apl.Number)) {
-		return apl.Index(0), true
+		return apl.Int(0), true
 	}
 	p, ok := mul2(a, L, R)
 	if ok == false {

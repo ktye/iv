@@ -89,13 +89,13 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return res, nil
 }
 
-func indexSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+func indexSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	spec := L.(apl.IdxSpec)
 	ar := R.(apl.Array)
 
 	// Special case for empty brackets.
 	if len(spec) == 0 {
-		ai := apl.IndexArray{Dims: apl.CopyShape(ar), Ints: make([]int, apl.ArraySize(ar))}
+		ai := apl.IntArray{Dims: apl.CopyShape(ar), Ints: make([]int, apl.ArraySize(ar))}
 		for i := range ai.Ints {
 			ai.Ints[i] = i
 		}
@@ -105,12 +105,12 @@ func indexSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 	return indexArray(a, spec, ar.Shape())
 }
 
-func objSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+func objSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	obj := R.(apl.Object)
 	d, isd := R.(*apl.Dict)
 	spec := L.(apl.IdxSpec)
 	if len(spec) != 1 {
-		return apl.IndexArray{}, fmt.Errorf("object index must be a vector")
+		return apl.IntArray{}, fmt.Errorf("object index must be a vector")
 	}
 
 	keys := make(map[apl.Value]int)
@@ -124,32 +124,32 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 			if isd {
 				// Index-assignment into a non-existing key in a dict, creates a new key.
 				if err := d.Set(a, spec[0], apl.EmptyArray{}); err != nil {
-					return apl.IndexArray{}, err
+					return apl.IntArray{}, err
 				} else {
-					return apl.IndexArray{Dims: []int{1}, Ints: []int{len(keys) + a.Origin}}, nil
+					return apl.IntArray{Dims: []int{1}, Ints: []int{len(keys) + a.Origin}}, nil
 				}
 			} else {
-				return apl.IndexArray{}, fmt.Errorf("key does not exist: %s", spec[0].String(a))
+				return apl.IntArray{}, fmt.Errorf("key does not exist: %s", spec[0].String(a))
 			}
 		} else {
-			return apl.IndexArray{Dims: []int{1}, Ints: []int{idx}}, nil
+			return apl.IntArray{Dims: []int{1}, Ints: []int{idx}}, nil
 		}
 	}
 
-	ai := apl.IndexArray{Dims: []int{as.Size()}, Ints: make([]int, as.Size())}
+	ai := apl.IntArray{Dims: []int{as.Size()}, Ints: make([]int, as.Size())}
 	for i := 0; i < as.Size(); i++ {
 		key := as.At(i)
 		k, ok := keys[key]
 		if ok == false {
 			if isd {
 				if err := d.Set(a, key, apl.EmptyArray{}); err != nil {
-					return apl.IndexArray{}, err
+					return apl.IntArray{}, err
 				} else {
 					k = len(keys) + a.Origin
 					keys[key] = k
 				}
 			} else {
-				return apl.IndexArray{}, fmt.Errorf("key does not exist: %s", key.String(a))
+				return apl.IntArray{}, fmt.Errorf("key does not exist: %s", key.String(a))
 			}
 		}
 		ai.Ints[i] = k
@@ -160,15 +160,15 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 // indexArray returns the indexes within the array A for the given index specification.
 // The result may have a smaller size and shape as the input array.
 // The indexes in the spec are origin dependend, but in IndexArray are always origin 0.
-func indexArray(a *apl.Apl, spec apl.IdxSpec, shape []int) (apl.IndexArray, error) {
+func indexArray(a *apl.Apl, spec apl.IdxSpec, shape []int) (apl.IntArray, error) {
 	intspec, err := spec2ints(a, spec, shape)
 	if err != nil {
-		return apl.IndexArray{}, nil
+		return apl.IntArray{}, nil
 	}
 
 	// Initially the rank is the same as spec.
 	// Single element axis will be reduced later.
-	res := apl.IndexArray{Dims: make([]int, len(intspec))}
+	res := apl.IntArray{Dims: make([]int, len(intspec))}
 	for i := range intspec {
 		res.Dims[i] = len(intspec[i])
 	}
@@ -218,7 +218,7 @@ func spec2ints(a *apl.Apl, spec apl.IdxSpec, shape []int) ([][]int, error) {
 			}
 			continue
 		}
-		ia := v.(apl.IndexArray)
+		ia := v.(apl.IntArray)
 		idx[i] = make([]int, len(ia.Ints))
 		for k := range ia.Ints {
 			if n := ia.Ints[k] - a.Origin; n < 0 || n >= shape[i] {
@@ -296,11 +296,11 @@ func listIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // listSelection returns the index for selective assignment.
 // The returned array is a single depth-index, not multiple indexes.
 // This is different from array indexing.
-func listSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+func listSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	lst := R.(apl.List)
 	spec := L.(apl.IdxSpec)
 
-	var ai apl.IndexArray
+	var ai apl.IntArray
 	if len(spec) == 1 {
 		if _, ok := spec[0].(apl.List); ok {
 			return ai, fmt.Errorf("indexing with a list is not supported")
@@ -315,7 +315,7 @@ func listSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 		if ok == false {
 			return ai, fmt.Errorf("list index is no integer")
 		}
-		ai := v.(apl.IndexArray)
+		ai := v.(apl.IntArray)
 		if s := ai.Shape(); len(s) != 1 || s[0] != 1 {
 			return ai, fmt.Errorf("list index is no integer: %T", v)
 		}
@@ -341,7 +341,7 @@ func listSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
 			}
 		}
 	}
-	return apl.IndexArray{Dims: []int{len(idx)}, Ints: idx}, nil
+	return apl.IntArray{Dims: []int{len(idx)}, Ints: idx}, nil
 }
 
 // tableIndex indexes into a table.
@@ -379,7 +379,7 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	} else if ai, ok := toidx.To(a, spec[0]); ok == false {
 		return nil, fmt.Errorf("table index: first part must be an index or index vector: %T", spec[0])
 	} else {
-		rows = ai.(apl.IndexArray).Ints
+		rows = ai.(apl.IntArray).Ints
 	}
 
 	for i := range rows {

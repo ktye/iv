@@ -128,9 +128,9 @@ func (p Primitive) Call(a *Apl, L, R Value) (Value, error) {
 // Select is similar to Call.
 // It is used as a selection function in selective assignment.
 // While the Call on these primitives would return selected values, Select returns the indexes of the values.
-func (p Primitive) Select(a *Apl, L, R Value) (IndexArray, error) {
+func (p Primitive) Select(a *Apl, L, R Value) (IntArray, error) {
 	if handles := a.primitives[p]; handles == nil {
-		return IndexArray{}, fmt.Errorf("primitive function %s does not exist", p)
+		return IntArray{}, fmt.Errorf("primitive function %s does not exist", p)
 	} else {
 		for _, h := range handles {
 			if l, r, ok := h.To(a, L, R); ok {
@@ -139,9 +139,9 @@ func (p Primitive) Select(a *Apl, L, R Value) (IndexArray, error) {
 		}
 	}
 	if L == nil {
-		return IndexArray{}, fmt.Errorf("primitive is not implemented: %s %T ", p, R)
+		return IntArray{}, fmt.Errorf("primitive is not implemented: %s %T ", p, R)
 	}
-	return IndexArray{}, fmt.Errorf("primitive is not implemented: %T %s %T ", L, p, R)
+	return IntArray{}, fmt.Errorf("primitive is not implemented: %T %s %T ", L, p, R)
 }
 
 // PrimitiveHandler is the interface that implementations of primitive functions satisfy.
@@ -149,7 +149,7 @@ type PrimitiveHandler interface {
 	Domain
 	Function
 	//Call(*Apl, Value, Value) (Value, error)
-	Select(*Apl, Value, Value) (IndexArray, error)
+	Select(*Apl, Value, Value) (IntArray, error)
 	Doc() string
 }
 
@@ -176,8 +176,8 @@ func (h pHandler) String(a *Apl) string {
 func (h pHandler) Doc() string {
 	return h.s
 }
-func (h pHandler) Select(*Apl, Value, Value) (IndexArray, error) {
-	return IndexArray{}, fmt.Errorf("function cannot be used in selective assignment")
+func (h pHandler) Select(*Apl, Value, Value) (IntArray, error) {
+	return IntArray{}, fmt.Errorf("function cannot be used in selective assignment")
 }
 
 // ToFunction can be used to cast a function with the right signature to a type that implements the Function interface.

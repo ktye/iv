@@ -79,7 +79,7 @@ func tableBoth(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 			if u, ok := v.(apl.Uniform); ok {
 				return u.Zero()
 			}
-			return apl.Index(0)
+			return apl.Int(0)
 		}
 
 		keys := l.Keys()

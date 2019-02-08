@@ -42,14 +42,14 @@ func init() {
 
 // interval: R: integer. index generator.
 func interval(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	n := int(R.(apl.Index))
+	n := int(R.(apl.Int))
 	if n < 0 {
 		return nil, fmt.Errorf("iota: L is negative")
 	}
 	if n == 0 {
 		return apl.EmptyArray{}, nil
 	}
-	ar := apl.IndexArray{
+	ar := apl.IntArray{
 		Ints: make([]int, n),
 		Dims: []int{n},
 	}
@@ -80,7 +80,7 @@ func indexof(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return notfound
 	}
 
-	ai := apl.IndexArray{
+	ai := apl.IntArray{
 		Ints: make([]int, apl.ArraySize(ar)),
 		Dims: apl.CopyShape(ar),
 	}
@@ -113,7 +113,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return apl.Bool(false), nil
 	}
 
-	res := apl.IndexArray{
+	res := apl.IntArray{
 		Dims: apl.CopyShape(al),
 		Ints: make([]int, apl.ArraySize(al)),
 	}
@@ -138,7 +138,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // In Dyalog where returns a nested index array for higher dimensional arrays.
 // Here only vectors are supported.
 func where(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	ar := R.(apl.IndexArray)
+	ar := R.(apl.IntArray)
 	shape := ar.Shape()
 	if apl.ArraySize(ar) == 0 {
 		return apl.EmptyArray{}, nil
@@ -157,7 +157,7 @@ func where(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		}
 	}
 
-	res := apl.IndexArray{Dims: []int{count}, Ints: make([]int, count)}
+	res := apl.IntArray{Dims: []int{count}, Ints: make([]int, count)}
 	n := 0
 	for i, v := range ar.Ints {
 		if v == 1 {
@@ -181,7 +181,7 @@ func intervalindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	ia, ok := gr.(apl.IndexArray)
+	ia, ok := gr.(apl.IntArray)
 	if ok == false {
 		return nil, fmt.Errorf("intervalindex: cannot grade left argument")
 	}
@@ -204,7 +204,7 @@ func intervalindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	fless := arith2("<", compare("<"))
 
-	res := apl.IndexArray{
+	res := apl.IntArray{
 		Dims: []int{rs[0]},
 		Ints: make([]int, rs[0]),
 	}

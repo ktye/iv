@@ -31,7 +31,7 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	ar := R.(apl.Array)
 	rs := ar.Shape()
 
-	res := apl.IndexArray{Dims: apl.CopyShape(ar)}
+	res := apl.IntArray{Dims: apl.CopyShape(ar)}
 	res.Ints = make([]int, apl.ArraySize(res))
 
 	// If the rank of L is arger than the rank of R, nothing is found.

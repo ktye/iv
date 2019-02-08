@@ -40,7 +40,7 @@ func SetBigTower(a *apl.Apl) {
 					return Int{big.NewInt(1)}
 				}
 				return Int{big.NewInt(0)}
-			} else if n, ok := n.(apl.Index); ok {
+			} else if n, ok := n.(apl.Int); ok {
 				return Int{big.NewInt(int64(n))}
 			}
 			return n
@@ -73,7 +73,7 @@ func SetPreciseTower(a *apl.Apl, prec uint) {
 					return Float{big.NewFloat(1).SetPrec(prec)}
 				}
 				return Float{big.NewFloat(0).SetPrec(prec)}
-			} else if n, ok := n.(apl.Index); ok {
+			} else if n, ok := n.(apl.Int); ok {
 				f := Float{big.NewFloat(float64(n)).SetPrec(prec)}
 				return f
 			}

@@ -72,15 +72,15 @@ func rollNumber(a *apl.Apl, n apl.Number) (apl.Number, error) {
 		f := rand.Float64()
 		return numbers.Float(f), nil // This only works with the default tower.
 	} else {
-		return a.Tower.Import(apl.Index(rand.Intn(m) + a.Origin)), nil
+		return a.Tower.Import(apl.Int(rand.Intn(m) + a.Origin)), nil
 	}
 }
 
 // deal selects L random numbers from ⍳R without repetition.
 func deal(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// TODO []RL (random link)
-	n := int(L.(apl.Index))
-	m := int(R.(apl.Index))
+	n := int(L.(apl.Int))
+	m := int(R.(apl.Int))
 	if n <= 0 || m < n {
 		return nil, fmt.Errorf("deal: L must be > 0 and R >= L")
 	}
@@ -89,7 +89,7 @@ func deal(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	for i := range p {
 		p[i] += a.Origin
 	}
-	return apl.IndexArray{
+	return apl.IntArray{
 		Ints: p,
 		Dims: []int{n},
 	}, nil

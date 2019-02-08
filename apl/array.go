@@ -59,8 +59,8 @@ func (ar array) Eval(a *Apl) (Value, error) {
 			return makeStringArray(v), nil
 		case reflect.TypeOf(Bool(false)):
 			return makeBoolArray(v), nil
-		case reflect.TypeOf(Index(0)):
-			return makeIndexArray(v), nil
+		case reflect.TypeOf(Int(0)):
+			return makeIntArray(v), nil
 		default:
 			if mk := a.Tower.Uniform; mk != nil {
 				if u, ok := mk(v); ok {
@@ -323,7 +323,7 @@ func (e EmptyArray) Reshape(s []int) Value {
 	if len(s) == 0 {
 		return e
 	}
-	res := IndexArray{Dims: s}
+	res := IntArray{Dims: s}
 	res.Ints = make([]int, ArraySize(res))
 	for i := range res.Ints {
 		res.Ints[i] = 0
@@ -332,36 +332,36 @@ func (e EmptyArray) Reshape(s []int) Value {
 }
 
 // IntdexArray is an array implementation which has only int values.
-type IndexArray struct {
+type IntArray struct {
 	Ints []int
 	Dims []int
 }
 
-func (ar IndexArray) String(a *Apl) string {
+func (ar IntArray) String(a *Apl) string {
 	return ArrayString(a, ar)
 }
 
-func (ar IndexArray) At(i int) Value {
-	return Index(ar.Ints[i])
+func (ar IntArray) At(i int) Value {
+	return Int(ar.Ints[i])
 }
 
-func (ar IndexArray) Zero() Value {
-	return Index(0)
+func (ar IntArray) Zero() Value {
+	return Int(0)
 }
 
-func (ar IndexArray) Size() int {
+func (ar IntArray) Size() int {
 	return len(ar.Ints)
 }
 
-func (ar IndexArray) Shape() []int {
+func (ar IntArray) Shape() []int {
 	return ar.Dims
 }
 
-func (ar IndexArray) Set(i int, v Value) error {
+func (ar IntArray) Set(i int, v Value) error {
 	if i < 0 || i >= len(ar.Ints) {
 		return fmt.Errorf("index out of range")
 	}
-	n, ok := v.(Index)
+	n, ok := v.(Int)
 	if ok {
 		ar.Ints[i] = int(n)
 		return nil
@@ -374,30 +374,30 @@ func (ar IndexArray) Set(i int, v Value) error {
 	return fmt.Errorf("cannot set %T to IndexArray", v)
 }
 
-func (s IndexArray) Make(shape []int) Array {
-	return IndexArray{
+func (s IntArray) Make(shape []int) Array {
+	return IntArray{
 		Dims: shape,
 		Ints: make([]int, prod(shape)),
 	}
 }
 
-func makeIndexArray(v []Value) IndexArray {
+func makeIntArray(v []Value) IntArray {
 	b := make([]int, len(v))
 	for i, e := range v {
-		b[i] = int(e.(Index))
+		b[i] = int(e.(Int))
 	}
-	return IndexArray{
+	return IntArray{
 		Dims: []int{len(v)},
 		Ints: b,
 	}
 }
 
-func (ar IndexArray) Reshape(shape []int) Value {
+func (ar IntArray) Reshape(shape []int) Value {
 	if len(ar.Ints) == 0 {
 		return EmptyArray{}
 	}
 	size := prod(shape)
-	rv := IndexArray{
+	rv := IntArray{
 		Ints: make([]int, size),
 		Dims: shape,
 	}

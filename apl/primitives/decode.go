@@ -59,7 +59,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		for k := 0; k < N-1; k++ {
 			p.Values[off+k] = p.Values[off+k+1]
 		}
-		p.Values[off+N-1] = apl.Index(1)
+		p.Values[off+N-1] = apl.Int(1)
 		for k := off + N - 1; k >= off+1; k-- {
 			v, err := fmul(a, p.Values[k], p.Values[k-1])
 			if err != nil {
@@ -114,8 +114,8 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				shape = append(shape, ar.Shape()...)
 			}
 		}
-		sv := apl.IndexArray{Dims: []int{len(shape)}, Ints: shape}
-		zv := apl.IndexArray{Dims: []int{1}, Ints: []int{0}}
+		sv := apl.IntArray{Dims: []int{len(shape)}, Ints: shape}
+		zv := apl.IntArray{Dims: []int{1}, Ints: []int{0}}
 		return rho2(a, sv, zv)
 	}
 
@@ -163,12 +163,12 @@ func encodeVecScalar(a *apl.Apl, L []apl.Value, R apl.Value) (apl.Value, error) 
 		}
 
 		// If L[i] is 0: C[i] ← 0
-		a0, err := eq(a, L[i], apl.Index(0))
+		a0, err := eq(a, L[i], apl.Int(0))
 		if err != nil {
 			return nil, err
 		}
 		if iszero := a0.(apl.Bool); iszero == true {
-			C[i] = apl.Index(0)
+			C[i] = apl.Int(0)
 		} else {
 			// Otherwise: C[i] ← (C[i+1] - Z[i])÷A[i]
 			d, err := fsub(a, C[i+1], Z[i])
@@ -211,7 +211,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	enc := func(rad []apl.Value, r apl.Value, vec []apl.Value) error {
 		var p apl.Value
 		for i := range rad {
-			p = apl.Index(1)
+			p = apl.Int(1)
 			if i < len(rad)-1 {
 				p = rad[i+1]
 			}
@@ -238,7 +238,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 		}
 
 		// If L has no zero lead, numbers exceeding the representation is incomplete.
-		zerold, err := eq(a, rad[0], apl.Index(0))
+		zerold, err := eq(a, rad[0], apl.Int(0))
 		if err != nil {
 			return err
 		}

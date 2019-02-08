@@ -33,7 +33,7 @@ func (c Conn) Close() (apl.Value, error) {
 	if err := c.KDBConn.Close(); err != nil {
 		return nil, err
 	}
-	return apl.Index(1), nil
+	return apl.Int(1), nil
 }
 
 func (c Conn) Call(a *apl.Apl, cmd string, args apl.List) (apl.Value, error) {

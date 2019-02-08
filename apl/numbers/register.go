@@ -48,7 +48,7 @@ func newTower() apl.Tower {
 					return Float(1)
 				}
 				return Float(0)
-			} else if n, ok := n.(apl.Index); ok {
+			} else if n, ok := n.(apl.Int); ok {
 				return Float(n)
 			}
 			return n
@@ -64,7 +64,7 @@ func makeUniform(v []apl.Value) (apl.Value, bool) {
 	}
 	if t := reflect.TypeOf(v[0]); t == reflect.TypeOf(apl.Bool(false)) {
 		return makeBoolArray(v), true
-	} else if t := reflect.TypeOf(v[0]); t == reflect.TypeOf(apl.Index(0)) {
+	} else if t := reflect.TypeOf(v[0]); t == reflect.TypeOf(apl.Int(0)) {
 		return makeIndexArray(v), true
 	} else if t == reflect.TypeOf(Float(0.0)) {
 		return makeFloatArray(v), true
@@ -86,12 +86,12 @@ func makeBoolArray(v []apl.Value) apl.BoolArray {
 		Bools: f,
 	}
 }
-func makeIndexArray(v []apl.Value) apl.IndexArray {
+func makeIndexArray(v []apl.Value) apl.IntArray {
 	f := make([]int, len(v))
 	for i, e := range v {
-		f[i] = int(e.(apl.Index))
+		f[i] = int(e.(apl.Int))
 	}
-	return apl.IndexArray{
+	return apl.IntArray{
 		Dims: []int{len(v)},
 		Ints: f,
 	}

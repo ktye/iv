@@ -47,7 +47,7 @@ func grade(up bool) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
 		} else {
 			sort.Sort(sort.Reverse(si))
 		}
-		return apl.IndexArray{
+		return apl.IntArray{
 			Ints: si.idx,
 			Dims: []int{len(si.idx)},
 		}, nil
@@ -109,8 +109,8 @@ func gradeSetup(a *apl.Apl, R apl.Value) (sortIndexes, error) {
 			for k := range b[i] {
 				v := b[i][k]
 				var num apl.Number
-				if n, ok := v.(apl.Index); ok {
-					num = a.Tower.Import(apl.Index(n))
+				if n, ok := v.(apl.Int); ok {
+					num = a.Tower.Import(apl.Int(n))
 				} else if n, ok := v.(apl.Bool); ok {
 					num = a.Tower.Import(n)
 				} else if n, ok := v.(apl.Number); ok {

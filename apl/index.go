@@ -9,7 +9,7 @@ import (
 // For an axis specification this must be a length 1 slice
 // and the value is an apl.Float.
 // For an index specification this is an array and each value
-// is either an EmptyArray or an IndexArray.
+// is either an EmptyArray or an IntArray.
 // IdxSpec is origin dependend.
 type IdxSpec []Value
 

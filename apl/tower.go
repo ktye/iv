@@ -73,24 +73,24 @@ func (t Tower) SameType(a, b Number) (Number, Number, error) {
 
 	// Handle Bool and Index.
 	if ab, ok := a.(Bool); ok {
-		if _, ok := b.(Index); ok {
+		if _, ok := b.(Int); ok {
 			return bool2int(ab), b, nil
 		}
 		a = t.Import(a)
 		at = reflect.TypeOf(a)
 	}
 	if bb, ok := b.(Bool); ok {
-		if _, ok := a.(Index); ok {
+		if _, ok := a.(Int); ok {
 			return a, bool2int(bb), nil
 		}
 		b = t.Import(b)
 		bt = reflect.TypeOf(b)
 	}
-	if _, ok := a.(Index); ok {
+	if _, ok := a.(Int); ok {
 		a = t.Import(a)
 		at = reflect.TypeOf(a)
 	}
-	if _, ok := b.(Index); ok {
+	if _, ok := b.(Int); ok {
 		b = t.Import(b)
 		bt = reflect.TypeOf(b)
 	}
@@ -122,11 +122,11 @@ func (t Tower) SameType(a, b Number) (Number, Number, error) {
 	return a, b, nil
 }
 
-func bool2int(b Bool) Index {
+func bool2int(b Bool) Int {
 	if b {
-		return Index(1)
+		return Int(1)
 	}
-	return Index(0)
+	return Int(0)
 }
 
 func (a *Apl) IsZero(n Number) bool {
@@ -155,13 +155,13 @@ func (t *Tower) ToNumeric(v Number) *Numeric {
 			Class: -2,
 			Uptype: func(n Number) (Number, bool) {
 				if b := n.(Bool); b {
-					return Index(1), true
+					return Int(1), true
 				}
-				return Index(0), true
+				return Int(0), true
 			},
 		}
 	}
-	if _, ok := v.(Index); ok {
+	if _, ok := v.(Int); ok {
 		return &Numeric{
 			Class: -1,
 			Uptype: func(n Number) (Number, bool) {

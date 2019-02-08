@@ -14,9 +14,9 @@ func identityItem(f apl.Value) apl.Value {
 	if p, ok := f.(apl.Primitive); ok {
 		switch p {
 		case "+", "-", "|", "∨", "<", ">", "≠", "⊤", "∪", "⌽", "⊖":
-			return apl.Index(0)
+			return apl.Int(0)
 		case "×", "÷", "*", "!", "^", "∧", "≤", "=", "≥", "/", "⌿", `\`, `⍀`:
-			return apl.Index(1)
+			return apl.Int(1)
 		case "⌊":
 			return numbers.Float(-math.MaxFloat64)
 		case "⌈":

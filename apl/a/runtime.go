@@ -16,11 +16,11 @@ func Memstats(p *apl.Apl, L, R apl.Value) (apl.Value, error) {
 }
 
 func cpus(p *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	return apl.Index(runtime.NumCPU()), nil
+	return apl.Int(runtime.NumCPU()), nil
 }
 
 func goroutines(p *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	return apl.Index(runtime.NumGoroutine()), nil
+	return apl.Int(runtime.NumGoroutine()), nil
 }
 
 func goversion(p *apl.Apl, _, R apl.Value) (apl.Value, error) {

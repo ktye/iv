@@ -124,7 +124,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 
 	shape := ar.Shape()
 
-	al := L.(apl.IndexArray)
+	al := L.(apl.IntArray)
 	lshape := al.Shape()
 
 	rot := func(i, n, size int) int {
@@ -140,7 +140,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		if len(lshape) != 1 || lshape[0] != 1 {
 			return nil, fmt.Errorf("rotate: wrong shape of L for vector R: %v", lshape)
 		}
-		n := int(al.At(0).(apl.Index))
+		n := int(al.At(0).(apl.Int))
 		size := shape[0]
 
 		res := apl.MixedArray{
@@ -168,7 +168,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		}
 		if rs, ok := L.(apl.Reshaper); ok {
 			newl := rs.Reshape(newshape)
-			al = newl.(apl.IndexArray)
+			al = newl.(apl.IntArray)
 			lshape = al.Shape()
 		} else {
 			return nil, fmt.Errorf("rotate: cannot reshape L") // this should not happen
@@ -201,7 +201,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		// Copy dst over idx, omitting axis
 		copy(idx, dst[:axis])
 		copy(idx[axis:], dst[axis+1:])
-		n := int(al.At(lic.Index(idx)).(apl.Index))
+		n := int(al.At(lic.Index(idx)).(apl.Int))
 		copy(src, dst)                        // sic: copy dst over src
 		src[axis] = rot(dst[axis], n, axsize) // replace the axis by it's rotation
 		res.Values[i] = ar.At(ric.Index(src)) // TODO copy ?

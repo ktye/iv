@@ -30,7 +30,7 @@ func power(a *apl.Apl, f, g apl.Value) apl.Function {
 			if ok == false {
 				return nil, fmt.Errorf("power: non-function RO must be an integer: %T", g)
 			}
-			n := int(nv.(apl.Index))
+			n := int(nv.(apl.Int))
 			if n < 0 {
 				return nil, fmt.Errorf("power: function inverse is not implemented")
 			} else if n == 0 {
@@ -68,7 +68,7 @@ func power(a *apl.Apl, f, g apl.Value) apl.Function {
 				if ok == false {
 					return nil, fmt.Errorf("power: gY must be an integer: %T", v)
 				}
-				n := int(nv.(apl.Index))
+				n := int(nv.(apl.Int))
 
 				if n == 1 {
 					return fR, nil

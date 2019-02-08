@@ -66,12 +66,12 @@ func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	return res, nil
 }
 
-func ravelSelection(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+func ravelSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		return apl.IndexArray{}, fmt.Errorf("ravel: cannot select from non-array: %T", R)
+		return apl.IntArray{}, fmt.Errorf("ravel: cannot select from non-array: %T", R)
 	}
-	ai := apl.IndexArray{Dims: []int{apl.ArraySize(ar)}}
+	ai := apl.IntArray{Dims: []int{apl.ArraySize(ar)}}
 	ai.Ints = make([]int, ai.Dims[0])
 	for i := range ai.Ints {
 		ai.Ints[i] = i
@@ -84,7 +84,7 @@ func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
 	if r, vec, err := splitAxis(a, R); err == nil {
 		R = r
 		x = vec
-	} else if r, n, frac, err := splitCatAxis(a, apl.Index(0), R); err != nil {
+	} else if r, n, frac, err := splitCatAxis(a, apl.Int(0), R); err != nil {
 		return nil, fmt.Errorf("ravel with axis: %s", err)
 	} else {
 		// The result has rank ⍴⍴R+1 with the same shape as R,
@@ -395,7 +395,7 @@ func catenateFirst(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if _, ok := R.(apl.Axis); ok == true {
 		return catenate(a, L, R)
 	}
-	return catenate(a, L, apl.Axis{A: apl.Index(a.Origin), R: R})
+	return catenate(a, L, apl.Axis{A: apl.Int(a.Origin), R: R})
 }
 
 func table(a *apl.Apl, _, R apl.Value) (apl.Value, error) {

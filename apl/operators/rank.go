@@ -21,7 +21,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 	// Rank operator: ISO; 9.3.4, p 124
 	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		f := LO.(apl.Function)
-		ai := RO.(apl.IndexArray)
+		ai := RO.(apl.IntArray)
 		if len(ai.Shape()) != 1 {
 			return nil, fmt.Errorf("rank: RO must be a vector")
 		}
@@ -219,7 +219,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 					}
 				}
 				if diffshape {
-					idx := apl.IndexArray{Dims: []int{len(common)}}
+					idx := apl.IntArray{Dims: []int{len(common)}}
 					idx.Ints = make([]int, len(common))
 					for i := range common {
 						idx.Ints[i] = int(common[i])
@@ -266,7 +266,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 
 // Take is defined and exported here, because it is used by both the rank operator and the take primitive function.
 
-func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array, x []int) (apl.Array, error) {
+func Take(a *apl.Apl, ai apl.IntArray, ar apl.Array, x []int) (apl.Array, error) {
 	rs := ar.Shape()
 
 	if x == nil {
@@ -316,7 +316,7 @@ func Take(a *apl.Apl, ai apl.IndexArray, ar apl.Array, x []int) (apl.Array, erro
 			}
 		}
 		if zero {
-			res.Values[i] = apl.Index(0) // TODO: fill element of R?
+			res.Values[i] = apl.Int(0) // TODO: fill element of R?
 		} else {
 			res.Values[i] = ar.At(ic.Index(src)) // TODO: copy?
 		}

@@ -32,13 +32,13 @@ type primitive struct {
 	symbol string
 	doc    string
 	fn     func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)
-	sel    func(*apl.Apl, apl.Value, apl.Value) (apl.IndexArray, error)
+	sel    func(*apl.Apl, apl.Value, apl.Value) (apl.IntArray, error)
 }
 
 func (p primitive) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) { return p.fn(a, L, R) }
-func (p primitive) Select(a *apl.Apl, L, R apl.Value) (apl.IndexArray, error) {
+func (p primitive) Select(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	if p.sel == nil {
-		return apl.IndexArray{}, fmt.Errorf("primitive %s cannot be used in selective assignment", p.symbol)
+		return apl.IntArray{}, fmt.Errorf("primitive %s cannot be used in selective assignment", p.symbol)
 	}
 	return p.sel(a, L, R)
 }

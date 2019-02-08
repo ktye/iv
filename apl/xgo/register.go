@@ -78,7 +78,7 @@ func (s source) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 				close(c[0])
 				return
 			default:
-				c[0] <- apl.Index(i)
+				c[0] <- apl.Int(i)
 			}
 		}
 		close(c[0])

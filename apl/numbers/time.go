@@ -110,11 +110,11 @@ func (t Time) Sub2(R apl.Value) (apl.Value, bool) {
 
 func (t Time) Mul() (apl.Value, bool) {
 	if t0 := time.Time(t); t0.Before(y0) {
-		return apl.Index(-1), true
+		return apl.Int(-1), true
 	} else if t0.After(y0) {
-		return apl.Index(1), true
+		return apl.Int(1), true
 	}
-	return apl.Index(0), true
+	return apl.Int(0), true
 }
 
 // Multiplication is allowed for durations only and applied to seconds.

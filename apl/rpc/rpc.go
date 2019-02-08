@@ -36,7 +36,7 @@ func (c Conn) Close() (apl.Value, error) {
 	if err := c.Conn.Close(); err != nil {
 		return nil, err
 	}
-	return apl.Index(1), nil
+	return apl.Int(1), nil
 }
 
 func (c Conn) Call(f string, L, R apl.Value) (apl.Value, error) {
