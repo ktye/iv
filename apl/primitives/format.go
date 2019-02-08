@@ -31,7 +31,6 @@ func init() {
 		Domain: Dyadic(Split(IsObject(nil), IsTable(nil))),
 		fn:     formatTable,
 	})
-	// TODO: dyadic ⍕: format with specification.
 
 	register(primitive{
 		symbol: "⍎",
@@ -39,7 +38,12 @@ func init() {
 		Domain: Monadic(IsString(nil)),
 		fn:     execute,
 	})
-	// TODO: dyadic ⍎: execute with namespace.
+	register(primitive{
+		symbol: "⍎",
+		doc:    "parse data",
+		Domain: Dyadic(Split(nil, IsString(nil))),
+		fn:     parseData,
+	})
 }
 
 // Format converts the argument to string.
@@ -144,4 +148,34 @@ func execute(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		fmt.Fprintln(a.GetOutput(), v.String(a))
 	}
 	return values[len(values)-1], nil
+}
+
+// ParseData parses data from strings that has been written with ¯1⍕V.
+// L may be "A", "D" or "T" for array, dict or table.
+// If L is a value of type array, dict or table it is used as a prototype with stricter requirements.
+func parseData(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	var p apl.Value
+	ls, ok := L.(apl.String)
+	if ok == false {
+		p = L
+		if _, ok := L.(apl.Array); ok {
+			ls = "A"
+		} else if _, ok := L.(*apl.Dict); ok {
+			ls = "D"
+		} else if _, ok := L.(apl.Table); ok {
+			ls = "T"
+		} else {
+			return nil, fmt.Errorf("parse data: left argument is an unknown prototype %T", L)
+		}
+	}
+	rs := R.(apl.String)
+	switch ls {
+	case "A":
+		return a.ParseArray(p, string(rs))
+	case "D":
+		return a.ParseDict(p, string(rs))
+	case "T":
+		return a.ParseTable(p, string(rs))
+	}
+	return nil, fmt.Errorf("parse data: left argument is an unknown type: %s", ls)
 }

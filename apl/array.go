@@ -2,9 +2,13 @@ package apl
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 	"text/tabwriter"
+	"unicode"
+
+	"github.com/ktye/iv/apl/scan"
 )
 
 // IsScalar returns true,
@@ -266,6 +270,100 @@ func ArrayString(a *Apl, v Array) string {
 		return s[:len(s)-1]
 	}
 	return s
+}
+
+// ParseArray parses an array from a string representation.
+// If the protoptye is not 0, the result will have the same type.
+func (a *Apl) ParseArray(prototype Value, s string) (Value, error) {
+	if prototype != nil {
+		if _, ok := prototype.(Array); ok == false {
+			return nil, fmt.Errorf("parse array: prototype is not an array: %T", prototype)
+		}
+	}
+	vector := func(line string) ([]Value, bool) {
+		var values []Value
+		rr := strings.NewReader(line)
+		for {
+			r, _, err := rr.ReadRune()
+			if err == io.EOF {
+				return values, true
+			} else if r == '"' {
+				rr.UnreadRune()
+				if str, err := scan.ReadString(rr); err != nil {
+					return nil, false
+				} else {
+					values = append(values, String(str))
+				}
+			} else if unicode.IsSpace(r) == false {
+				if num, err := scan.ScanNumber(rr); err != nil {
+					return nil, false
+				} else if n, err := a.Tower.Parse(num); err != nil {
+					return nil, false
+				} else {
+					values = append(values, n)
+				}
+			}
+		}
+	}
+	s = strings.TrimSpace(s)
+	if strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]") {
+		s = s[1 : len(s)-1]
+	}
+	var values []Value
+	lines := strings.Split(s, "\n")
+	var shape []int
+	c := 0
+	for k := range lines {
+		vec, ok := vector(lines[k])
+		if ok == false {
+			return nil, fmt.Errorf("parse array: cannot parse")
+		}
+		n := len(vec)
+		if shape == nil && n == 0 {
+			return nil, fmt.Errorf("parse array: empty first line")
+		} else if shape == nil {
+			shape = []int{n}
+		}
+		if n != 0 && n != shape[len(shape)-1] {
+			return nil, fmt.Errorf("parse array: last axis is not uniform %d != %d", n, shape[len(shape)-1])
+		}
+		// TODO: assemble rank from the number of delimiters.
+		if n == 0 {
+			c++
+		}
+		values = append(values, vec...)
+	}
+	if shape == nil {
+		if prototype != nil {
+			if u, ok := prototype.(Uniform); ok {
+				return u.Make([]int{}), nil
+			}
+		}
+		return EmptyArray{}, nil
+	}
+
+	// TODO parse nd-arrays.
+	shape = []int{len(lines) / shape[0], shape[0]}
+	if prod(shape) != len(values) {
+		return nil, fmt.Errorf("parse array: array is not rectangular: shape %v, size %d", shape, len(values))
+	}
+	A := MixedArray{
+		Values: values,
+		Dims:   shape,
+	}
+	if prototype != nil {
+		if u, ok := prototype.(Uniform); ok {
+			res, ok := a.Unify(A, true)
+			if ok == false {
+				return nil, fmt.Errorf("parse uniform array: array has no uniform type")
+			}
+			if reflect.TypeOf(res) != reflect.TypeOf(u) {
+				return nil, fmt.Errorf("parse uniform array: result has wrong type %T != %T", res, u)
+			}
+			return res, nil
+		}
+	}
+	return A, nil
 }
 
 // MixedArray is an n-dimensional array that can hold any Value.

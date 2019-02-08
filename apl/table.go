@@ -171,3 +171,13 @@ func (f *tableFormatter) Close() {
 		f.a.Fmt = f.rst
 	}
 }
+
+func (a *Apl) ParseTable(prototype Value, s string) (Table, error) {
+	if prototype != nil {
+		_, ok := prototype.(Table)
+		if ok == false {
+			return Table{}, fmt.Errorf("ParseTable: prototype is not a table: %T", prototype)
+		}
+	}
+	return Table{}, fmt.Errorf("TODO ParseTable")
+}

@@ -225,11 +225,11 @@ func (s *Scanner) nextToken() (Token, error) {
 				// otherwise it could be the dot operator.
 				if n := s.peek(); n >= '0' && n <= '9' {
 					s.unreadRune()
-					return s.scanNumber(true)
+					return s.scanNumber()
 				}
 			} else {
 				s.unreadRune()
-				return s.scanNumber(true)
+				return s.scanNumber()
 			}
 		}
 
@@ -280,12 +280,24 @@ func (s *Scanner) nextToken() (Token, error) {
 // and stops before a character is not digit, a-zA-Z, dot or ¯.
 // Valid number formats are not known to the scanner.
 // Parsing is done by the parser with the current numerical tower.
-func (s *Scanner) scanNumber(cmplx bool) (Token, error) {
+func (s *Scanner) scanNumber() (Token, error) {
+	num, err := ScanNumber(s)
+	if err != nil {
+		return Token{}, err
+	}
+	return Token{T: Number, S: num}, nil
+}
+
+// ScanNumber reads the next number from s.
+// The string is not parsed and may not be a valid number.
+func ScanNumber(s io.RuneScanner) (string, error) {
 	var buf strings.Builder
 	for {
-		r, _ := s.nextRune()
-		if r == -1 {
-			return Token{T: Number, S: buf.String()}, nil
+		r, _, err := s.ReadRune()
+		if err == io.EOF {
+			return buf.String(), nil
+		} else if err != nil {
+			return "", err
 		} else if r >= '0' && r <= '9' {
 			buf.WriteRune(r)
 		} else if r >= 'a' && r <= 'z' {
@@ -297,8 +309,8 @@ func (s *Scanner) scanNumber(cmplx bool) (Token, error) {
 		} else if r == '¯' {
 			buf.WriteRune(r)
 		} else {
-			s.unreadRune()
-			return Token{T: Number, S: buf.String()}, nil
+			s.UnreadRune()
+			return buf.String(), nil
 		}
 	}
 }

@@ -87,3 +87,13 @@ func (d *Dict) String(a *Apl) string {
 	}
 	return s
 }
+
+func (a *Apl) ParseDict(prototype Value, s string) (*Dict, error) {
+	if prototype != nil {
+		_, ok := prototype.(*Dict)
+		if ok == false {
+			return nil, fmt.Errorf("ParseDict: prototype is not a dict: %T", prototype)
+		}
+	}
+	return nil, fmt.Errorf("TODO ParseDict")
+}
