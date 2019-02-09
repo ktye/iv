@@ -2,6 +2,7 @@ package operators
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
@@ -16,6 +17,8 @@ func init() {
 	})
 }
 
+// rank is extended for sending subarrays over a channel:
+//	<⍤3 C
 func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 	// Cell, Frame, Conform: ISO: 9.3.3, p123
 	// Rank operator: ISO; 9.3.4, p 124
@@ -32,6 +35,12 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			return nil, fmt.Errorf("rank: RO vector has %d elements, must be between 1..3", n)
 		} else if n == 1 {
 			p, q, r = int(ai.Ints[0]), int(ai.Ints[0]), int(ai.Ints[0])
+			// Special case: <⍤R C
+			if pf, ok := f.(apl.Primitive); ok && string(pf) == "<" {
+				if c, ok := R.(apl.Channel); ok {
+					return sendSubArray(a, r, c)
+				}
+			}
 		} else if n == 2 {
 			p, q, r = int(ai.Ints[1]), int(ai.Ints[0]), int(ai.Ints[1])
 		} else if n == 3 {
@@ -262,6 +271,33 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		return res, nil
 	}
 	return function(derived)
+}
+
+// sendSubArray assembles an array the given rank from strings read on channel c.
+// It returns a channel and sends arrays of the rank.
+func sendSubArray(a *apl.Apl, rank int, in apl.Channel) (apl.Value, error) {
+	out := apl.NewChannel()
+	go func() {
+		defer close(out[0])
+		scn := apl.RuneScanner{C: in, O: out}
+		for {
+			v, err := a.ScanRankArray(&scn, rank)
+			if err == io.EOF || err == io.ErrClosedPipe {
+				return
+			} else if err != nil {
+				out[0] <- apl.Error{err}
+				return
+			}
+			select {
+			case _, ok := <-in[1]:
+				if !ok {
+					return
+				}
+			case out[0] <- v:
+			}
+		}
+	}()
+	return out, nil
 }
 
 // Take is defined and exported here, because it is used by both the rank operator and the take primitive function.

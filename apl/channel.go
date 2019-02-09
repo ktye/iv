@@ -18,6 +18,11 @@ import (
 //	[L]f¨C	each channel
 type Channel [2]chan Value
 
+// TODO: drain input channels.
+// When the output channel [1] is closed, the functions propagate the cancellation
+// by closing input channel [1], then close output channel [0] and return.
+// Should they drain input channel [0] before returning?
+
 func NewChannel() Channel {
 	var c Channel
 	c[0] = make(chan Value)
@@ -181,4 +186,46 @@ func (r *ChannelReader) Read(p []byte) (n int, err error) {
 		}
 	}
 	return r.buf.Read(p)
+}
+
+// RuneScanner converts Channel C into an io.RuneScanner.
+// The channel should contain String values.
+// The output channel O is checked for cancellation.
+type RuneScanner struct {
+	C Channel
+	O Channel
+	b bytes.Buffer
+	i bool
+}
+
+func (r *RuneScanner) ReadRune() (rune, int, error) {
+	if r.b.Len() == 0 {
+		select {
+		case _, ok := <-r.O[1]:
+			if !ok {
+				close(r.C[1])
+				// TODO drain C[0]
+				return -1, 0, io.ErrClosedPipe
+			}
+		case v, ok := <-r.C[0]:
+			if !ok {
+				return -1, 0, io.EOF
+			}
+			if s, ok := v.(String); ok == false {
+				return -1, 0, fmt.Errorf("channel must contain strings: %T", v)
+			} else {
+				if r.i == false {
+					r.i = true
+				} else {
+					// Newlines are implicit for strings sent over a channel.
+					r.b.WriteRune('\n')
+				}
+				r.b.WriteString(string(s))
+			}
+		}
+	}
+	return r.b.ReadRune()
+}
+func (r *RuneScanner) UnreadRune() error {
+	return r.b.UnreadRune()
 }

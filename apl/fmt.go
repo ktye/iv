@@ -157,12 +157,14 @@ func (a *Apl) ScanRankArray(s io.RuneScanner, rank int) (Value, error) {
 	var values []Value
 	c := 0
 	var shape []int
-	brackets := false
 	for {
 		r, _, err := s.ReadRune()
 		if err == io.EOF {
 			break
 		} else if r == '\n' || r == ';' || r == ']' {
+			if len(values) == 0 {
+				continue
+			}
 			c++
 			if c == rank {
 				break
@@ -173,9 +175,6 @@ func (a *Apl) ScanRankArray(s io.RuneScanner, rank int) (Value, error) {
 					p := prod(shape)
 					shape = append([]int{len(values) / p}, shape...)
 				}
-			}
-			if r == ']' {
-				brackets = true
 			}
 		} else if unicode.IsSpace(r) || r == ',' || r == '[' || r == '(' || r == ')' {
 			continue
@@ -210,13 +209,28 @@ func (a *Apl) ScanRankArray(s io.RuneScanner, rank int) (Value, error) {
 	}
 	// The algorithm does not check if the array is uniform in between.
 	// We just test at the end, if the size matches the shape. This may include false positives.
-	p := prod(shape)
-	if brackets == false || p != len(values) {
-		// With brackets the array is already closed. With newlines, it could still be open.
-		shape = append([]int{len(values) / p}, shape...)
+	if len(values) == 0 {
+		return nil, io.EOF
 	}
-	if prod(shape) != len(values) {
-		return nil, fmt.Errorf("parse array: array is not rectangular: ×/%v ≠ %v", shape, len(values))
+	if rank < 0 {
+		// For rank < 0, we read everything. Data could be closed or not.
+		rank = len(shape)
+		if prod(shape) == len(values) {
+			rank = len(shape) - 1
+		}
+	}
+	for i := 0; i <= rank-len(shape); i++ {
+		p := prod(shape)
+		if len(shape) == 0 {
+			p = 1
+		} else if p == 0 {
+			return nil, fmt.Errorf("parse array: divide by zero: values: %v shape: %v", values, shape)
+		}
+		shape = append([]int{len(values) / p}, shape...)
+		if prod(shape) != len(values) {
+			return nil, fmt.Errorf("parse array: array is not rectangular: ×/%v ≠ %v", shape, len(values))
+		}
+		// Continue and fill leading 1s if the rank is higher than data.
 	}
 	return MixedArray{
 		Dims:   shape,
