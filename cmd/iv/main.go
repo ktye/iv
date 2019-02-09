@@ -44,6 +44,9 @@ func iv(p string, w io.Writer) error {
 		domain.Monadic(domain.ToIndex(nil)),
 		"read fd",
 	))
+	if err := a.ParseAndEval(`r←{<⍤⍵<0}⋄s←{⍵⍴<⍤0<0}`); err != nil {
+		return err
+	}
 	return a.ParseAndEval(p)
 }
 
