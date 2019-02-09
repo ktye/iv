@@ -105,5 +105,8 @@ func getformat(a *apl.Apl, num apl.Value) (string, bool) {
 	if len(s) > 0 && s[0] == '-' {
 		return s[1:], true
 	}
+	if a.PP < -1 {
+		return "", true // intended for external interchange (full prec, with -).
+	}
 	return s, false
 }

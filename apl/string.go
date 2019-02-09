@@ -13,7 +13,7 @@ type String string
 func (s String) String(a *Apl) string {
 	f := a.Fmt[reflect.TypeOf(s)]
 	if f == "" {
-		if a.PP == -1 {
+		if a.PP < 0 {
 			f = "%q"
 		}
 	}

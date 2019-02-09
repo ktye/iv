@@ -26,6 +26,11 @@ func (c Complex) String(a *apl.Apl) string {
 	if format == "" {
 		if a.PP < 0 {
 			format = "%vJ%v"
+			if a.PP == -2 { // json: there is no standard.
+				format = "[%v,%v]"
+			} else if a.PP == -3 { // matlab
+				format = "%v" // prints as "(1-2i)"
+			}
 		} else if a.PP == 0 {
 			format = "%.6GJ%.6G"
 		} else {
