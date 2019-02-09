@@ -31,6 +31,9 @@ type Table struct {
 // String formats a table using a tabwriter.
 // Each value is printed using by it's String method, same as ⍕V.
 func (t Table) String(a *Apl) string {
+	if a.PP == -2 || a.PP == -3 {
+		return t.Dict.String(a)
+	}
 	var b bytes.Buffer
 	if err := t.WriteFormatted(a, nil, &b); err != nil {
 		return ""

@@ -75,6 +75,11 @@ func (d *Dict) Set(a *Apl, key Value, v Value) error {
 }
 
 func (d *Dict) String(a *Apl) string {
+	if a.PP == -2 {
+		return d.jsonString(a)
+	} else if a.PP == -3 {
+		return d.matString(a)
+	}
 	var buf strings.Builder
 	tw := tabwriter.NewWriter(&buf, 1, 0, 1, ' ', 0)
 	for _, k := range d.K {
@@ -86,6 +91,44 @@ func (d *Dict) String(a *Apl) string {
 		return s[:len(s)-1]
 	}
 	return s
+}
+
+func (d *Dict) jsonString(a *Apl) string {
+	var b strings.Builder
+	b.WriteRune('{')
+	keys := d.Keys()
+	for i, key := range keys {
+		if i > 0 {
+			b.WriteRune(',')
+		}
+		k := key.String(a)
+		val := d.At(a, key)
+		v := val.String(a)
+		b.WriteString(k)
+		b.WriteRune(':')
+		b.WriteString(v)
+	}
+	b.WriteRune('}')
+	return b.String()
+}
+
+func (d *Dict) matString(a *Apl) string {
+	var b strings.Builder
+	b.WriteString("struct(")
+	keys := d.Keys()
+	for i, key := range keys {
+		if i > 0 {
+			b.WriteRune(',')
+		}
+		k := key.String(a)
+		val := d.At(a, key)
+		v := val.String(a)
+		b.WriteString(k)
+		b.WriteRune(',')
+		b.WriteString(v)
+	}
+	b.WriteRune(')')
+	return b.String()
 }
 
 func (a *Apl) ParseDict(prototype Value, s string) (*Dict, error) {
