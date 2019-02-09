@@ -84,6 +84,20 @@ It is just sleeping until all connections are done and the pipeline unblocks aut
 
 Elementary primitive functions `+-×...` everything in `apl/primtives/elementary.go` are extended to act like being called with the each operator implicitly.
 
+## Draining channels
+
+When a channel is evaluated and not assigned to a variable, all values are read from it and printed.
+
+Another way to accumulate values from a channel, is the `/` operator.
+Similar to it's usual definition, it applies the function on it's left to subsequent values read from the channel.
+
+## Reshape
+Dyadic ⍴ is extended for channels: It reads arrays from a channel and reshapes them according to the left argument.
+Results of the given shape are send to the output channel.
+
+This does not change the ravel order of all values, but may change the sending frequency.
+If 6 2-by-3 are send over C, then `6 2 ⍴ C` returns a channel that contains 3 values, each of shape 6 2.
+
 # Applications
 
 ## IO operations
