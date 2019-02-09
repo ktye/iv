@@ -10,6 +10,9 @@ import (
 type List []Value
 
 func (l List) String(a *Apl) string {
+	if a.PP == -2 {
+		return l.jsonString(a)
+	}
 	var buf strings.Builder
 	buf.WriteRune('(')
 	for i := range l {
@@ -64,6 +67,20 @@ func (l List) getset(idx []int, v Value) (Value, error) {
 		}
 	}
 	return nil, fmt.Errorf("not reached")
+}
+
+// jsonString formats the list as a json object.
+func (l List) jsonString(a *Apl) string {
+	var b strings.Builder
+	b.WriteRune('[')
+	for i, v := range l {
+		if i > 0 {
+			b.WriteRune(',')
+		}
+		b.WriteString(v.String(a))
+	}
+	b.WriteRune(']')
+	return b.String()
 }
 
 type list []expr

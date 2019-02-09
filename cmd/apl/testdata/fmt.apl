@@ -1,4 +1,4 @@
-⍝ Formatting examples for arrays and dicts to csv, json, mat
+⍝ Formatting examples for arrays, dicts and lists to csv, json, mat
 ¯1⍕2 3 4⍴⍳24    ⍝ display format
 ¯2⍕2 3 4⍴⍳24    ⍝ json
 ¯3⍕3⍴⍳3         ⍝ matlab vector
@@ -20,3 +20,8 @@ S
 ¯1⍕S
 ¯2⍕S
 ¯3⍕S
+⍝ lists
+L←(1 2;(3;(1;2;);"four";);5;)
+L
+¯1⍕L
+¯2⍕L
