@@ -11,6 +11,46 @@ import (
 	"github.com/ktye/iv/apl/scan"
 )
 
+// SetPP is called when a value is assigned to Quad-PP.
+// If R is an integer, PP is set to this value.
+// If R is a dict that maps from values to string, the format strings of the types are set.
+// If R is the empty array, all format strings are removed and PP is reset.
+//
+// PP >= 0 sets the precision when printing floating point numbers.
+// When nothing else is set, the default format string is %.(prec)G.
+// PP < 0 always uses full precision for numbers and quoted format for strings (%q).
+// Additionally, there are several special interpretations for PP < 0:
+//  -1:  arrays formatted in a table
+//  -2:  arrays formatted in a single line of json
+//  -3:  arrays formatted in a single line compatible with matlab
+//  -8:  integers formatted as octal numbers with 0 prefix
+// -16:  integers formatted as hexadecimal numbers with 0x prefix, floats with %b (-123456p-78)
+func (a *Apl) SetPP(R Value) error {
+	if _, ok := R.(EmptyArray); ok {
+		a.PP = 0
+		for k := range a.Fmt {
+			delete(a.Fmt, k)
+		}
+		return nil
+	} else if d, ok := R.(Object); ok {
+		keys := d.Keys()
+		for _, k := range keys {
+			v := d.At(a, k)
+			if v != nil {
+				if s, ok := v.(String); ok {
+					a.Fmt[reflect.TypeOf(k)] = string(s)
+				}
+			}
+		}
+	} else if n, ok := R.(Number); ok {
+		if i, ok := n.ToIndex(); ok {
+			a.PP = i
+			return nil
+		}
+	}
+	return fmt.Errorf("illegal type for PP: %T", R)
+}
+
 // ArrayString can be used by an array implementation.
 // It formats an n-dimensional array using a tabwriter for PP>=-1.
 // Each dimension is terminated by k newlines, where k is the dimension index.

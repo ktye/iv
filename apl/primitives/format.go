@@ -49,7 +49,7 @@ func init() {
 // Format converts the argument to string.
 // If L is a number it is used as the precision (sets PP).
 // If L is a string L is used as a format string.
-// Special formatting is used, if the string is "csv", "json" or "mat".
+// Special formatting is used, if the string is "csv", "json", "mat", "img" or "x".
 func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	pp := a.PP
 	defer func() {
@@ -67,6 +67,9 @@ func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			a.PP = -2
 		case "mat":
 			a.PP = -3
+		case "x":
+			a.PP = -16
+			// TODO case "img":
 		default:
 			t := reflect.TypeOf(R)
 			f := a.Fmt[t]

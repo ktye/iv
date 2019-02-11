@@ -18,12 +18,14 @@ type Float float64
 func (n Float) String(a *apl.Apl) string {
 	format, minus := getformat(a, n)
 	if format == "" {
-		prec := a.PP
-		if prec < 0 {
-			format = "%v"
-		} else if prec == 0 {
+		switch prec := a.PP; {
+		case prec == 0:
 			format = "%.6G"
-		} else {
+		case prec == -16:
+			format = "%b"
+		case prec < 0:
+			format = "%v"
+		default:
 			format = fmt.Sprintf("%%.%dG", prec)
 		}
 	}

@@ -26,7 +26,14 @@ func (i Int) String(a *Apl) string {
 		format = format[1:]
 	}
 	if format == "" {
-		format = "%v"
+		switch a.PP {
+		case -8:
+			format = "0%o"
+		case -16:
+			format = "0x%X"
+		default:
+			format = "%v"
+		}
 	}
 	s := fmt.Sprintf(format, i)
 	if minus == false {
