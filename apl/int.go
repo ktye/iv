@@ -35,10 +35,11 @@ func (i Int) String(a *Apl) string {
 	return s
 }
 
-// ParseInt parses an integer. It replaces ¯ with -, then uses Atoi.
+// ParseInt parses an integer. It replaces ¯ with -, then uses ParseInt.
+// Decimal, Octal (0x..) and Hexadecimal (0..) formats are supported.
 func ParseInt(s string) (Number, bool) {
 	s = strings.Replace(s, "¯", "-", -1)
-	if n, err := strconv.Atoi(s); err == nil {
+	if n, err := strconv.ParseInt(s, 0, 64); err == nil {
 		return Int(n), true
 	}
 	return Int(0), false
