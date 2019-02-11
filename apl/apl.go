@@ -33,6 +33,7 @@ type Apl struct {
 	scan.Scanner
 	parser
 	stdout     io.Writer
+	stdimg     ImageWriter
 	Tower      Tower
 	Origin     int
 	PP         int
@@ -123,6 +124,10 @@ func (a *Apl) GetOutput() io.Writer {
 		return ioutil.Discard
 	}
 	return a.stdout
+}
+
+func (a *Apl) SetImage(w ImageWriter) {
+	a.stdimg = w
 }
 
 func newEnv() *env {
