@@ -2,6 +2,10 @@
 package main
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/eaburns/T/rope"
 	"github.com/ktye/iv/apl"
 	apkg "github.com/ktye/iv/apl/a"
@@ -16,12 +20,42 @@ import (
 	"github.com/ktye/iv/apl/xgo"
 	"github.com/ktye/iv/aplextra/q"
 	"github.com/ktye/iv/aplextra/u"
+	"github.com/ktye/iv/cmd"
 	"github.com/ktye/ui"
 )
 
-func main() {
+const usage = `usage
+     lui          ui mode
+     lui -a ARGS  cmd/apl mode
+     lui -i ARGS  cmd/iv mode
+     lui -z ZIP   attach zip file
+`
 
-	// Start APL and register all packages.
+func main() {
+	if len(os.Args) < 2 {
+		gui(newApl())
+		return
+	}
+
+	var err error
+	switch os.Args[1] {
+	case "-a":
+		err = cmd.Apl(newApl(), os.Stdin, os.Args[2:])
+	case "-i":
+		err = cmd.Iv(newApl(), strings.Join(os.Args[2:], " "), os.Stdout)
+	case "-z":
+		fmt.Println("TODO: attach zip file")
+	default:
+		fmt.Println(usage)
+	}
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func newApl() *apl.Apl {
 	a := apl.New(nil)
 	numbers.Register(a)
 	big.Register(a, "")
@@ -35,7 +69,11 @@ func main() {
 	http.Register(a, "")
 	q.Register(a, "")
 	u.Register(a, "")
+	return a
+}
 
+// gui runs lui in gui mode.
+func gui(a *apl.Apl) {
 	// Implement the repl interface.
 	var interp interp
 	repl := &ui.Repl{Reply: true}
