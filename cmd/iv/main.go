@@ -16,6 +16,7 @@ import (
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
 	"github.com/ktye/iv/apl/scan"
+	"github.com/ktye/iv/cmd"
 )
 
 var stdin io.ReadCloser = os.Stdin
@@ -24,11 +25,13 @@ func main() {
 	if len(os.Args) < 2 {
 		fatal(fmt.Errorf("arguments expected"))
 	}
-	fatal(iv(strings.Join(os.Args[1:], " "), os.Stdout))
+	a := newApl(stdin)
+	fatal(cmd.Iv(a, strings.Join(os.Args[1:], " "), os.Stdout))
 }
 
-func iv(p string, w io.Writer) error {
-	a := apl.New(w)
+func newApl(r io.ReadCloser) *apl.Apl {
+	stdin = r
+	a := apl.New(nil)
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
@@ -44,10 +47,7 @@ func iv(p string, w io.Writer) error {
 		domain.Monadic(domain.ToIndex(nil)),
 		"read fd",
 	))
-	if err := a.ParseAndEval(`r←{<⍤⍵<0}⋄s←{⍵⍴<⍤0<0}`); err != nil {
-		return err
-	}
-	return a.ParseAndEval(p)
+	return a
 }
 
 func fatal(err error) {
@@ -57,7 +57,8 @@ func fatal(err error) {
 	}
 }
 
-// copied from apl/io.
+// The following functions are a subset of apl/io to support loading a library
+// and streaming from stdin.
 
 func readfd(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	fd := int(R.(apl.Int))
