@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/ktye/iv/apl"
-	"github.com/ktye/iv/apl/domain"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
@@ -35,16 +34,12 @@ func newApl(r io.ReadCloser) *apl.Apl {
 	primitives.Register(a)
 	operators.Register(a)
 
-	a.RegisterPrimitive("<", apl.ToHandler(
-		read,
-		domain.Monadic(domain.IsString(nil)),
-		"read file",
-	))
-	a.RegisterPrimitive("<", apl.ToHandler(
-		readfd,
-		domain.Monadic(domain.ToIndex(nil)),
-		"read fd",
-	))
+	// Add a minimal io package that's sole purpose is to allow
+	// to read from stdin.
+	pkg := map[string]apl.Value{
+		"r": apl.ToFunction(readfd),
+	}
+	a.RegisterPackage("io", pkg)
 	return a
 }
 
@@ -55,24 +50,13 @@ func fatal(err error) {
 	}
 }
 
-// The following functions are a subset of apl/io to support loading a library
-// and streaming from stdin.
-
 func readfd(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	fd := int(R.(apl.Int))
+	fd, ok := R.(apl.Int)
+	if ok == false {
+		return nil, fmt.Errorf("iv/io read: argument must be 0 (stdin)")
+	}
 	if fd != 0 {
 		return nil, fmt.Errorf("monadic <: right argument must be 0 (stdin)")
 	}
 	return apl.LineReader(stdin), nil
-}
-func read(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	name, ok := R.(apl.String)
-	if ok == false {
-		return nil, fmt.Errorf("read: expect file name %T", R)
-	}
-	f, err := os.Open(string(name))
-	if err != nil {
-		return nil, err
-	}
-	return apl.LineReader(f), nil // LineReader closes the file.
 }

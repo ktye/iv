@@ -39,7 +39,7 @@ func Register(a *apl.Apl, name string) {
 		"read file",
 	))
 	a.RegisterPrimitive("<", apl.ToHandler(
-		readfd,
+		read,
 		domain.Monadic(domain.ToIndex(nil)),
 		"read fd",
 	))

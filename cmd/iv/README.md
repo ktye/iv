@@ -9,30 +9,40 @@ Usage
 	cat data | iv COMMANDS
 ```
 
-Monadic `<0` is defined to return a Channel that read lines of input from stdin.
-Otherwise only the standard packages are included.
-
 ## streaming data
-The interpreter has some built-in methods for parsing textual data into values, mostly with dyadic ⍎.
+Iv provides two pre-defined functions that read data from stdin:
+```
+	r ← {<⍤⍵ io→r 0}
+	s ← {⍵⍴<⍤0 io→r 0}
+```
+io→r 0 reads from stdin are returns a channel that provides a line of input on each read.
 
-But also the rank operator `⍤` is extended to parse sub-arrays from a channel containing strings, e.g. `<0` (stdin).
+The rank operator `⍤` is extended to parse sub-arrays from a channel delivering strings.
+See `ScanRankArray` in `apl/fmt.go`.
+The number and array syntax is not as strict as usual program text to allow interoperatiliby with other programs.
 
-This example reads lines of text from stdin and interpretes them as 2 dimensional arrays: `<⍤2<0`
+Function `r` is called monadically with a rank argument: `r 0` reads a scalar at a time, `r 1` a line at a time and so on.
+Higher order arrays are terminated by multiple newlines, or bracket notation can be used (like json arrays), or matlab style.
 
-As this is a common pattern for the use case of iv, it is stored as a lambda function in r: `r←{<⍤⍵<0}`.
+Function `s` ignores the structure of incoming data and always reads a scalar at a time, reshaping it according to it's right argument.
 
+## examples
 To apply a function on each 2d subarray of the input stream, we can call iv with:
 ```
 	cat data | iv f¨r 2
 ```
 
-Another use case is to reshape the input stream if it does not contain a structure.
-This can be done with the extension of ⍴ for stream.
-It is already stored in the variable s: `s←{⍵⍴<⍤0<0}`.
 
-This example formats each 3 2 subarray of the input stream to a json string:
+Format each 3 2 subarray of the input stream to a json string:
 ```
 	cat data | iv '`json ⍕¨s 2 3'
 ```
 
+More examples are given in `testdata`.
 
+## extra libraries
+cmd/iv includes only the base packages. Even `io` mentioned above only provides a single function to read from stdin.
+To use all packages in this repository, cmd/lui can be called to work like iv by including the argument `-i`.
+```
+	lui -i COMMANDS
+```

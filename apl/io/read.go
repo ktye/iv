@@ -13,10 +13,19 @@ import (
 	"github.com/ktye/iv/apl/scan"
 )
 
+// Stdin is exported to be overwritable by tests.
+var Stdin io.ReadCloser = os.Stdin
+
 // read reads from a file
 func read(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	name, ok := R.(apl.String)
 	if ok == false {
+		// If R is 0, it reads from stdin.
+		if num, ok := R.(apl.Number); ok {
+			if n, ok := num.ToIndex(); ok && n == 0 {
+				return apl.LineReader(Stdin), nil
+			}
+		}
 		return nil, fmt.Errorf("io read: expect file name %T", R)
 	}
 	f, err := Open(string(name))
@@ -24,15 +33,6 @@ func read(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		return nil, err
 	}
 	return apl.LineReader(f), nil // LineReader closes the file.
-}
-
-// readfd reads from a file descriptor (Index). Only 0 is allowed.
-func readfd(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	fd := int(R.(apl.Int))
-	if fd != 0 {
-		return nil, fmt.Errorf("io readfd: argument must be 0 (stdin)")
-	}
-	return apl.LineReader(os.Stdin), nil
 }
 
 // exec executes a program and sends the output through a channel.
