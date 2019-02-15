@@ -36,13 +36,13 @@ We take a channel pair as one value.
 The monadic primitive function `<` is used to create a channel.
 
 ```
-	<A        return a channel, start a go routine and write A to it.
-	          A may be any value (except a channel). Only once. Close afterwards.
+	<A        Return a channel, start a go routine and write A to it.
+	          A may be any value (except for a channel). Send once and close afterwards.
 	<[5]A     Send A 5 times.
-	<[¯1]A    Send A repeatatly. As long as the channel is open.
-	          Sending on a channel blocks until there is someone taking the values.
-	<[0]A     return a channel that sends A once as an initial value.
+	<[¯1]A    Send A repeatedly, as long as the channel is open.
+	<[0]A     Return a channel that sends A once as an initial value.
 	          The channel remains open.
+	Sending on a channel blocks until there is someone taking the values.
 ```
 Keep in mind, an expression like `A←<[5]2 3⍴⍳6` only assigns a channel to `A`.
 The values are have not yet being sent anywhere.
