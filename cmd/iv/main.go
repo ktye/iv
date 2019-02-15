@@ -15,7 +15,6 @@ import (
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
 	"github.com/ktye/iv/apl/primitives"
-	"github.com/ktye/iv/apl/scan"
 	"github.com/ktye/iv/cmd"
 )
 
@@ -35,7 +34,6 @@ func newApl(r io.ReadCloser) *apl.Apl {
 	numbers.Register(a)
 	primitives.Register(a)
 	operators.Register(a)
-	a.AddCommands(map[string]scan.Command{"l": load{}})
 
 	a.RegisterPrimitive("<", apl.ToHandler(
 		read,
@@ -77,19 +75,4 @@ func read(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		return nil, err
 	}
 	return apl.LineReader(f), nil // LineReader closes the file.
-}
-
-type load struct{}
-
-func (c load) Rewrite(t []scan.Token) []scan.Token {
-	if len(t) < 2 {
-		return t
-	}
-	return append([]scan.Token{
-		scan.Token{T: scan.Symbol, S: "⍎"},
-		scan.Token{T: scan.Symbol, S: "¨"},
-		scan.Token{T: scan.Symbol, S: "<"},
-		t[0],
-		scan.Token{T: scan.Diamond, S: "⋄"},
-	}, t[1:]...)
 }

@@ -54,7 +54,7 @@ func IvTest(newapl func(io.ReadCloser) *apl.Apl) error {
 			continue
 		}
 		if err := testIvFile(newapl, file[:len(file)-3]); err != nil {
-			return err
+			return fmt.Errorf("%s: %s", file, err)
 		}
 	}
 	return nil
