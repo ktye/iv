@@ -4,16 +4,21 @@
 </p>
 
 Lui is a gui frontend to APL\iv
+```
+     lui          ui mode
+     lui -a ARGS  cmd/apl mode
+     lui -i ARGS  cmd/iv mode
+     lui -z ZIP   attach zip file
+```
 
-Lui is built on to of ktye/ui toolkit.
-It embedds APL385 Unicode font and translates keystrokes automatically.
-No special keyboard driver is needed.
+Lui embedds all libraries in this repository and can be used in the terminal similar to cmd/apl and cmd/iv or as a gui application.
 
+## Multiline expressions
 When pressing the ENTER key, the current line is interpreted and the result is appended to the end of the editor.
 ESC toggles hold mode, which prevents execution to edit multiple lines.
 
 ## Commands
-Commands can be entered following a slash or a backslash.
+Some packages provide commands that start with a slash or backslash as the first token, which is not valid APL.
 The rewrite the tokens of the current line.
 
 There is a built-in sam editor with the `/e` command.
@@ -27,11 +32,12 @@ Commands are recursive.
 To see the help text searchable in the editor, type `/e/h`
 
 ## ui customization
-The user interface can be changed at runtime using package `aplextra/u` which is built-in.
+Lui is built on top of the ktye/ui toolkit.
+The user interface can be changed at runtime using package `aplextra/u`.
 See the documentation of package `u` for examples.
 
 ## Attach application (TODO)
-Lui builds as a single static binary.
+Lui builds as a single static binary including APL385 font.
 Custom startup code can be attached to the binary in a zip file,
 that can be used to create a self-contained APL application with a custom user interface bundled with data.
 
