@@ -15,14 +15,15 @@ Iv provides two pre-defined functions that read data from stdin:
 	r ← {<⍤⍵ io→r 0}
 	s ← {⍵⍴<⍤0 io→r 0}
 ```
-io→r 0 reads from stdin are returns a channel that provides a line of input on each read.
+io→r 0 returns a channel that provides a line of input on each read.
 
 The rank operator `⍤` is extended to parse sub-arrays from a channel delivering strings.
 See `ScanRankArray` in `apl/fmt.go`.
 The number and array syntax is not as strict as usual program text to allow interoperatiliby with other programs.
 
-Function `r` is called monadically with a rank argument: `r 0` reads a scalar at a time, `r 1` a line at a time and so on.
-Higher order arrays are terminated by multiple newlines, or bracket notation can be used (like json arrays), or matlab style.
+Function `r` is called monadically with a rank argument: `r 0` reads a scalar at a time, `r 1` a vector at a time and so on.
+Usually a vector is a line and higher order arrays are terminated by multiple newlines.
+Bracket notation (json arrays) or matlab style `1 2 3;4 5 6` can also be used.
 
 Function `s` ignores the structure of incoming data and always reads a scalar at a time, reshaping it according to it's right argument.
 
