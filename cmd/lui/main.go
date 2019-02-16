@@ -40,7 +40,9 @@ func main() {
 	var err error
 	switch os.Args[1] {
 	case "-a":
-		err = cmd.Apl(newApl(), os.Stdin, os.Args[2:])
+		a := newApl()
+		a.SetOutput(os.Stdout)
+		err = cmd.Apl(a, os.Stdin, os.Args[2:])
 	case "-i":
 		err = cmd.Iv(newApl(), strings.Join(os.Args[2:], " "), os.Stdout)
 	case "-z":
