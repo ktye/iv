@@ -48,7 +48,11 @@ func convert2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	s := L.(apl.String)
 	switch s {
 	case "img":
-		return nil, fmt.Errorf("convert: TODO img")
+		to := ToImage(nil)
+		if m, ok := to.To(a, R); ok {
+			return m, nil
+		}
+		return nil, fmt.Errorf("cannot convert to image: %T", R)
 	default:
 		return nil, fmt.Errorf("convert: %T to %s is not supported", R, s)
 	}

@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"time"
 )
 
 // An ImageWriter is anything that can handle image output.
@@ -29,9 +28,8 @@ type ImageWriter interface {
 //	Img ← `img ⌶N       N numeric array, values between 0 and 0xFFFFFFFF (rrggbbaa)
 // After creation, an image can be indexed and assigned to.
 type Image struct {
-	Im    []image.Image
-	Delay time.Duration
-	Dims  []int
+	Im   []image.Image
+	Dims []int
 }
 
 func (i Image) String(a *Apl) string {
@@ -87,13 +85,13 @@ func (i Image) toIntArray() IntArray {
 	ints := make([]int, prod(i.Dims))
 	shape := make([]int, len(i.Dims))
 	copy(shape, i.Dims)
-	off := 0
+	idx := 0
 	for _, m := range i.Im {
 		r := m.Bounds()
-		for i := r.Min.Y; i < r.Max.Y; i++ {
-			for k := r.Min.X; k < r.Max.X; k++ {
-				ints[off] = int(colorValue(m.At(i, k)))
-				off++
+		for y := r.Min.Y; y < r.Max.Y; y++ {
+			for x := r.Min.X; x < r.Max.X; x++ {
+				ints[idx] = int(colorValue(m.At(x, y)))
+				idx++
 			}
 		}
 	}
