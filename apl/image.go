@@ -108,7 +108,5 @@ func colorValue(c color.Color) Int {
 }
 func toColor(i int) color.Color {
 	u := uint32(i)
-	c := color.RGBA{uint8(u & 0xFF0000 >> 16), uint8(u & 0xFF00 >> 8), uint8(u & 0xFF), ^uint8(u >> 24)}
-	fmt.Println(c)
-	return c
+	return color.RGBA{uint8(u & 0xFF0000 >> 16), uint8(u & 0xFF00 >> 8), uint8(u & 0xFF), ^uint8(u >> 24)}
 }

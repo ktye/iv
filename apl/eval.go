@@ -43,6 +43,15 @@ func (a *Apl) Eval(p Program) (err error) {
 				for e := range v[0] {
 					fmt.Fprintln(a.stdout, e.String(a))
 				}
+			case Image:
+				if a.stdimg != nil {
+					err = a.stdimg.WriteImage(v)
+					if err != nil {
+						return err
+					}
+				} else {
+					fmt.Println(a.stdout, v.String(a))
+				}
 			default:
 				fmt.Fprintln(a.stdout, val.String(a))
 			}
