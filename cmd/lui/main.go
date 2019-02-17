@@ -42,11 +42,11 @@ func main() {
 	case "-a":
 		a := newApl()
 		a.SetOutput(os.Stdout)
-		a.SetImage(u.Sxl{os.Stdout})
+		a.SetImage(&u.Sxl{Writer: os.Stdout})
 		err = cmd.Apl(a, os.Stdin, os.Args[2:])
 	case "-i":
 		a := newApl()
-		a.SetImage(u.Sxl{os.Stdout})
+		a.SetImage(&u.Sxl{Writer: os.Stdout})
 		err = cmd.Iv(a, strings.Join(os.Args[2:], " "), os.Stdout)
 	case "-z":
 		fmt.Println("TODO: attach zip file")

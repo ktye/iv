@@ -53,7 +53,15 @@ func (a *Apl) Eval(p Program) (err error) {
 		if isAssignment(expr) == false {
 			switch v := val.(type) {
 			case Channel:
+				i := 0
 				for e := range v[0] {
+					if i == 0 {
+						i++
+						if _, ok := e.(Image); ok && a.stdimg != nil {
+							a.stdimg.StartLoop()
+							defer a.stdimg.StopLoop()
+						}
+					}
 					write(e)
 				}
 			default:

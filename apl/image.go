@@ -9,8 +9,12 @@ import (
 
 // An ImageWriter is anything that can handle image output.
 // Apl's stdimg device uses it.
+// A single image can be written directly with WriteImage.
+// An animation needs Start- and StopLoop before and after.
 type ImageWriter interface {
 	WriteImage(Image) error
+	StartLoop()
+	StopLoop()
 }
 
 // An Image is a raster image.
