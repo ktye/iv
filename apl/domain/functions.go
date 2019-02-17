@@ -28,3 +28,19 @@ func (f function) String(a *apl.Apl) string {
 	}
 	return "function " + f.child.String(a)
 }
+
+func IsPrimitive(p string) SingleDomain {
+	return primitive(p)
+}
+
+type primitive string
+
+func (p primitive) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
+	if pf, ok := V.(apl.Primitive); ok && string(pf) == string(p) {
+		return V, true
+	}
+	return V, false
+}
+func (p primitive) String(a *apl.Apl) string {
+	return string(p)
+}

@@ -72,6 +72,7 @@ It is just sleeping until all connections are done and the pipeline unblocks aut
 ```
 	 f¨C      read a value from a channel, apply f to it and send the result to the
 	          response channel.
+	 <¨R      return a channel and send each value in R over it.
 	Lf¨C      same as above, but use L as the left argument to f on each call.
 	Df¨C      D is also a channel. This is a synchronisation point.
 	          The derived function waits until it has input on both channels C and D,

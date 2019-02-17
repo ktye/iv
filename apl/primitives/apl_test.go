@@ -1001,6 +1001,7 @@ var testCases = []struct {
 	{`C←go→source 4⋄5+¨C`, "5\n6\n7\n8", 0},
 	{"C←go→source 3⋄C", "0\n1\n2", 0},
 	{"C←go→source 3⋄-¨C", "0\n¯1\n¯2", 0},
+	{"<¨⍳3", "1\n2\n3", 0},
 
 	{"⍝ Communicate over a channel", "apl/channel.go", 0},
 	{`C←go→echo"?"⋄C↓'a'⋄C↓'b'⋄2↑C⋄↓C`, "a\nb\n?a ?b\n1", 0},

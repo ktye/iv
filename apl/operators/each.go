@@ -14,6 +14,12 @@ func init() {
 		doc:     "each, map",
 		derived: each,
 	})
+	register(operator{
+		symbol:  "¨",
+		Domain:  MonadicOp(IsPrimitive("<")),
+		doc:     "channel each",
+		derived: channelEach,
+	})
 }
 
 func each(a *apl.Apl, LO, RO apl.Value) apl.Function {
@@ -83,6 +89,43 @@ func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
 // This can be used as a filter. Empty strings however are written.
 func eachChannel(a *apl.Apl, L apl.Value, r apl.Channel, f apl.Function) (apl.Value, error) {
 	return r.Apply(a, f, L, false), nil
+}
+
+// ChannelEach sends each value in R over a channel.
+func channelEach(a *apl.Apl, _, _ apl.Value) apl.Function {
+	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+		if L != nil {
+			return nil, fmt.Errorf("channel each cannot be called dyadically")
+		}
+		c := apl.NewChannel()
+		go func() {
+			defer close(c[0])
+			send := func(v apl.Value) bool {
+				select {
+				case _, ok := <-c[1]:
+					if ok == false {
+						return false
+					}
+				case c[0] <- v:
+					return true
+				}
+				return true
+			}
+			ar, ok := R.(apl.Array)
+			if ok == false {
+				send(R)
+				return
+			}
+			for i := 0; i < ar.Size(); i++ {
+				v := ar.At(i) // TODO: copy?
+				if send(v) == false {
+					return
+				}
+			}
+		}()
+		return c, nil
+	}
+	return function(derived)
 }
 
 func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
