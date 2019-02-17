@@ -2,6 +2,17 @@
 - [Primitive Functions](#primitive-functions)
 - [Operators](#operators)
 
+```
+← @ ⍂ ! ⍉ , < ○
+⍨ ∘ ⌶ ↓ ? ⊥ # ÷
+¨ ⊤ = \ ⍀ ⍷ ⍕ ⍒
+⍋ ≥ > ⍳ ⌷ ⍸ ⊂ ⊣
+≤ ⍟ ^ ∧ ⍲ ⍱ ∨ ≡
+⌹ ⌈ ∊ ⌊ × ≠ ≢ ⍎
++ ⍣ * ⍤ / ⌿ ⍴ |
+⊢ ⌽ ⊖ . ⊃ ⌺ - ⍪
+↑ ∪ ~ 
+```
 ## Primitive functions
 ```
 !                                              
@@ -27,15 +38,15 @@
    !R  scalar                                  
                                                
 ⍉                                              
-   cant, transpose, general transpose          apl/primitives/transpose.go:38
+   cant, transpose, general transpose          apl/primitives/transpose.go:37
    L⍉R  L toindexarray R array                 
-   cant, transpose, general transpose          apl/primitives/transpose.go:31
+   cant, transpose, general transpose          apl/primitives/transpose.go:30
    L⍉R  L array R number                       
-   dict from table, transpose, flip            apl/primitives/transpose.go:25
+   dict from table, transpose, flip            apl/primitives/transpose.go:24
    ⍉R  table                                   
-   table from object, transpose, flip          apl/primitives/transpose.go:19
+   table from object, transpose, flip          apl/primitives/transpose.go:18
    ⍉R  object                                  
-   cant, transpose, reverse axes               apl/primitives/transpose.go:12
+   cant, transpose, reverse axes               apl/primitives/transpose.go:11
    ⍉R  array                                   
                                                
 ,                                              
@@ -75,6 +86,14 @@
    ○R  array                                   
    pi times                                    apl/primitives/elementary.go:32
    ○R  scalar                                  
+                                               
+⌶                                              
+   convert to named type                       apl/primitives/type.go:24
+   L⌶R  L string R any                         
+   convert to type                             apl/primitives/type.go:18
+   L⌶R  L any, R any                           
+   type                                        apl/primitives/type.go:12
+   ⌶R  R any                                   
                                                
 ↓                                              
    cut                                         apl/primitives/take.go:51
@@ -134,16 +153,16 @@
    equality                                    apl/primitives/compare.go:20
    L=R  L scalar R scalar                      
                                                
-⍎                                              
-   execute, evaluate expression                apl/primitives/format.go:21
-   ⍎R  string                                  
-                                               
 ⍷                                              
    find                                        apl/primitives/find.go:9
    L⍷R  L toarray R toarray                    
                                                
 ⍕                                              
-   format, convert to string                   apl/primitives/format.go:11
+   format, convert to string                   apl/primitives/format.go:28
+   L⍕R  L object R table                       
+   format, convert to string                   apl/primitives/format.go:22
+   L⍕R  L any, R any                           
+   format, convert to string                   apl/primitives/format.go:14
    ⍕R  R any                                   
                                                
 ⍒                                              
@@ -358,6 +377,12 @@
    tally, number of major cells                apl/primitives/match.go:17
    ≢R  R any                                   
                                                
+⍎                                              
+   parse data                                  apl/primitives/format.go:41
+   L⍎R  L any R string                         
+   execute, evaluate expression                apl/primitives/format.go:35
+   ⍎R  string                                  
+                                               
 +                                              
    plus, addition                              apl/primitives/elementary.go:86
    L+R  L any R channel                        
@@ -403,7 +428,9 @@
    *R  scalar                                  
                                                
 ⍴                                              
-   reshape                                     apl/primitives/rho.go:12
+   reshape channel                             apl/primitives/rho.go:24
+   L⍴R  L tovector toindexarray R channel      
+   reshape                                     apl/primitives/rho.go:17
    L⍴R  L tovector toindexarray R toarray      
    shape                                       apl/primitives/rho.go:11
    ⍴R  R any                                   
@@ -448,6 +475,12 @@
    reverse first                               apl/primitives/reverse.go:18
    ⊖R  R any                                   
                                                
+⊃                                              
+   split string                                apl/primitives/enclose.go:29
+   L⊃R  L string R string                      
+   split runes                                 apl/primitives/enclose.go:23
+   ⊃R  string                                  
+                                               
 -                                              
    substract, substraction                     apl/primitives/elementary.go:86
    L-R  L any R channel                        
@@ -483,10 +516,6 @@
    L↑R  L toindexarray R channel               
    take                                        apl/primitives/take.go:13
    L↑R  L toindexarray R any                   
-                                               
-⌶                                              
-   type                                        apl/primitives/type.go:11
-   ⌶R  R any                                   
                                                
 ∪                                              
    union                                       apl/primitives/unique.go:15
@@ -546,7 +575,7 @@
    ⍣RO  L function R any           
                                    
 ⍤                                  
-   rank                            apl/operators/rank.go:11
+   rank                            apl/operators/rank.go:12
    ⍤RO  L function R toindexarray  
                                    
 /                                  
@@ -573,6 +602,6 @@
                                    
 ```
 PASS
-ok  	github.com/ktye/iv/apl/primitives	0.687s
+ok  	github.com/ktye/iv/apl/primitives	0.711s
 
-generated by `go generate (apl/primitives/gen.go)` 2019-02-03 18:44:53
+generated by `go generate (apl/primitives/gen.go)` 2019-02-17 17:59:00

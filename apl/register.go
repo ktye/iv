@@ -44,6 +44,37 @@ func (a *Apl) RegisterPackage(name string, m map[string]Value) {
 
 // Doc writes the documentation of all registered primitives and operators to the writer.
 func (a *Apl) Doc(w io.Writer) {
+
+	idx := make([]struct {
+		symbol string
+		doc    string
+	}, len(a.primitives)+len(a.operators))
+	i := 0
+	for s, h := range a.primitives {
+		idx[i].symbol = string(s)
+		idx[i].doc = h[0].Doc()
+		i++
+	}
+	for s, h := range a.operators {
+		idx[i].symbol = s
+		idx[i].doc = h[0].Doc()
+		i++
+	}
+	sort.Slice(idx, func(i, j int) bool { return idx[i].doc < idx[j].doc })
+	c := 0
+	fmt.Fprintln(w, "```")
+	for _, s := range idx {
+		sep := " "
+		c++
+		if c == 8 {
+			sep = "\n"
+			c = 0
+		}
+		fmt.Fprintf(w, "%s%s", s.symbol, sep)
+	}
+	fmt.Fprintf(w, "\n")
+	fmt.Fprintf(w, "```\n")
+
 	fmt.Fprintln(w, "## Primitive functions")
 	fmt.Fprintln(w, "```")
 	{
