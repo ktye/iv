@@ -70,7 +70,7 @@ func (im image) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 func ints2image(ia apl.IntArray, pal []int) (apl.Image, bool) {
 	res := apl.Image{}
 	shape := ia.Shape()
-	if len(shape) < 2 || len(shape) > 3 {
+	if len(shape) != 2 {
 		return res, false
 	}
 
@@ -80,40 +80,34 @@ func ints2image(ia apl.IntArray, pal []int) (apl.Image, bool) {
 	}
 
 	var r img.Rectangle
-	r.Max.X = shape[len(shape)-1]
-	r.Max.Y = shape[len(shape)-2]
+	r.Max.X = shape[1]
+	r.Max.Y = shape[0]
 
-	n := 1
-	if len(shape) == 3 {
-		n = shape[0]
+	var pm *img.Paletted
+	var im *img.RGBA
+	if pal == nil {
+		im = img.NewRGBA(r)
+	} else {
+		pm = img.NewPaletted(r, p)
 	}
 	i := 0
-	for m := 0; m < n; m++ {
-		var pm *img.Paletted
-		var im *img.RGBA
-		if pal == nil {
-			im = img.NewRGBA(r)
-		} else {
-			pm = img.NewPaletted(r, p)
-		}
-		for y := 0; y < r.Max.Y; y++ {
-			for x := 0; x < r.Max.X; x++ {
-				c := ia.Ints[i]
-				if pal == nil {
-					im.Set(x, y, toColor(c))
-				} else if c >= len(pal) {
-					pm.SetColorIndex(x, y, 0)
-				} else {
-					pm.SetColorIndex(x, y, uint8(c))
-				}
-				i++
+	for y := 0; y < r.Max.Y; y++ {
+		for x := 0; x < r.Max.X; x++ {
+			c := ia.Ints[i]
+			if pal == nil {
+				im.Set(x, y, toColor(c))
+			} else if c >= len(pal) {
+				pm.SetColorIndex(x, y, 0)
+			} else {
+				pm.SetColorIndex(x, y, uint8(c))
 			}
+			i++
 		}
-		if pal == nil {
-			res.Im = append(res.Im, im)
-		} else {
-			res.Im = append(res.Im, pm)
-		}
+	}
+	if pal == nil {
+		res.Image = im
+	} else {
+		res.Image = pm
 	}
 	res.Dims = apl.CopyShape(ia)
 	return res, true

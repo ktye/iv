@@ -13,12 +13,10 @@ type ImageWriter interface {
 	WriteImage(Image) error
 }
 
-// An Image is one or more raster images.
-// If it is more than one, it is an animation.
+// An Image is a raster image.
 //
-// An Image can be created by converting arrays of shape
-// 	FRAMES HEIGHT WIDTH or HEIGHT WIDTH.
-// An Image is never empty, it always has at least rank 2 and never more than 3.
+// It can by converting from a numeric array of shape HEIGHT WIDTH.
+// An Image is never empty, it always has rank 2.
 // It cannot be reshaped, instead reshape it's int array before creating it.
 //
 // Formats:
@@ -26,11 +24,11 @@ type ImageWriter interface {
 //	Img ← `img ⌶(I;P;)  I numeric array with values in the range ⎕IO+(0..0xFF) as indexes into P
 //                           P (palette) vector of shape 256 with values as below:
 //	Img ← `img ⌶N       N numeric array, values between 0 and 0xFFFFFFFF (aarrggbb)
-// Alpha values are inverted compared to the go image library, to be able to specify opaque colors
-// with 0xRRGGBB.
+// Transparency has the value 0xFF000000, which is inverted compared to the go image library,
+// to be able to specify opaque colors in the short form 0xRRGGBB.
 // After creation, an image can be indexed and assigned to.
 type Image struct {
-	Im   []image.Image
+	image.Image
 	Dims []int
 }
 
@@ -41,12 +39,7 @@ func (i Image) String(a *Apl) string {
 func (i Image) At(k int) Value {
 	ic, idx := NewIdxConverter(i.Dims)
 	ic.Indexes(k, idx)
-	p := 0
-	if len(idx) > 2 {
-		p = idx[0]
-		idx = idx[1:]
-	}
-	return colorValue(i.Im[p].At(idx[0], idx[1]))
+	return colorValue(i.Image.At(idx[0], idx[1]))
 }
 func (i Image) Shape() []int {
 	return i.Dims
@@ -63,24 +56,14 @@ func (i Image) Set(k int, v Value) error {
 	if ok == false {
 		return fmt.Errorf("img set: value must be an integer: %T", v)
 	}
-	p := 0
-	shape := i.Dims
-	if len(i.Dims) == 3 {
-		n := i.Dims[1] * i.Dims[2]
-		p = k / n
-		k -= p * n
-	} else {
-		shape = shape[1:]
-	}
-	y := k / shape[1]
-	x := k - y*shape[1]
-	m := i.Im[p]
-	r := m.Bounds()
-	if d, ok := m.(draw.Image); ok {
+	y := k / i.Dims[1]
+	x := k - y*i.Dims[1]
+	r := i.Bounds()
+	if d, ok := i.Image.(draw.Image); ok {
 		d.Set(x+r.Min.X, y+r.Min.Y, toColor(c))
 		return nil
 	}
-	return fmt.Errorf("img: image is not settable: %T", m)
+	return fmt.Errorf("img: image is not settable: %T", i.Image)
 }
 
 func (i Image) toIntArray() IntArray {
@@ -88,13 +71,11 @@ func (i Image) toIntArray() IntArray {
 	shape := make([]int, len(i.Dims))
 	copy(shape, i.Dims)
 	idx := 0
-	for _, m := range i.Im {
-		r := m.Bounds()
-		for y := r.Min.Y; y < r.Max.Y; y++ {
-			for x := r.Min.X; x < r.Max.X; x++ {
-				ints[idx] = int(colorValue(m.At(x, y)))
-				idx++
-			}
+	r := i.Image.Bounds()
+	for y := r.Min.Y; y < r.Max.Y; y++ {
+		for x := r.Min.X; x < r.Max.X; x++ {
+			ints[idx] = int(colorValue(i.Image.At(x, y)))
+			idx++
 		}
 	}
 	return IntArray{Dims: shape, Ints: ints}

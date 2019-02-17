@@ -27,6 +27,19 @@ func (a *Apl) Eval(p Program) (err error) {
 		fmt.Fprintln(a.stdout, strings.Join(v, " ⋄ "))
 	}
 
+	write := func(val Value) {
+		switch v := val.(type) {
+		case Image:
+			if a.stdimg != nil {
+				a.stdimg.WriteImage(v)
+			} else {
+				fmt.Fprintln(a.stdout, val.String(a))
+			}
+		default:
+			fmt.Fprintln(a.stdout, val.String(a))
+		}
+	}
+
 	var val Value
 	for _, expr := range p {
 		val, err = expr.Eval(a)
@@ -41,19 +54,10 @@ func (a *Apl) Eval(p Program) (err error) {
 			switch v := val.(type) {
 			case Channel:
 				for e := range v[0] {
-					fmt.Fprintln(a.stdout, e.String(a))
-				}
-			case Image:
-				if a.stdimg != nil {
-					err = a.stdimg.WriteImage(v)
-					if err != nil {
-						return err
-					}
-				} else {
-					fmt.Println(a.stdout, v.String(a))
+					write(e)
 				}
 			default:
-				fmt.Fprintln(a.stdout, val.String(a))
+				write(val)
 			}
 		}
 	}

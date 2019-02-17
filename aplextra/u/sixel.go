@@ -13,8 +13,6 @@ type Sxl struct {
 }
 
 func (dev Sxl) WriteImage(m apl.Image) error {
-	// TODO animations
-
 	e := sixel.NewEncoder(dev.Writer)
-	return e.Encode(m.Im[0])
+	return e.Encode(m.Image)
 }
