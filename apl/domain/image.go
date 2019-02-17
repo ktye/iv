@@ -119,8 +119,8 @@ func ints2image(ia apl.IntArray, pal []int) (apl.Image, bool) {
 	return res, true
 }
 
-// coColor is copied from apl/image.go
+// toColor is copied from apl/image.go
 func toColor(i int) color.Color {
 	u := uint32(i)
-	return color.RGBA{uint8(u >> 24), uint8(u&0xFF0000) >> 16, uint8(u&0xFF00) >> 8, uint8(u & 0xFF)}
+	return color.RGBA{uint8(u & 0xFF0000 >> 16), uint8(u & 0xFF00 >> 8), uint8(u & 0xFF), ^uint8(u >> 24)}
 }

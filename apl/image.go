@@ -25,7 +25,9 @@ type ImageWriter interface {
 //	Img ← `img ⌶B       B BoolArray (0 White, 1 Black) // TODO or user def, or alpha?
 //	Img ← `img ⌶(I;P;)  I numeric array with values in the range ⎕IO+(0..0xFF) as indexes into P
 //                           P (palette) vector of shape 256 with values as below:
-//	Img ← `img ⌶N       N numeric array, values between 0 and 0xFFFFFFFF (rrggbbaa)
+//	Img ← `img ⌶N       N numeric array, values between 0 and 0xFFFFFFFF (aarrggbb)
+// Alpha values are inverted compared to the go image library, to be able to specify opaque colors
+// with 0xRRGGBB.
 // After creation, an image can be indexed and assigned to.
 type Image struct {
 	Im   []image.Image
@@ -99,13 +101,14 @@ func (i Image) toIntArray() IntArray {
 }
 
 // ColorValue converts a Color to an Int.
-// On 32bit systems, white 0xFFFFFFFF will be -1.
 func colorValue(c color.Color) Int {
 	r, g, b, a := c.RGBA() // uint32 premultiplied with alpha.
-	u := r&0xFF00<<16 | g&0xFF00<<8 | b&0xFF00 | a>>8
+	u := (255-(a>>8))<<16 | r&0xFF00<<8 | g&0xFF00 | b>>8
 	return Int(u)
 }
 func toColor(i int) color.Color {
 	u := uint32(i)
-	return color.RGBA{uint8(u >> 24), uint8(u&0xFF0000) >> 16, uint8(u&0xFF00) >> 8, uint8(u & 0xFF)}
+	c := color.RGBA{uint8(u & 0xFF0000 >> 16), uint8(u & 0xFF00 >> 8), uint8(u & 0xFF), ^uint8(u >> 24)}
+	fmt.Println(c)
+	return c
 }
