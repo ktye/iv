@@ -97,32 +97,18 @@ func channelEach(a *apl.Apl, _, _ apl.Value) apl.Function {
 		if L != nil {
 			return nil, fmt.Errorf("channel each cannot be called dyadically")
 		}
+		var all []apl.Value
 		c := apl.NewChannel()
-		go func() {
-			defer close(c[0])
-			send := func(v apl.Value) bool {
-				select {
-				case _, ok := <-c[1]:
-					if ok == false {
-						return false
-					}
-				case c[0] <- v:
-					return true
-				}
-				return true
+		ar, ok := R.(apl.Array)
+		if ok == false {
+			all = []apl.Value{R}
+		} else {
+			all = make([]apl.Value, ar.Size())
+			for i := range all {
+				all[i] = ar.At(i) // TODO: copy?
 			}
-			ar, ok := R.(apl.Array)
-			if ok == false {
-				send(R)
-				return
-			}
-			for i := 0; i < ar.Size(); i++ {
-				v := ar.At(i) // TODO: copy?
-				if send(v) == false {
-					return
-				}
-			}
-		}()
+		}
+		go c.SendAll(all)
 		return c, nil
 	}
 	return function(derived)

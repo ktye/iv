@@ -122,6 +122,30 @@ func (R Channel) Apply(a *Apl, f Function, L Value, filter bool) Channel {
 	return c
 }
 
+// SendAll sends all given values sequentially over channel c[0].
+// If c[1] is closed it closes c[0].
+// Call SendAll in a go-routine.
+func (c Channel) SendAll(all []Value) {
+	defer close(c[0])
+	k := 0
+	if k == len(all) {
+		return
+	}
+	for {
+		select {
+		case _, ok := <-c[1]:
+			if ok == false {
+				return
+			}
+		case c[0] <- all[k]:
+			k++
+			if k == len(all) {
+				return
+			}
+		}
+	}
+}
+
 // LineReader wraps a ReadCloser with a Channel.
 func LineReader(rc io.ReadCloser) Channel {
 	scn := bufio.NewScanner(rc)
