@@ -1001,7 +1001,8 @@ var testCases = []struct {
 	{`C←go→source 4⋄5+¨C`, "5\n6\n7\n8", 0},
 	{"C←go→source 3⋄C", "0\n1\n2", 0},
 	{"C←go→source 3⋄-¨C", "0\n¯1\n¯2", 0},
-	{"<¨⍳3", "1\n2\n3", 0},
+	{"<¨⍳3", "1\n2\n3", 0},                                 // channel-each
+	{"(<⍤2)2 2 3⍴⍳12", "1 2 3\n4 5 6\n7 8 9\n10 11 12", 0}, // channel-rank
 
 	{"⍝ Communicate over a channel", "apl/channel.go", 0},
 	{`C←go→echo"?"⋄C↓'a'⋄C↓'b'⋄2↑C⋄↓C`, "a\nb\n?a ?b\n1", 0},

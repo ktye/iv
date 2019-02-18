@@ -18,12 +18,18 @@ func init() {
 }
 
 // rank is extended for sending subarrays over a channel:
-//	<⍤3 C
+//	<⍤3 A  send rank-3 subarray of A sequentially over the returned channel
+//	<⍤3 C  read strings from input channel C, parse rank-3 subarrays and send them over a return channel
 func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 	// Cell, Frame, Conform: ISO: 9.3.3, p123
 	// Rank operator: ISO; 9.3.4, p 124
 	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		f := LO.(apl.Function)
+		doSend := false
+		if pf, ok := f.(apl.Primitive); ok && string(pf) == "<" {
+			doSend = true
+		}
+
 		ai := RO.(apl.IntArray)
 		if len(ai.Shape()) != 1 {
 			return nil, fmt.Errorf("rank: RO must be a vector")
@@ -36,10 +42,8 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		} else if n == 1 {
 			p, q, r = int(ai.Ints[0]), int(ai.Ints[0]), int(ai.Ints[0])
 			// Special case: <⍤R C
-			if pf, ok := f.(apl.Primitive); ok && string(pf) == "<" {
-				if c, ok := R.(apl.Channel); ok {
-					return sendSubArray(a, r, c)
-				}
+			if c, ok := R.(apl.Channel); ok && doSend == true {
+				return sendParseSubArray(a, r, c)
 			}
 		} else if n == 2 {
 			p, q, r = int(ai.Ints[1]), int(ai.Ints[0]), int(ai.Ints[1])
@@ -151,7 +155,6 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 				}
 				results = append(results, v)
 			}
-
 		} else {
 			// Monadic context: p specifies rank of R.
 			// r specifies rank of R.
@@ -169,11 +172,20 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 				if err != nil {
 					return nil, err
 				}
-				v, err := f.Call(a, nil, s)
-				if err != nil {
-					return nil, err
+				if doSend {
+					results = append(results, s)
+				} else {
+					v, err := f.Call(a, nil, s)
+					if err != nil {
+						return nil, err
+					}
+					results = append(results, v)
 				}
-				results = append(results, v)
+			}
+			if doSend {
+				c := apl.NewChannel()
+				go c.SendAll(results)
+				return c, nil
 			}
 		}
 
@@ -273,9 +285,10 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 	return function(derived)
 }
 
-// sendSubArray assembles an array the given rank from strings read on channel c.
+// sendParseSubArray assembles an array of the given rank from strings read on channel c.
+// Strings are parsed to numbers or strings.
 // It returns a channel and sends arrays of the rank.
-func sendSubArray(a *apl.Apl, rank int, in apl.Channel) (apl.Value, error) {
+func sendParseSubArray(a *apl.Apl, rank int, in apl.Channel) (apl.Value, error) {
 	out := apl.NewChannel()
 	go func() {
 		defer close(out[0])

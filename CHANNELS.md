@@ -42,6 +42,8 @@ The monadic primitive function `<` is used to create a channel.
 	<[¯1]A    Send A repeatedly, as long as the channel is open.
 	<[0]A     Return a channel that sends A once as an initial value.
 	          The channel remains open.
+	<¨R       return a channel and send each value in R over it.
+	(<⍤R)A    return a channel and send R-subrank values of A over it.
 	Sending on a channel blocks until there is someone taking the values.
 ```
 Keep in mind, an expression like `A←<[5]2 3⍴⍳6` only assigns a channel to `A`.
@@ -72,7 +74,6 @@ It is just sleeping until all connections are done and the pipeline unblocks aut
 ```
 	 f¨C      read a value from a channel, apply f to it and send the result to the
 	          response channel.
-	 <¨R      return a channel and send each value in R over it.
 	Lf¨C      same as above, but use L as the left argument to f on each call.
 	Df¨C      D is also a channel. This is a synchronisation point.
 	          The derived function waits until it has input on both channels C and D,
