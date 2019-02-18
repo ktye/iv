@@ -38,6 +38,7 @@ func typeof(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 // convert is called with a values of the destination type on the left.
 func convert(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// L can be a prototype, similar to the left argument of format.
+	// TODO: use domain.ToType.
 	return nil, fmt.Errorf("TODO: convert to destination type")
 }
 
