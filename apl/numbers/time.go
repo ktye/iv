@@ -112,6 +112,14 @@ func (t Time) Sub2(R apl.Value) (apl.Value, bool) {
 	return nil, false
 }
 
+// Duration returns if the time value is a duration and it's value.
+func (t Time) Duration() (time.Duration, bool) {
+	if time.Time(t).Before(y1k) {
+		return time.Time(t).Sub(y0), true
+	}
+	return time.Duration(0), false
+}
+
 func (t Time) Mul() (apl.Value, bool) {
 	if t0 := time.Time(t); t0.Before(y0) {
 		return apl.Int(-1), true

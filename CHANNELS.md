@@ -100,6 +100,14 @@ Results of the given shape are send to the output channel.
 This does not change the ravel order of all values, but may change the sending frequency.
 If 6 2-by-3 are send over C, then `6 2 ⍴ C` returns a channel that contains 3 values, each of shape 6 2.
 
+## Delay, rate down (TODO and monitor)
+By default, values are send over a channel as soon as the receiver is ready.
+Sometimes values should be send with a fixed rate, e.g. for animations.
+```
+	D<C    return channel that holds back values read from C by the duration D
+	       Example (count-down): '1s<<¨11-⍳11'
+```
+
 # Applications
 
 ## IO operations

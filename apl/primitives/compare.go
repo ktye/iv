@@ -1,8 +1,12 @@
 package primitives
 
 import (
+	"reflect"
+	"time"
+
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
+	"github.com/ktye/iv/apl/numbers"
 )
 
 func init() {
@@ -42,6 +46,12 @@ func init() {
 		doc:    "channel copy, connect",
 		Domain: Dyadic(Split(IsChannel(nil), IsChannel(nil))),
 		fn:     channelCopy, // channel.go
+	})
+	register(primitive{
+		symbol: "<",
+		doc:    "channel delay",
+		Domain: Dyadic(Split(IsType(reflect.TypeOf(numbers.Time(time.Time{})), nil), IsChannel(nil))),
+		fn:     channelDelay, // channel.go
 	})
 }
 

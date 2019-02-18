@@ -2,8 +2,10 @@ package primitives
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ktye/iv/apl"
+	"github.com/ktye/iv/apl/numbers"
 )
 
 // primitive < is defined in compare.go
@@ -88,6 +90,26 @@ func channelCopy(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			}
 		}
 	}
+}
+
+// channelDelay returns a channel that sends at fixed intervals what it receives.
+func channelDelay(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	d, ok := L.(numbers.Time).Duration()
+	if ok == false {
+		return nil, fmt.Errorf("channel delay: left argument is not a duration: %T", L)
+	}
+	in := R.(apl.Channel)
+	out := in.Apply(a, Delay(d), nil, false)
+	return out, nil
+}
+
+// Delay is a function that pauses execution for a given duration.
+// It is currently not bound to a primitive and only used by channel-delay.
+type Delay time.Duration
+
+func (d Delay) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	time.Sleep(time.Duration(d))
+	return R, nil
 }
 
 // channel1 applies the monadic elementary function to each value in a channel.
