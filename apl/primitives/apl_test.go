@@ -651,7 +651,7 @@ var testCases = []struct {
 	{"2017.03.01-2017.02.28", "24h0m0s", small},            // Substract two times returns a duration
 	{"2016.03.01-2016.02.28", "48h0m0s", small},            // Leap years are covered
 	{"3m-62s", "1m58s", small},                             // Substract two durations
-	{"-3s", "-3s", small},                                  // Negate a duration
+	{"-3s", "¯3s", small},                                  // Negate a duration
 	{"×¯3h 0s 2m 2015.01.02", "¯1 0 1 1", small},           // Signum
 	{"(|¯1s)+|1s", "2s", small},                            // Absolute value of a duration
 	{"3×1h", "3h0m0s", small},                              // Uptype numbers to seconds and multiply durations

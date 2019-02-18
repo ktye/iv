@@ -45,11 +45,15 @@ var layouts = []string{
 }
 
 func (t Time) String(a *apl.Apl) string {
+	format, minus := getformat(a, t)
 	if t1 := time.Time(t); t1.Before(y1k) {
-		return t1.Sub(y0).String()
+		s := t1.Sub(y0).String()
+		if minus == false {
+			s = strings.Replace(s, "-", "¯", -1)
+			return s
+		}
 	}
 
-	format, _ := getformat(a, t)
 	if format == "" {
 		format = "2006.01.02T15.04.05.000"
 	}
