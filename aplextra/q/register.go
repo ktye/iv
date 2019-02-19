@@ -47,21 +47,15 @@ func Register(a *apl.Apl, name string) {
 		name = "q"
 	}
 	pkg := map[string]apl.Value{
-		"dial":  dial{},
-		"call":  call{},
-		"test":  test{},
-		"close": closeconn{},
+		"dial":  apl.ToFunction(dial),
+		"call":  apl.ToFunction(call),
+		"test":  apl.ToFunction(test),
+		"close": apl.ToFunction(closeconn),
 	}
 	a.RegisterPackage(name, pkg)
 }
 
-type dial struct{}
-
-func (_ dial) String(a *apl.Apl) string {
-	return "q dial"
-}
-
-func (_ dial) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+func dial(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	s, ok := R.(apl.String)
 	if ok == false {
 		return nil, fmt.Errorf("q dial: argument must be a string")
@@ -79,13 +73,7 @@ func (_ dial) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return Dial(host, port)
 }
 
-type call struct{}
-
-func (_ call) String(a *apl.Apl) string {
-	return "q call"
-}
-
-func (_ call) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+func call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	lst, ok := R.(apl.List)
 	if ok == false {
 		return nil, fmt.Errorf("q call: argument must be a list: %T", R)
@@ -107,13 +95,7 @@ func (_ call) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	return c.Call(a, string(cmd), lst[2:])
 }
 
-type closeconn struct{}
-
-func (_ closeconn) String(a *apl.Apl) string {
-	return "q close"
-}
-
-func (_ closeconn) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+func closeconn(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	c, ok := R.(Conn)
 	if ok == false {
 		return nil, fmt.Errorf("right argument must be a connection")
@@ -121,13 +103,7 @@ func (_ closeconn) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	return c.Close()
 }
 
-type test struct{}
-
-func (_ test) String(a *apl.Apl) string {
-	return "q test"
-}
-
-func (_ test) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+func test(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	c, ok := R.(Conn)
 	if ok == false {
 		return nil, fmt.Errorf("q test: right argument must be a connection")
