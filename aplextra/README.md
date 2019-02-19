@@ -22,6 +22,7 @@ To be included in the interpreter, each package needs to be compiled in:
 ```
 
 ## extra packages
+- p: plot package based on ktye/plot
 - q: rpc interface from APL to kdb (via `github.com/sv/kdbgo`)
 - u: ui elements used by `cmd/lui`
 

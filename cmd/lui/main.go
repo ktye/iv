@@ -18,6 +18,7 @@ import (
 	"github.com/ktye/iv/apl/rpc"
 	aplstrings "github.com/ktye/iv/apl/strings"
 	"github.com/ktye/iv/apl/xgo"
+	"github.com/ktye/iv/aplextra/p"
 	"github.com/ktye/iv/aplextra/q"
 	"github.com/ktye/iv/aplextra/u"
 	"github.com/ktye/iv/cmd"
@@ -72,6 +73,7 @@ func newApl() *apl.Apl {
 	xgo.Register(a, "")
 	rpc.Register(a, "")
 	http.Register(a, "")
+	p.Register(a, "")
 	q.Register(a, "")
 	u.Register(a, "")
 	return a
