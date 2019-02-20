@@ -41,8 +41,8 @@ Some plot style is controlled package wide and can be changed by set functions:
 - `p→transparent 1` (bool): transparent background
 - `p→colors 0xFF0000 0x00FF00 0x0000FF` 
 	- (int vector): line colors (cyclic), ints 0xRRGGBB, empty: reset
-- `p→size 600 300: (2 ints) width height of output image
-- `p→fontsizes 12 8: (2 ints) font sizes for labels and axis tic labels
+- `p→size 600 300`: (2 ints) width height of output image
+- `p→fontsizes 12 8`: (2 ints) font sizes for labels and axis tic labels
 
 ## Example
 ```
