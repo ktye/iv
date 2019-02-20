@@ -12,7 +12,7 @@ import (
 func init() {
 	register(primitive{
 		symbol: "?",
-		doc:    "roll",
+		doc:    "roll, rand, randn, bi-randn",
 		Domain: Monadic(nil),
 		fn:     roll,
 	})
@@ -62,10 +62,22 @@ func roll(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 // rollNumber returns a random integer upto n, which must be integer.
 // If n is 0, it returns a random float between 0 and 1.
+// If n is negative it returns a random number from a normal distribution with std←|n.
+// If n is complex, it returns a random number from a bivariate normal distribution
+// with normal parameters given by the real an imag part.
+//
+// TODO: seed. Currently random numbers are not seeded (equivalent to Seed(1))
+// and always return the same values.
 func rollNumber(a *apl.Apl, n apl.Number) (apl.Number, error) {
+	if f, ok := n.(numbers.Float); ok && float64(f) < 0 {
+		return numbers.Float(float64(f) * rand.NormFloat64()), nil
+	}
+	if z, ok := n.(numbers.Complex); ok {
+		return numbers.Complex(complex(real(z)*rand.NormFloat64(), imag(z)*rand.NormFloat64())), nil
+	}
 	m, ok := n.ToIndex()
 	if ok == false || m < 0 {
-		return nil, fmt.Errorf("roll: values of R must be integer > 0: %T", n)
+		return numbers.Float(float64(m) * rand.NormFloat64()), nil
 	}
 	if m == 0 {
 		// TODO: should we exclude 0?
