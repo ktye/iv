@@ -3,6 +3,7 @@ package u
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/ktye/iv/apl"
 	sixel "github.com/mattn/go-sixel"
@@ -29,4 +30,33 @@ func (dev *Sxl) StartLoop() {
 
 func (dev *Sxl) StopLoop() {
 	dev.animation = false
+}
+
+// Device size query only works on stdout.
+// Stdout and stdin must be connected to the terminal.
+// If this fails, it is in bad state.
+// TODO: this does not work. It hangs.
+func (dev *Sxl) DeviceSize() (width, height int) {
+	width = 800
+	height = 400
+
+	// Request size of text area in cells and pixels.
+	os.Stdout.WriteString("\x1b[18t\x1b[14t")
+	os.Stdout.Sync()
+	var rows, cols, x, y int
+	if n, err := fmt.Scanf("\x1b[8;%d;%d;t", &rows, &cols); n != 2 || err != nil {
+		return
+	}
+	if n, err := fmt.Scanf("\x1b[4;%d;%d;t", &y, &x); n != 2 || err != nil {
+		return
+	}
+	rowheight := y / height
+
+	// Substract 2 lines to make the first and last line visible.
+	height = y - 2*rowheight
+	width = x
+	if width <= 0 || height <= 0 {
+		return 800, 400
+	}
+	return
 }
