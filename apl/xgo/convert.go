@@ -23,22 +23,6 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 		}
 	}
 
-	/*
-		number := func(from apl.Value, to apl.Number) (apl.Number, error) {
-			src, ok := from.(apl.Number)
-			if ok == false {
-				return nil, fmt.Errorf("not a number: %T", from)
-			}
-			n, _, err := a.Tower.SameType(src, to)
-			if err != nil {
-				return nil, err
-			}
-			if reflect.TypeOf(to) != reflect.TypeOf(n) {
-				return nil, fmt.Errorf("cannot convert to %T", to)
-			}
-			return n, nil
-		}
-	*/
 	zero := reflect.Value{}
 	switch t.Kind() {
 
@@ -71,9 +55,18 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 			}
 		}
 		return s, nil
-
+		/*
+			case reflect.Struct:
+				switch v.(type) {
+				case Value:
+					return zero, fmt.Errorf("convert: t=%v xgo.Value is: %T", t, reflect.Value(v.(Value)).Interface())
+				default:
+					return zero, fmt.Errorf("cannot convert %T to a struct")
+				}
+				return zero, fmt.Errorf("can I set a struct? from a %T", v)
+		*/
 	default:
-		return zero, fmt.Errorf("cannot convert to %v", t)
+		return zero, fmt.Errorf("cannot convert to %v (%s)", t, t.Kind())
 	}
 }
 
@@ -108,7 +101,7 @@ func Convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
 		return ar, nil
 
 	case reflect.Struct:
-		return Value(v), nil // TODO: populate
+		return Value(v.Addr()), nil // TODO: populate
 
 	default:
 		return nil, fmt.Errorf("cannot convert %s to an apl value", v.Kind())

@@ -6,244 +6,168 @@ import (
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/plot"
-	"github.com/ktye/plot/color"
 )
 
-// real data: plot each row in R as a line in an xy plot.
-// dyadic case: L is the x axis, a vector or a conforming matrix.
-//
-// rank-3 input (TODO).
-// create multiple plots, one for each major cell.
-// Example: ⌼?10⍴10
-func plot4(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	ar, rs, err := rank4(a, R)
+// plot1 returns a Plot or a PlotArray (rank-1).
+// L may be nil, or an numeric array (rank-3 or smaller)
+// R must be a numeric array or empty (rank-3 or smaller)
+func plot1(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	if _, ok := R.(apl.EmptyArray); ok {
+		return toPlot(defaultPlot()), nil
+	}
+	ar, rs, err := rank3(a, R)
 	if err != nil {
 		return nil, fmt.Errorf("p/plot: right argument %s", err)
 	}
-	x, err := xaxis(a, L, rs[3])
+	x, err := xaxis(a, L, rs[2])
 	if err != nil {
 		return nil, fmt.Errorf("p/plot: left argument %s", err)
 	}
 
-	types, err := plotTypes(a, ar, L == nil)
-	if err != nil {
-		return nil, err
-	}
-
-	nf := rs[0] // number of frames
-	np := rs[1] // number of plots
-	//    rs[2] // number of lines
-	//    rs[3] // number of points per line
-
-	// Multiple frames are send over a channel (animation).
-	if nf > 1 {
-		plots := make([]plot.Plots, nf)
-		for i := range plots {
-			p, err := plot3(a, x, ar, i, types)
-			if err != nil {
-				return nil, err
-			}
-			plots[i] = p
+	plots := make([]Plot, rs[0])
+	for i := range plots {
+		xoff := x.Dims[2] * x.Dims[1] * i
+		if i >= x.Dims[0] {
+			xoff = 0
 		}
-
-		// Each plot must have equal limits per frame (to prevent rescale during the loop).
-		for n := 0; n < np; n++ {
-			plts := make(plot.Plots, nf)
-			for i, p := range plots {
-				plts[i] = p[n]
-			}
-			lim, err := plts.EqualLimits()
-			for i := range plots {
-				if err != nil {
-					plots[i][n].Limits = lim
-				}
-			}
-		}
-
-		frames := make([]apl.Value, nf)
-		for i := range plots {
-			m, err := toImage(a, plots[i], width, height)
-			if err != nil {
-				return nil, err
-			}
-			frames[i] = m
-		}
-		c := apl.NewChannel()
-		go c.SendAll(frames)
-		return c, nil
-	}
-
-	p, err := plot3(a, x, ar, 0, types)
-	if err != nil {
-		return nil, err
-	}
-	return toImage(a, p, width, height)
-}
-
-// plot3 returns plots of a single animation frame. ar is a rank 4 array.
-func plot3(a *apl.Apl, al, ar apl.Array, frame int, types []string) (plot.Plots, error) {
-	plts := make(plot.Plots, len(types))
-	for i := range plts {
-		p, err := plot2(a, al, ar, frame, i, types[i])
+		roff := rs[2] * rs[1] * i
+		p, err := plot2(a, x, xoff, ar, roff, L == nil)
 		if err != nil {
-			return nil, fmt.Errorf("p/plot: plot %d: %s", i+1, err)
+			return nil, fmt.Errorf("p/plot: %s", err)
 		}
-		plts[i] = p
+		plots[i] = toPlot(p)
 	}
-	return plts, nil
+	if len(plots) == 1 {
+		return plots[0], nil
+	}
+	return PlotArray{plots, []int{len(plots)}}, nil
 }
 
-func plot2(a *apl.Apl, al, ar apl.Array, frame, col int, plotType string) (plot.Plot, error) {
-	p := plot.Plot{
-		Type: plot.PlotType(plotType),
-	}
-	isComplex := false
-	if plotType == "ampang" || plotType == "polar" {
-		isComplex = true
-	}
+func plot2(a *apl.Apl, x numbers.FloatArray, xoff int, ar apl.Array, roff int, monadic bool) (*plot.Plot, error) {
+	p := defaultPlot()
 	rs := ar.Shape()
-	np := rs[3]
-	xf := al.(numbers.FloatArray)
-
-	x0 := 0
-	if col < xf.Dims[0] {
-		x0 = col * xf.Dims[1] * xf.Dims[2]
+	np := rs[2]
+	isComplex, err := complexType(ar, roff)
+	if err != nil {
+		return p, err
 	}
-	lines := make([]plot.Line, rs[2])
-	var err error
-	for i := range lines {
-		xoff := x0
-		if i < xf.Dims[1] {
-			xoff += i * np
+	p.Type = plot.XY
+	if isComplex {
+		p.Type = plot.AmpAng
+		if monadic {
+			p.Type = plot.Polar
 		}
-		var y []float64
-		var c []complex128
+	}
+	p.Lines = make([]plot.Line, rs[1])
+	for i := 0; i < rs[1]; i++ {
+		l := plot.Line{
+			Id: i,
+			X:  make([]float64, np),
+		}
+		x0 := xoff + i*np
+		if i >= x.Dims[1] {
+			x0 = xoff
+		}
+		copy(l.X, x.Floats[x0:x0+np])
 		if isComplex {
-			y, c, err = rcVector(a, ar, frame, col, i, true)
+			l.C, err = complexVector(a, ar, roff+i*np, np)
 			if err != nil {
 				return p, err
 			}
 		} else {
-			y, c, err = rcVector(a, ar, frame, col, i, false)
+			l.Y, err = realVector(a, ar, roff+i*np, np)
 			if err != nil {
 				return p, err
 			}
 		}
-		l := plot.Line{
-			Id: i,
-			X:  xf.Floats[xoff : xoff+np],
-			Y:  y,
-			C:  c,
-		}
-		lines[i] = l
+		p.Lines[i] = l
 	}
-	p.Lines = lines
-	p.Style.Dark = dark
-	p.Style.Transparent = transparent
-	p.Style.Order = color.Order(colorOrder())
 	return p, nil
 }
 
-// plotTypes determines the type for the plot by looking at the data of the rank-4 array R.
-// Types in the second axis may differ.
-// If any number in axis 1, 3 or 4 is complex, the data is considered complex.
-// Big numbers are not supported.
-func plotTypes(a *apl.Apl, R apl.Array, monadic bool) ([]string, error) {
-	shape := R.Shape()
-	np := shape[1]
-	types := make([]string, np)
-	isComplex := make([]bool, np)
-	idx := make([]int, len(shape))
-	for i := 0; i < R.Size(); i++ {
-		v := R.At(i)
-		switch v.(type) {
-		case apl.Bool, apl.Int, numbers.Float:
-		case numbers.Complex:
-			isComplex[idx[1]] = true
-		default:
-			return nil, fmt.Errorf("p/plot: data in R must be numeric: %T", v)
+// realVector returns a float or a complex array for the last axis of ar at the given offset.
+func realVector(a *apl.Apl, ar apl.Array, off, np int) ([]float64, error) {
+	f := make([]float64, np)
+	for i := 0; i < np; i++ {
+		v := ar.At(i + off)
+		z, ok, err := complexNumber(v)
+		if err != nil {
+			return nil, err
 		}
-		apl.IncArrayIndex(idx, shape)
-	}
-	for i := range types {
-		if isComplex[i] {
-			if monadic {
-				types[i] = "polar"
-			} else {
-				types[i] = "ampang"
-			}
-		} else {
-			types[i] = "xy"
+		if ok {
+			return nil, fmt.Errorf("expected real array, got complex")
 		}
+		f[i] = real(z)
 	}
-	return types, nil
+	return f, nil
 }
 
-// rank4 makes sure the argument is an array and reshapes it to rank-4.
-func rank4(a *apl.Apl, R apl.Value) (apl.Array, []int, error) {
+// complexVector returns a float or a complex array for the last axis of ar at the given offset.
+func complexVector(a *apl.Apl, ar apl.Array, off, np int) ([]complex128, error) {
+	c := make([]complex128, np)
+	for i := 0; i < np; i++ {
+		v := ar.At(i + off)
+		z, _, err := complexNumber(v)
+		if err != nil {
+			return nil, err
+		}
+		c[i] = z
+	}
+	return c, nil
+}
+
+// complexType returns if the subarray (last 2 dimensions) contains complex numbers.
+func complexType(ar apl.Array, roff int) (bool, error) {
+	rs := ar.Shape()
+	for i := roff; i < roff+rs[1]*rs[2]; i++ {
+		v := ar.At(i)
+		_, isComplex, err := complexNumber(v)
+		if isComplex || err != nil {
+			return isComplex, err
+		}
+	}
+	return false, nil
+}
+
+func complexNumber(v apl.Value) (complex128, bool, error) {
+	switch x := v.(type) {
+	case apl.Bool:
+		if x {
+			return complex(1, 0), false, nil
+		}
+		return complex(0, 0), false, nil
+	case apl.Int:
+		return complex(float64(x), 0), false, nil
+	case numbers.Float:
+		return complex(float64(x), 0), false, nil
+	case numbers.Complex:
+		return complex128(x), true, nil
+	default:
+		return 0, false, fmt.Errorf("unknown numeric type: %T", v)
+	}
+}
+
+// rank3 makes sure the argument is an array and reshapes it to rank-3.
+func rank3(a *apl.Apl, R apl.Value) (apl.Array, []int, error) {
 	ar, ok := R.(apl.Array)
 	if ok == false {
 		return nil, nil, fmt.Errorf("not an array: %T", R)
 	}
 	rs := ar.Shape()
-	if len(rs) > 4 {
+	if len(rs) > 3 {
 		return nil, nil, fmt.Errorf("rank is too high: %d", len(rs))
-	} else if len(rs) < 4 {
+	} else if len(rs) < 3 {
 		r, ok := ar.(apl.Reshaper)
 		if ok == false {
-			return nil, nil, fmt.Errorf("cannot reshape to rank 4: %T", R)
+			return nil, nil, fmt.Errorf("cannot reshape to rank 3: %T", R)
 		}
-		shape := []int{1, 1, 1, 1}
-		copy(shape[4-len(rs):], rs) // Keep leading ones.
+		shape := []int{1, 1, 1}
+		copy(shape[3-len(rs):], rs) // Keep leading ones.
 		v := r.Reshape(shape)
 		ar = v.(apl.Array)
 		rs = ar.Shape()
 	}
 	return ar, rs, nil
-}
-
-func rcVector(a *apl.Apl, ar apl.Array, frame int, col int, line int, isComplex bool) (fs []float64, cs []complex128, err error) {
-	rs := ar.Shape()
-	np := rs[3]
-	off := frame * rs[1] * rs[2] * rs[3]
-	off += col * rs[2] * rs[3]
-	off += line * rs[3]
-	if isComplex {
-		cs = make([]complex128, np)
-	} else {
-		fs = make([]float64, np)
-	}
-	for i := off; i < off+np; i++ {
-		v := ar.At(i)
-		var f float64
-		var c complex128
-		switch x := v.(type) {
-		case apl.Bool:
-			if x == true {
-				f = 1.0
-				c = complex(f, 0)
-			}
-		case apl.Int:
-			f = float64(x)
-			c = complex(f, 0)
-		case numbers.Float:
-			f = float64(x)
-			c = complex(f, 0)
-		case numbers.Complex:
-			c = complex128(x)
-			if isComplex == false {
-				return nil, nil, fmt.Errorf("data is complex")
-			}
-		default:
-			return nil, nil, fmt.Errorf("unknown numeric type: %T", v)
-		}
-		if isComplex {
-			cs[i-off] = c
-		} else {
-			fs[i-off] = f
-		}
-	}
-	return fs, cs, nil
 }
 
 // xaxis converts the left argument to an x-axis (rank-3 numbers.FloatArray).
@@ -299,15 +223,4 @@ func xaxis(a *apl.Apl, L apl.Value, lastAxis int) (numbers.FloatArray, error) {
 		return numbers.FloatArray{}, fmt.Errorf("unsupported type: %T", ua)
 	}
 	return res, nil
-}
-
-func toImage(a *apl.Apl, plots plot.Plots, w, h int) (apl.Image, error) {
-	ip, err := plots.IPlots(w, h)
-	if err != nil {
-		return apl.Image{}, err
-	}
-	return apl.Image{
-		Image: plot.Image(ip, nil, w, h),
-		Dims:  []int{w, h},
-	}, nil
 }

@@ -2,65 +2,67 @@
 
 This package is an interface to ktye/plot.
 
-The plot function `p→p` or `⌼` takes an array on the right and returns an [image](../../apl/image.go).
+The plot function `p→p` or `⌼` takes an array on the right and returns a Plot or a PlotArray.
 
-## Arguments
-- right argument R (numeric array)
+A Plot is an interactive object that can be manipulated in a gui, such as zoom, pan, or select.
+It's properties can be changed like a dictionary.
+
+In a non-gui application, the default stringer formats a Plot as a [sixel](https://en.wikipedia.org/wiki/Sixel) encoded image,
+such that it can be dumped into the terminal directly.
+
+There are basically two level to build plots: 
+- directly by passing numeric arrays
+- piecewise by adding Line object to a Plot
+
+PlotArrays can be reshaped to rows and columns.
+
+## Plot numeric arrays
+- right argument R (numeric array) returns a Plot or PlotArray
 	- rank 1: one plot with a single line
 	- rank 2: one plot with multiple lines (one per major cell)
 	- rank 3: multiple plots shown side by side
-	- rank 4: multiple images send over a channel (animation)
-- right argument R (list of dictionaries) *TODO*
-	- each line object is given as a dictionary (see `ktye/plot/plot.go:/^type Line/`):
-	- field `X`: float vector
-	- field `Y`: float vector
-	- field `C`: complex vector
-	- field `Id`: int
-	- field `Style`: data style numeric vector [LineWidth PointSize Color] or shorter
-	- plot type is inferred by the numeric type and L
-		- real: xy plot
-		- complex monadic: polar diagram
-		- complex dyadic: ampang (amplitude and angle over L)
-- monadic:
+- left argument L (numeric array, x-axis)
+	- last axis must conform to last axis of R
+	- other axis may conform, otherwise the first index is used
+	- smaller ranks are extended with leading ones
+- monadic
 	- default value: L←⍳ ¯1↑R
-- left argument L (numeric array)
-	- rank 1: single x axis must conform to last axis of R
-	- rank > 1: individual x-axis conformant to R
-- left argument L (dictionary) more control over the plot *TODO*
-	- the following string fields can be string vectors, or are extended for multiple plots:
-	- field `Type`: "xy"|"polar"|"ampang"
-	- fields `Xlabel, Ylabel, Title`: axis labels
-	- fields `Xunit, Yunit, Zunit`: added to the labels
-	- field: `Limits`
-		- numeric array: xmin xmax ymin ymax zmin zmax (missing or 0 for autoscale)
-		- "equal" autoscale but equal axis for all plots
+- plot type is inferred from the data type
+	- if any value in ¯2↑R is complex: "polar" (monadic), "ampang" (dyadic)
+	- otherwise "xy"
+
+## Build Plots sequentially
+- initialize empty Plot: P←⌼⍳0
+- set plot properties like a dict: P[`Type`Title]←("polar";"An example plot";)
+- add Line object:
+	- `L←p→l 0 ⋄ L["X" "Y"]←(⍳10;10-⍳10;) ⋄ L+P`
+- see [ktye/plot](https://github.com/ktye/plot/blob/master/plot.go) for a description of the Plot and Line objects	
+
 	
 ## Default style
-Some plot style is controlled package wide and can be changed by set functions:
+The default plot style is controlled package wide and can be changed by set functions:
 - `p→dark 0` (bool): dark background
 - `p→transparent 1` (bool): transparent background
 - `p→colors 0xFF0000 0x00FF00 0x0000FF` 
 	- (int vector): line colors (cyclic), ints 0xRRGGBB, empty: reset
-- `p→size 600 300`: (2 ints) width height of output image
-- `p→fontsizes 12 8`: (2 ints) font sizes for labels and axis tic labels
+- `p→fontsizes 12 8: (2 floats) font sizes for labels and axis tic labels
+- `p→size 600 300` (2 int vector) default plot image size in pixels
+- `p→gui 1` (bool): don't use sixel stringer
 
-## Example
+## Examples
 ```
-	⌼?10⍴10           single line plot (xy)
-	⌼?2 10⍴1J1        polar diagram with two datasets, 10 points each
-	(⍳10)⌼?2 10⍴1J1    amplitude and angle over x, two lines each with 10 points
-	⌼?2 3 10⍴10       two xy plots side by side, 3 lines each with 10 points per line
-	⌼?10 2 3 10⍴10    animation with 10 frames, 2 plots, 3 lines 10 points each
-```
-
-## Device
-The terminal version of cmd/lui uses [sixel](https://en.wikipedia.org/wiki/Sixel) as an output device.
-The terminal must support it (current versions of xterm, or mintty on windows).
-
-Example:
-```
-	lui -i '⌼?3 10⍴10'
+	lui -a test.apl
+	lui -i '⌼?3 10⍴10'           # one xy-plot with 3 lines
+	lui -i '2 2⍴⌼?3 3 10⍴1J1'    # reshape 3 polar plots to 2x2 with one empty image
+	lui -i '400 400⌼⌼?3 10⍴1J1'  # explicitly convert to an image with a size of 400x400
 ```
 
 ## TODO
-Interactive widget for package u, used by lui.
+- depth-assignments for objects (and xgo.Values)
+- animations (frames within the plot object)
+- animations send plots over a channel
+- plot at a low rate using a monitor channel, CLT example
+- raster images, spectrogram
+- histogram (bar plot style)
+- convert/add plots to png, pptx, html
+

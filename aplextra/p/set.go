@@ -11,6 +11,7 @@ import (
 	"github.com/ktye/iv/apl/domain"
 	aplfont "github.com/ktye/iv/cmd/lui/font"
 	"github.com/ktye/plot"
+	"github.com/ktye/plot/color"
 )
 
 var dark bool = true
@@ -18,6 +19,15 @@ var transparent bool
 var colors []int
 var width int = 800
 var height int = 400
+var gui bool
+
+func defaultPlot() *plot.Plot {
+	p := plot.Plot{}
+	p.Style.Dark = dark
+	p.Style.Transparent = transparent
+	p.Style.Order = color.Order(colorOrder())
+	return &p
+}
 
 func setDark(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	dark = boolean(a, R)
@@ -92,6 +102,11 @@ func setFontSizes(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	return apl.EmptyArray{}, nil
 }
 
+func setGui(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	gui = boolean(a, R)
+	return apl.EmptyArray{}, nil
+}
+
 func read2(a *apl.Apl, R apl.Value) (int, int, error) {
 	to := domain.ToIndexArray(nil)
 	ia, ok := to.To(a, R)
@@ -114,8 +129,8 @@ func colorOrder() string {
 		return ""
 	}
 	v := make([]string, len(colors))
-	for i, n := range v {
-		v[i] = fmt.Sprintf("#%06X\n", n)
+	for i, n := range colors {
+		v[i] = fmt.Sprintf("#%06X", n)
 	}
 	return strings.Join(v, ",")
 }

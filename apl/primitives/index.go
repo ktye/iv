@@ -231,7 +231,7 @@ func spec2ints(a *apl.Apl, spec apl.IdxSpec, shape []int) ([][]int, error) {
 	return idx, nil
 }
 
-// listIndex returns a dictionary with only the given keys.
+// objIndex returns a dictionary with only the given keys.
 // Keys may be indexed by integers, or strings.
 func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	obj := R.(apl.Object)

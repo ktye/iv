@@ -42,6 +42,10 @@ func (i Int) String(a *Apl) string {
 	return s
 }
 
+func (i Int) Export() reflect.Value {
+	return reflect.ValueOf(int(i))
+}
+
 // ParseInt parses an integer. It replaces ¯ with -, then uses ParseInt.
 // Decimal, Octal (0x..) and Hexadecimal (0..) formats are supported.
 func ParseInt(s string) (Number, bool) {

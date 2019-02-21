@@ -22,6 +22,7 @@ What you find in TESTS.md is what works. It has not yet been used for anything e
 
 Next tasks:
 - [ ] assignments on tables (updates)
+- [ ] depth-assignment on objects
 - [ ] decide when to copy
 - [ ] make use of uniform type arrays
 - [ ] *this is a stack, not a task list*

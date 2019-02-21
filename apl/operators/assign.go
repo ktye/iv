@@ -85,7 +85,7 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 	return R, nil
 }
 
-// AssignScalar assigns to a single numeric variable.
+// AssignScalar assigns to a scalar variable.
 // If indexes is non-nil, it must be an IndexArray for indexed assignment.
 // Mod may be a dyadic modifying function.
 func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R apl.Value) error {
