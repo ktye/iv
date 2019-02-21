@@ -8,32 +8,32 @@ A Plot is an interactive object that can be manipulated in a gui, such as zoom, 
 It's properties can be changed like a dictionary.
 
 In a non-gui application, the default stringer formats a Plot as a [sixel](https://en.wikipedia.org/wiki/Sixel) encoded image,
-such that it can be dumped into the terminal directly.
+such that it can be directly dumped into the terminal.
 
-There are basically two level to build plots: 
+There are basically two methods to build plots:
 - directly by passing numeric arrays
 - piecewise by adding Line object to a Plot
 
-PlotArrays can be reshaped to rows and columns.
+Plots can be arranged in a grid by reshaping a PlotArray.
 
 ## Plot numeric arrays
 - right argument R (numeric array) returns a Plot or PlotArray
-	- rank 1: one plot with a single line
+	- rank 1: one plot with a single line (dataseries)
 	- rank 2: one plot with multiple lines (one per major cell)
-	- rank 3: multiple plots shown side by side
+	- rank 3: multiple plots shown side by side (can be reshaped)
 - left argument L (numeric array, x-axis)
 	- last axis must conform to last axis of R
 	- other axis may conform, otherwise the first index is used
 	- smaller ranks are extended with leading ones
 - monadic
-	- default value: L←⍳ ¯1↑R
+	- default value: `L←⍳ ¯1↑R`
 - plot type is inferred from the data type
-	- if any value in ¯2↑R is complex: "polar" (monadic), "ampang" (dyadic)
+	- if any value in `¯2↑R` is complex: "polar" (monadic), "ampang" (dyadic)
 	- otherwise "xy"
 
 ## Build Plots sequentially
-- initialize empty Plot: P←⌼⍳0
-- set plot properties like a dict: P[`Type`Title]←("polar";"An example plot";)
+- initialize empty Plot: `P←⌼⍳0`
+- set plot properties like a dict: `P["Type" "Title"]←("polar";"An example plot";)`
 - add Line object:
 	- `L←p→l 0 ⋄ L["X" "Y"]←(⍳10;10-⍳10;) ⋄ L+P`
 - see [ktye/plot](https://github.com/ktye/plot/blob/master/plot.go) for a description of the Plot and Line objects	
