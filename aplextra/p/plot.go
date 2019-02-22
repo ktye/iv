@@ -2,6 +2,7 @@ package p
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
@@ -19,6 +20,11 @@ func plot1(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if err != nil {
 		return nil, fmt.Errorf("p/plot: right argument %s", err)
 	}
+	var prop *apl.Dict
+	if d, ok := L.(*apl.Dict); ok {
+		L = d.At(a, apl.String("X"))
+		prop = d
+	}
 	x, err := xaxis(a, L, rs[2])
 	if err != nil {
 		return nil, fmt.Errorf("p/plot: left argument %s", err)
@@ -33,6 +39,9 @@ func plot1(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		roff := rs[2] * rs[1] * i
 		p, err := plot2(a, x, xoff, ar, roff, L == nil)
 		if err != nil {
+			return nil, fmt.Errorf("p/plot: %s", err)
+		}
+		if err := plotProperties(a, p, prop); err != nil {
 			return nil, fmt.Errorf("p/plot: %s", err)
 		}
 		plots[i] = toPlot(p)
@@ -223,4 +232,47 @@ func xaxis(a *apl.Apl, L apl.Value, lastAxis int) (numbers.FloatArray, error) {
 		return numbers.FloatArray{}, fmt.Errorf("unsupported type: %T", ua)
 	}
 	return res, nil
+}
+
+// plotProperties overwrites plot properties from a dict.
+func plotProperties(a *apl.Apl, p *plot.Plot, prop *apl.Dict) error {
+	if prop == nil {
+		return nil
+	}
+	keys := prop.Keys()
+	for _, k := range keys {
+		s, ok := k.(apl.String)
+		if ok == false {
+			return fmt.Errorf("property key must be string: %T", k)
+		}
+		v := prop.At(a, k)
+		if v == nil {
+			return fmt.Errorf("property %s has nil value", s)
+		}
+		u := reflect.ValueOf(p).Elem()
+		switch s {
+		case "Xlabel", "Ylabel", "Title", "Xunit", "Yunit", "Zunit":
+			sv, ok := v.(apl.String)
+			if ok == false {
+				return fmt.Errorf("property %s not a string value: %T", s, v)
+			}
+			sf := u.FieldByName(string(s))
+			sf.SetString(string(sv))
+		case "X":
+		case "Xmin", "Xmax", "Ymin", "Ymax", "Zmin", "Zmax":
+			num, ok := v.(apl.Number)
+			if ok == false {
+				return fmt.Errorf("axis limits %s must be a number: %T", s, v)
+			}
+			c, ok, err := complexNumber(num)
+			if ok == true || err != nil {
+				return fmt.Errorf("axis limits: %s not a float: %T", s, v)
+			}
+			sf := u.FieldByName("Limits").FieldByName(string(s))
+			sf.SetFloat(real(c))
+		default:
+			return fmt.Errorf("unknown property: %s", string(s))
+		}
+	}
+	return nil
 }

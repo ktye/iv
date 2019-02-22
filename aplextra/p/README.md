@@ -25,6 +25,12 @@ Plots can be arranged in a grid by reshaping a PlotArray.
 	- last axis must conform to last axis of R
 	- other axis may conform, otherwise the first index is used
 	- smaller ranks are extended with leading ones
+- left argument L (dict)
+	- fields are translated to Plot properties:
+		- Type, Xlabel, Ylabel, [XYZ]unit (all strings)
+		- [XYZ]{min,max} (float)
+		- field X is used as X axis (float vector)
+	- example: `("Title" "Xmax" "Ymax"#("A B C";8;5;))⌼?2 3⍴5`
 - monadic
 	- default value: `L←⍳ ¯1↑R`
 - plot type is inferred from the data type

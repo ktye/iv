@@ -35,6 +35,11 @@ func Register(a *apl.Apl, name string) {
 		"plot",
 	))
 	a.RegisterPrimitive("⌼", apl.ToHandler(
+		plot1,
+		domain.Dyadic(domain.Split(domain.IsObject(nil), domain.ToArray(nil))),
+		"plot",
+	))
+	a.RegisterPrimitive("⌼", apl.ToHandler(
 		plotToImage,
 		domain.Monadic(
 			domain.Or(
