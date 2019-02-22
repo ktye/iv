@@ -416,7 +416,7 @@ func ReadString(s io.RuneScanner) (string, error) {
 				break loop
 			}
 			switch r {
-			case '`', '}', ']', ')', '⋄', '#':
+			case '`', '}', ']', ')', '⋄', '#', ';':
 				s.UnreadRune()
 				break loop
 			default:

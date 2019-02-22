@@ -31,6 +31,7 @@ type T struct {
 	F float64
 	C complex128
 	V []string
+	S S
 }
 
 func (t *T) Inc() {
@@ -46,6 +47,7 @@ func (t *T) Join(sep string) (int, string) {
 type S struct {
 	A int
 	B int
+	V []int
 }
 
 func (s S) Sum() int {

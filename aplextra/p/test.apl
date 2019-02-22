@@ -35,22 +35,14 @@ P2[`Title]←"right plot"
 P
 
 ⍝ Build plot from line objects
-⍝ TODO: This uses temporary reference variables into xgo objects.
-⍝       It would benefit from depth-index-assignment into objects.
 P←⌼⍳0
 P[`Type]←`xy
-Lim←P[`Limits]
-Lim[`Xmax`Ymax]←8 8
-Line1←p→l 0
-Line1[`X`Y]←(⍳10;10-⍳10;)
-S←Line1[`Style]
-LS←S[`Line]
-LS[`Width]←5
-MS←S[`Marker]
-MS[`Size]←8
-Line2←p→l 1
-Line2[`X`Y]←(⍳10;⍳10;)
-P←Line1+Line2+P
+L1←p→l 0
+L1[`X`Y]←(⍳10;10-⍳10;)
+L1[`Style;`Line;`Width]←5
+L1[`Style;`Marker;`Size]←8
+L2←p→l 1
+L2[`X`Y]←(⍳10;⍳10;)
+P←L1+L2+P
 P[`Title`Xlabel`Ylabel`Xunit`Yunit]←`Title`X-axis`Y-axis`km`km/h
 P
-

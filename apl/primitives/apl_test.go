@@ -929,6 +929,7 @@ var testCases = []struct {
 	{"D←`alpha#1⋄D[`alpha`beta]←3 4⋄D", "alpha: 3\nbeta: 4", 0},
 	{"D←`a`b`c#1⋄D⋄#D", "a: 1\nb: 1\nc: 1\na b c", 0},
 	{"D←`a`b`c#1 2 3⋄G←D[`a`c]⋄G", "a: 1\nc: 3", 0},
+	{"D←`a`b#(1;(`c`d#`F`G);)⋄D[`b;`d]←123⋄D[`b]", "c: F\nd: 123", 0},
 
 	{"⍝ Table, transpose a dict to create a table", "apl/primitives/transpose.go", 0},
 	{"⍉`a`b#1 2", "a b\n1 2", 0},
@@ -989,6 +990,7 @@ var testCases = []struct {
 	{"X←go→t 0⋄X[`I]←55⋄X[`inc]⍨0⋄X[`I]", "56", small},
 	{"X←go→t 0⋄X[`V]←'abcd'⋄X[`join]⍨'+'", "(4;a+b+c+d;)", small},
 	{"S←go→s 0⋄#[1]S", "sum", 0},
+	{"T←go→t 0⋄T[`S;`A]←3⋄T[`S;`V]←2 3⋄T[`S]", "A: 3\nB: 0\nV: 2 3", 0},
 
 	{"⍝ Channels read, write and close", "apl/primitives/take.go", 0},
 	{"C←go→source 6⋄2 3↑C", "0 1 2\n3 4 5", 0},

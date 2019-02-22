@@ -58,7 +58,6 @@ The default plot style is controlled package wide and can be changed by set func
 ```
 
 ## TODO
-- depth-assignments for objects (and xgo.Values)
 - animations (frames within the plot object)
 - animations send plots over a channel
 - plot at a low rate using a monitor channel, CLT example

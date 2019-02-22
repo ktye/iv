@@ -55,16 +55,18 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 			}
 		}
 		return s, nil
-		/*
-			case reflect.Struct:
-				switch v.(type) {
-				case Value:
-					return zero, fmt.Errorf("convert: t=%v xgo.Value is: %T", t, reflect.Value(v.(Value)).Interface())
-				default:
-					return zero, fmt.Errorf("cannot convert %T to a struct")
-				}
-				return zero, fmt.Errorf("can I set a struct? from a %T", v)
-		*/
+
+	case reflect.Struct:
+		if xv, ok := v.(Value); ok {
+			st := reflect.Value(xv).Type()
+			if st == reflect.PtrTo(t) {
+				return reflect.Indirect(reflect.Value(xv)), nil
+			} else if st == t {
+				return reflect.Value(xv), nil
+			}
+		}
+		return zero, fmt.Errorf("xgo: export struct: cannot convert %T to %s", v, t)
+
 	default:
 		return zero, fmt.Errorf("cannot convert to %v (%s)", t, t.Kind())
 	}

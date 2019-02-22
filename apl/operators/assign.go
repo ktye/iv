@@ -85,7 +85,7 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 	return R, nil
 }
 
-// AssignScalar assigns to a scalar variable.
+// AssignScalar assigns to a named scalar variable.
 // If indexes is non-nil, it must be an IndexArray for indexed assignment.
 // Mod may be a dyadic modifying function.
 func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R apl.Value) error {
@@ -95,24 +95,36 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 
 	w, env := a.LookupEnv(name)
 	if w == nil {
-		return fmt.Errorf("modified/indexed assignment to non-existing variable %s", name)
+		return fmt.Errorf("assign %s: modified/indexed: variable does not exist", name)
 	}
 
 	var f apl.Function
 	if mod != nil {
-		if fn, ok := mod.(apl.Function); ok == false {
-			return fmt.Errorf("modified assignment needs a function: %T", mod)
+		if fp, ok := mod.(apl.Function); ok {
+			f = fp
 		} else {
-			f = fn
+			return fmt.Errorf("assign %s: modifier is not a function: %T", name, mod)
 		}
 	}
 
+	v, err := assignValue(a, w, indexes, f, R)
+	if err != nil {
+		return fmt.Errorf("assign %s: %s", name, err)
+	}
+	if v != nil {
+		return a.AssignEnv(name, v, env)
+	}
+	return nil
+}
+
+// assignValue assigns to a given value. It may return a new value, or nil with no error.
+func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R apl.Value) (apl.Value, error) {
 	// Modified assignment without indexing.
 	if indexes == nil {
-		if v, err := f.Call(a, w, R); err != nil {
-			return err
+		if v, err := f.Call(a, dst, R); err != nil {
+			return nil, err
 		} else {
-			return a.AssignEnv(name, v, env)
+			return v, nil
 		}
 	}
 
@@ -120,25 +132,25 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 	if ok == false {
 		to := ToIndexArray(nil)
 		if v, ok := to.To(a, indexes); ok == false {
-			return fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
+			return nil, fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
 		} else if _, ok := v.(apl.EmptyArray); ok {
-			return fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
+			return nil, fmt.Errorf("indexed assignment could not convert to IndexArray: %T", indexes)
 		} else {
 			idx = v.(apl.IntArray)
 		}
 	}
 
-	if obj, ok := w.(apl.Object); ok {
-		return assignObject(a, obj, idx, f, R)
+	if obj, ok := dst.(apl.Object); ok {
+		return nil, assignObject(a, obj, idx, f, R)
 	}
 
-	if lst, ok := w.(apl.List); ok {
-		return assignList(a, lst, idx, f, R)
+	if lst, ok := dst.(apl.List); ok {
+		return nil, assignList(a, lst, idx, f, R)
 	}
 
-	ar, ok := w.(apl.ArraySetter)
+	ar, ok := dst.(apl.ArraySetter)
 	if ok == false {
-		return fmt.Errorf("variable %s is no settable array: %T", name, w)
+		return nil, fmt.Errorf("variable is no settable array: %T", dst)
 	}
 
 	// Try to keep the original array type, upgrade only if needed.
@@ -197,7 +209,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		// Scalar or 1-element assignment.
 		for _, d := range idx.Ints {
 			if err := modAssign(int(d), scalar); err != nil {
-				return err
+				return ar, err
 			}
 		}
 	} else {
@@ -226,29 +238,34 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R a
 		ds := collapse(idx.Shape())
 		ss := collapse(src.Shape())
 		if len(ds) != len(ss) {
-			return fmt.Errorf("indexed assignment: arrays have different rank: %d != %d", len(ds), len(ss))
+			return nil, fmt.Errorf("indexed assignment: arrays have different rank: %d != %d", len(ds), len(ss))
 		}
 		for i := range ds {
 			if ss[i] != ds[i] {
-				return fmt.Errorf("indexed assignment: arrays are not conforming: %v != %v", ss, ds)
+				return nil, fmt.Errorf("indexed assignment: arrays are not conforming: %v != %v", ss, ds)
 			}
 		}
 		for i, d := range idx.Ints {
 			if err := apl.ArrayBounds(src, i); err != nil {
-				return err
+				return ar, err
 			}
 			if err := modAssign(int(d), src.At(i)); err != nil {
-				return err
+				return ar, err
 			}
 		}
 	}
-	return a.AssignEnv(name, ar, env)
+	return ar, nil
 }
 
 // assignObject assigns R to index keys of a object.
 func assignObject(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Function, R apl.Value) error {
 	if f != nil {
 		return fmt.Errorf("TODO: object: modified indexed assignment")
+	}
+	if len(idx.Ints) > 1 && idx.Ints[0] < 0 {
+		return assignObjectDepth(a, obj, idx, f, R)
+	} else if len(idx.Ints) == 1 && idx.Ints[0] < 0 {
+		idx.Ints[0] = -1 - idx.Ints[0] + a.Origin
 	}
 	vectorize := false
 	ar, ok := R.(apl.Array)
@@ -280,6 +297,40 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Function, 
 		}
 	}
 	return nil
+}
+
+func assignObjectDepth(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Function, R apl.Value) (err error) {
+	k := -1 - idx.Ints[0]
+	keys := obj.Keys()
+	if k < 0 || k >= len(keys) {
+		return fmt.Errorf("assign obj-depth: index out of range")
+	}
+	key := keys[k]
+	v := obj.At(a, key)
+	if v == nil {
+		return fmt.Errorf("assign obj-depth: nil value")
+	}
+
+	ia := apl.IntArray{Dims: []int{idx.Dims[0] - 1}, Ints: idx.Ints[1:]}
+	if _, ok := v.(apl.Table); ok {
+		err = fmt.Errorf("assign obj-depth: tables are not supported")
+	} else if o, ok := v.(apl.Object); ok {
+		err = assignObject(a, o, ia, f, R)
+	} else if l, ok := v.(apl.List); ok {
+		err = assignList(a, l, ia, f, R)
+	} else if ar, ok := v.(apl.Array); ok {
+		var nv apl.Value
+		nv, err = assignValue(a, ar, ia, f, R)
+		if err == nil && nv != nil {
+			v = nv
+		}
+	} else {
+		err = fmt.Errorf("TODO: assign obj-depth: unsupported type: %T", v)
+	}
+	if err == nil {
+		return obj.Set(a, key, v)
+	}
+	return err
 }
 
 // assignList assigns R to the depth index of a list.

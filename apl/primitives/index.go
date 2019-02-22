@@ -110,7 +110,7 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	d, isd := R.(*apl.Dict)
 	spec := L.(apl.IdxSpec)
 	if len(spec) != 1 {
-		return apl.IntArray{}, fmt.Errorf("object index must be a vector")
+		return objDepthSelection(a, obj, spec, apl.IntArray{})
 	}
 
 	keys := make(map[apl.Value]int)
@@ -155,6 +155,65 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		ai.Ints[i] = k
 	}
 	return ai, nil
+}
+
+// objDepthSelection returns a depth index into an object tree.
+// Depth indexes for objects are returned as negative indexes starting at -1
+// to distinguish them from vector indexes (multiple keys at the same level).
+func objDepthSelection(a *apl.Apl, o apl.Object, spec apl.IdxSpec, ia apl.IntArray) (apl.IntArray, error) {
+	key := spec[0]
+	val := o.At(a, key)
+	if val == nil {
+		return ia, fmt.Errorf("obj depth sel: key does not exist: %v", key)
+	}
+
+	idx := -1
+	keys := o.Keys()
+	for i, k := range keys {
+		if k == key {
+			idx = i
+		}
+	}
+	if idx < 0 {
+		return ia, fmt.Errorf("obj depth sel: cannot find index")
+	}
+	if len(ia.Dims) == 0 {
+		ia.Dims = []int{1}
+		ia.Ints = []int{-1 - idx}
+	} else {
+		ia.Dims[0]++
+		ia.Ints = append(ia.Ints, -1-idx)
+	}
+	if len(spec) < 2 {
+		return ia, nil
+	}
+
+	add := func(idx apl.IntArray) {
+		if n := len(idx.Ints); n > 0 {
+			ia.Dims[0] += n
+			ia.Ints = append(ia.Ints, idx.Ints...)
+		}
+	}
+
+	if _, ok := val.(apl.Table); ok {
+		return ia, fmt.Errorf("obj depth sel: index into table is not supported")
+	} else if o, ok := val.(apl.Object); ok {
+		return objDepthSelection(a, o, spec[1:], ia)
+	} else if l, ok := val.(apl.List); ok {
+		idx, err := listSelection(a, l, spec[1:])
+		if err != nil {
+			return ia, err
+		}
+		add(idx)
+		return ia, nil
+	} else {
+		idx, err := indexSelection(a, spec[1:], val)
+		if err != nil {
+			return ia, err
+		}
+		add(idx)
+		return ia, nil
+	}
 }
 
 // indexArray returns the indexes within the array A for the given index specification.
@@ -237,8 +296,7 @@ func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	obj := R.(apl.Object)
 	spec := L.(apl.IdxSpec)
 	if len(spec) != 1 {
-		// TODO: this could be extended to index into an array value.
-		return nil, fmt.Errorf("object index: index spec must be a single scalar or vector")
+		return objDepthIndex(a, obj, spec)
 	}
 
 	// If the spec is a single value, return the value for the key.
@@ -268,6 +326,27 @@ func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		m[key] = v // TODO: copy?
 	}
 	return &apl.Dict{K: k, M: m}, nil
+}
+
+func objDepthIndex(a *apl.Apl, obj apl.Object, spec apl.IdxSpec) (apl.Value, error) {
+	key := spec[0]
+	v := obj.At(a, key)
+	if v == nil {
+		return nil, fmt.Errorf("key does not exist: %q", key.String(a))
+	}
+	if len(spec) == 1 {
+		return v, nil
+	}
+	if _, ok := v.(apl.Table); ok {
+		return nil, fmt.Errorf("obj-depth-index: table is not supported")
+	} else if o, ok := v.(apl.Object); ok {
+		return objIndex(a, spec[1:], o)
+	} else if l, ok := v.(apl.List); ok {
+		return listIndex(a, spec[1:], l)
+	} else if ar, ok := v.(apl.Array); ok {
+		return index(a, spec[1:], ar)
+	}
+	return nil, fmt.Errorf("obj-depth-index: cannot index into %T", v)
 }
 
 // listIndexing indexes a list at depth.
