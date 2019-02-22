@@ -34,6 +34,10 @@ P1[`Title]←"left plot"
 P2[`Title]←"right plot"
 P
 
+⍝ Directly plot a numeric array, with property dict on the left.
+(`Title`Xlabel`Ylabel`Xmax#"Example plot" `x-axis`Y-Axis 3)⌼?2 3 10⍴3
+
+
 ⍝ Build plot from line objects
 P←⌼⍳0
 P[`Type]←`xy
