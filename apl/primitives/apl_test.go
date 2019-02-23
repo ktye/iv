@@ -827,6 +827,10 @@ var testCases = []struct {
 	{"A←3 3⍴'STYPIEANT' ⋄ (⍉A)←3 3⍴⍳9 ⋄ A", "1 4 7\n2 5 8\n3 6 9", 0},
 	{"⍝ TODO: First (↓) and Pick (⊃) are not implemented", "", 0},
 
+	{"⍝ Functional selective specification", "apl/operators/assign.go", 0},    // iv extension
+	{"A←3 3⍴⍳9 ⋄ A[{⍺[2]>⍺[1]}]←0 ⋄ A", "1 0 0\n4 5 0\n7 8 9", 0},             // ⍺ is the index vector
+	{"A←10×3 3⍴⍳9 ⋄ A[{(⍵>30)^⍵<60}]←0 ⋄ A", "10 20 30\n0 0 60\n70 80 90", 0}, // ⍵ is the scalar value
+
 	{"⍝ Lambda expressions", "apl/lambda.go", 0},
 	{"{2×⍵}3", "6", 0},           // lambda in monadic context
 	{"2{⍺+3{⍺×⍵}⍵+2}2", "14", 0}, // nested lambas

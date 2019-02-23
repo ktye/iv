@@ -102,6 +102,12 @@ func indexSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		return ai, nil
 	}
 
+	if len(spec) == 1 {
+		if f, ok := spec[0].(apl.Function); ok {
+			return funcArrayIndex(a, f, ar)
+		}
+	}
+
 	return indexArray(a, spec, ar.Shape())
 }
 
@@ -288,6 +294,46 @@ func spec2ints(a *apl.Apl, spec apl.IdxSpec, shape []int) ([][]int, error) {
 		}
 	}
 	return idx, nil
+}
+
+// funcArrayIndex uses the dyadic function f to index into array A.
+// f is called with the current index vector on the left and the array value on the right
+// for each element. Indexes are selected if the function returns 1 otherwise it may return 0 or empty.
+// Example: A←2 3⍴6 ⋄ A[{⍺[2]>⍺[1]&&⍵<4:1}].
+// It returns an index vector with the selected indexes only (0-based).
+func funcArrayIndex(a *apl.Apl, f apl.Function, A apl.Array) (apl.IntArray, error) {
+	shape := A.Shape()
+	res := apl.IntArray{Dims: []int{0}}
+	res.Ints = make([]int, 0, A.Size())
+	idx := make([]int, len(shape))
+	L := apl.IntArray{Dims: []int{len(idx)}}
+	L.Ints = make([]int, len(idx))
+	for i := 0; i < A.Size(); i++ {
+		for k := range L.Ints {
+			L.Ints[k] = a.Origin + idx[k]
+		}
+		v, err := f.Call(a, L, A.At(i)) // TODO: copy?
+		if err != nil {
+			return res, fmt.Errorf("func-array-index: %s", err)
+		}
+		if _, ok := v.(apl.EmptyArray); ok {
+			continue
+		}
+		num, ok := v.(apl.Number)
+		if ok == false {
+			return res, fmt.Errorf("func-array-index: return value is not numeric: %T", v)
+		}
+		n, ok := num.ToIndex()
+		if ok == false || (i < 0 && i > 1) {
+			return res, fmt.Errorf("func-array-index: return value is not boolean: %T %s", v, v.String(a))
+		}
+		if n == 1 {
+			res.Ints = append(res.Ints, i)
+			res.Dims[0]++
+		}
+		apl.IncArrayIndex(idx, shape)
+	}
+	return res, nil
 }
 
 // objIndex returns a dictionary with only the given keys.
