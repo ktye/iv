@@ -249,13 +249,7 @@
    natural logarithm                           apl/primitives/elementary.go:38
    ⍟R  array                                   
    natural logarithm                           apl/primitives/elementary.go:32
-   ⍟R  scalar                                  
-                                               
-∧                                              
-   logical and                                 apl/primitives/boolean.go:31
-   ∧R  arithmetic arrays                       
-   logical and                                 apl/primitives/boolean.go:25
-   L∧R  L scalar R scalar                      
+   ⍟R  scalar                                                     
                                                
 ^                                              
    logical and                                 apl/primitives/boolean.go:31
