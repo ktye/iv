@@ -2,6 +2,7 @@ package operators
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
@@ -140,6 +141,10 @@ func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R
 		}
 	}
 
+	if t, ok := dst.(apl.Table); ok {
+		return nil, assignTable(a, t, idx, f, R)
+	}
+
 	if obj, ok := dst.(apl.Object); ok {
 		return nil, assignObject(a, obj, idx, f, R)
 	}
@@ -255,6 +260,135 @@ func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R
 		}
 	}
 	return ar, nil
+}
+
+// assignTable updates a table.
+// indexes are given in a fake IntArray. See primitives/index.go: tableSelection.
+// R must be a table or array of corresponding size, an object for each row or a scalar value.
+func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R apl.Value) error {
+	rows := idx.Ints[:idx.Dims[0]]
+	cols := idx.Ints[idx.Dims[0]:]
+	keys := make([]apl.Value, len(cols))
+	for i := range keys {
+		all := t.Keys()
+		if i < 0 || i >= len(keys) {
+			return fmt.Errorf("table-update: col idx out of range")
+		}
+		keys[i] = all[cols[i]]
+	}
+
+	if ar, ok := R.(apl.Array); ok {
+		// convert array R to table.
+		shape := ar.Shape()
+		if len(shape) == 1 && ar.Size() == len(rows) {
+			// Reshape column vectors.
+			if rs, ok := ar.(apl.Reshaper); ok == false {
+				return fmt.Errorf("table-update: cannot reshape right vector: %T", ar)
+			} else {
+				shape = []int{shape[0], 1}
+				ar = rs.Reshape(shape).(apl.Array)
+			}
+		}
+
+		if len(shape) != 2 {
+			return fmt.Errorf("table-update: array on the right must have rank 2")
+		}
+		if shape[0] != len(rows) || shape[1] != len(cols) {
+			return fmt.Errorf("table-update: array on the right has wrong shape")
+		}
+		m := make(map[apl.Value]apl.Value)
+		for k, key := range keys {
+			u := t.At(a, key).(apl.Uniform)
+			column := u.Make([]int{len(rows)})
+			col, ok := column.(apl.ArraySetter)
+			if ok == false {
+				return fmt.Errorf("table-update: convert array: %T is not settable", column)
+			}
+			to := ToType(reflect.TypeOf(u.Zero()), nil)
+			for i := range rows {
+				val := ar.At(i*shape[1] + k)
+				v, ok := to.To(a, val)
+				if ok == false {
+					return fmt.Errorf("table-update: cannot convert %T to %T", val, u.Zero())
+				}
+				if err := col.Set(i, v); err != nil {
+					return fmt.Errorf("table-update: convert array: %s", err)
+				}
+			}
+			m[key] = col
+		}
+		d := apl.Dict{
+			K: keys,
+			M: m,
+		}
+		R = apl.Table{Dict: &d, Rows: shape[0]}
+	} else if _, ok := R.(apl.Object); ok == false {
+		// convert scalar R to dict.
+		d := apl.Dict{
+			K: keys, // It should be ok to share.
+			M: make(map[apl.Value]apl.Value),
+		}
+		for _, k := range keys {
+			d.M[k] = R // TODO: copy
+		}
+		R = &d
+	}
+
+	o, ok := R.(apl.Object)
+	if ok == false {
+		return fmt.Errorf("table-update: illegal right argument: %T", R)
+	}
+
+	rk := o.Keys()
+	if len(rk) != len(keys) {
+		return fmt.Errorf("table-update: keys on the right do not match")
+	}
+	for i := range keys {
+		if rk[i] != keys[i] {
+			return fmt.Errorf("table-update: keys on the right do not match")
+		}
+	}
+	for _, key := range keys {
+		column := t.Dict.At(a, key)
+		col, ok := column.(apl.ArraySetter)
+		if ok == false {
+			return fmt.Errorf("table-update: column is not settable: %T", column)
+		}
+		u := column.(apl.Uniform)
+
+		if rt, ok := R.(apl.Table); ok {
+			rc := rt.At(a, key)
+			to := ToType(reflect.TypeOf(column), nil)
+			nc, ok := to.To(a, rc)
+			if ok == false {
+				return fmt.Errorf("table-update: cannot convert %T to %T", rc, column)
+			}
+			ru := nc.(apl.Uniform)
+			for i, n := range rows {
+				if err := col.Set(n, ru.At(i)); err != nil {
+					return fmt.Errorf("table-update: %s", err)
+				}
+			}
+		} else {
+			z := u.Zero()
+			to := ToType(reflect.TypeOf(z), nil)
+			rv := o.At(a, key)
+			v, ok := to.To(a, rv)
+			if ok == false {
+				return fmt.Errorf("table-update: cannot convert %T to %T", rv, z)
+			}
+			for _, n := range rows {
+				if err := col.Set(n, v); err != nil {
+					return fmt.Errorf("table-update: %s", err)
+				}
+			}
+
+		}
+		if err := t.Dict.Set(a, key, column); err != nil {
+			return fmt.Errorf("table-update: %s", err)
+		}
+	}
+	return nil
 }
 
 // assignObject assigns R to index keys of a object.

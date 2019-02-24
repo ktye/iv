@@ -11,6 +11,18 @@ type Function interface {
 	Call(*Apl, Value, Value) (Value, error)
 }
 
+// EnvCall calls a function in a new environment.
+func (a *Apl) EnvCall(f Function, L, R Value, vars map[string]Value) (Value, error) {
+	e := env{
+		vars:   vars,
+		parent: a.env,
+	}
+	save := a.env
+	a.env = &e
+	defer func() { a.env = save }()
+	return f.Call(a, L, R)
+}
+
 // function wraps a Function with it's arguments.
 type function struct {
 	Function
@@ -148,7 +160,6 @@ func (p Primitive) Select(a *Apl, L, R Value) (IntArray, error) {
 type PrimitiveHandler interface {
 	Domain
 	Function
-	//Call(*Apl, Value, Value) (Value, error)
 	Select(*Apl, Value, Value) (IntArray, error)
 	Doc() string
 }

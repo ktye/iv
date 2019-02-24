@@ -18,11 +18,11 @@ import (
 //	T[⍳5]
 // returns a table with the first 5 rows.
 // Right arrow indexing selects columns, just like a dict.
-//	T→Col1
+//	T→Col1 // TODO update
 // Sorting by column
-//	T[⍋T→Time]
+//	T[⍋T→Time] // TODO update
 // Selecting rows
-//	T[⍸T→Qty>5]
+//	T[⍸T→Qty>5] // TODO update
 type Table struct {
 	*Dict
 	Rows int

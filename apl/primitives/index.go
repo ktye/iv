@@ -37,7 +37,7 @@ func init() {
 		doc:    "index table, []",
 		Domain: Dyadic(Split(indexSpec{}, IsTable(nil))),
 		fn:     tableIndex,
-		//sel:    tableSelection,
+		sel:    tableSelection,
 	})
 }
 
@@ -467,6 +467,120 @@ func listSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		}
 	}
 	return apl.IntArray{Dims: []int{len(idx)}, Ints: idx}, nil
+}
+
+// tableSelection returns the indexes for selective assignment on tables.
+// T[rowidx], T[rowidx; colkeys], T[rowfunc], T[rowfunc, colkeys], T[colkeys]
+// It returns a flat index vector (0-based) with catenated row and col indexes.
+// The shape only counts row indexes.
+// A rowfunc can be used as a selection function.
+// It is called in an environment with variables with the names of the
+// keys predeclared (if they are strings, and valid variable names).
+// The left and right argument is the row index.
+// E.g. T[{(⍵>10)^Time>2015.11.22}]
+// Rows are selected, if the the function returns 1, otherwise it must return 0 or empty.
+func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
+	T := R.(apl.Table)
+	spec := L.(apl.IdxSpec)
+	var idx apl.IntArray
+	if len(spec) < 1 || len(spec) > 2 {
+		return idx, fmt.Errorf("table-select: index spec len must be 1 or 2: %d", len(spec))
+	}
+
+	var colidx []int
+	cols := T.Dict.Keys()
+	if len(spec) < 2 {
+		colidx = make([]int, len(cols))
+		for i := range colidx {
+			colidx[i] = i
+		}
+	} else {
+		ar, ok := spec[1].(apl.Array)
+		if ok == false {
+			ar = apl.MixedArray{
+				Dims:   []int{1},
+				Values: []apl.Value{spec[1]},
+			}
+		}
+		colidx = make([]int, ar.Size())
+		for i := 0; i < ar.Size(); i++ {
+			key := ar.At(i)
+			for k := range cols {
+				if key == cols[k] {
+					colidx[i] = k
+					break
+				}
+				if k == len(cols)-1 {
+					return idx, fmt.Errorf("table-select: column does not exist: %s", key.String(a))
+				}
+			}
+		}
+	}
+
+	toIdx := ToIndexArray(nil)
+	iav, ok := toIdx.To(a, spec[0])
+	if _, ok := spec[0].(apl.EmptyArray); ok {
+		ia := apl.IntArray{Dims: []int{T.Rows}, Ints: make([]int, T.Rows)}
+		for i := range ia.Ints {
+			ia.Ints[i] = i + a.Origin
+		}
+		iav = ia
+	}
+
+	var ia apl.IntArray
+	if ok == false {
+		f, ok := spec[0].(apl.Function)
+		if ok == false {
+			return idx, fmt.Errorf("table-select: first spec must be an index vector or a function: %T", spec[0])
+		}
+		ints := make([]int, 0, T.Rows)
+		columns := make([]apl.Array, len(cols))
+		for i, k := range cols {
+			columns[i] = T.Dict.At(a, k).(apl.Array)
+		}
+		vars := make(map[string]apl.Value)
+		for i := 0; i < T.Rows; i++ {
+			for k, key := range cols {
+				if s, ok := key.(apl.String); ok {
+					vars[string(s)] = columns[k].At(i)
+				}
+			}
+			v, err := a.EnvCall(f, apl.Int(a.Origin+i), apl.Int(a.Origin+i), vars)
+			if err != nil {
+				return idx, fmt.Errorf("table-select-func: %s", err)
+			}
+			if _, ok := v.(apl.EmptyArray); ok {
+				continue
+			}
+			num, ok := v.(apl.Number)
+			if ok == false {
+				return idx, fmt.Errorf("table-select-func: return value is not a number: %T", v)
+			}
+			n, ok := num.ToIndex()
+			if ok == false || n < 0 || n > 1 {
+				return idx, fmt.Errorf("table-select-func: return value is invalid: %T %s", v, num.String(a))
+			} else if ok && n == 1 {
+				ints = append(ints, i+a.Origin)
+			}
+		}
+		ia.Ints = ints
+		ia.Dims = []int{len(ints)}
+	} else {
+		ia = iav.(apl.IntArray)
+	}
+
+	idx = apl.IntArray{Dims: []int{len(ia.Ints)}, Ints: make([]int, len(ia.Ints)+len(colidx))} // sic!
+	for i, k := range ia.Ints {
+		if n := k - a.Origin; n < 0 || n >= T.Rows {
+			return idx, fmt.Errorf("table-select: row index out of range: %d", k)
+		} else {
+			idx.Ints[i] = n
+		}
+	}
+	for i, k := range colidx {
+		idx.Ints[len(ia.Ints)+i] = k
+	}
+	return idx, nil
 }
 
 // tableIndex indexes into a table.

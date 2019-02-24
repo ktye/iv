@@ -954,7 +954,16 @@ var testCases = []struct {
 	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", small},    // single column table as a vector
 	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", small}, // subtable if any index is multiple
 	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", small},        // single value
-	{"⍝ TODO: Assignment on tables, updates", "", 0},
+
+	{"⍝ Table updates", "apl/operators/assign.go", 0},
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T", "a b\n1 3\n2 2\n3 1", small},
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[1 3]←0 ⋄ T", "a b\n0 0\n2 2\n0 0", small},                    // update with scalar
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[1 3]←10×2 2⍴⍳4 ⋄ T", "a b\n10 20\n2 2\n30 40", small},        // update with array
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[1 3]←`a`b#8 9 ⋄ T", "a b\n8 9\n2 2\n8 9", small},             // update with object
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[1 3]←⍉`a`b#(8 9;10 11;) ⋄ T", "a b\n8 10\n2 2\n9 11", small}, // update with table
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[;`b]←5 6 7 ⋄ T", "a b\n1 5\n2 6\n3 7", small},                // update column
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[{⍺<3};`b]←9 ⋄ T", "a b\n1 9\n2 9\n3 1", small},               // update column with row selection function
+	{"T←⍉`A`B#(⍳3;4-⍳3;) ⋄ T[{B<3};`A]←9 ⋄ T", "A B\n1 3\n9 2\n9 1", small},               // update column with row selection function using a key value
 
 	{"⍝ Elementary functions on dicts and tables", "apl/primitives/elementary.go", 0},
 	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", small},
