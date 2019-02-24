@@ -587,9 +587,14 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 // The result is always a (sub-)table, expect for two cases:
 //	- a single row is given with a trailing semicolon: T[3;] returns a List.
 //	- a single row and single key returns the value: T[3;`a]
+//	- an empty selection converts to array: T[]
 func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	t := R.(apl.Table)
 	spec := L.(apl.IdxSpec)
+	if len(spec) == 0 {
+		return table2array(a, t) // table.go
+	}
+
 	if len(spec) < 1 || len(spec) > 2 {
 		return nil, fmt.Errorf("table index: index spec must have one or two fields")
 	}

@@ -945,15 +945,16 @@ var testCases = []struct {
 	{"⍝ Indexing tables", "apl/primitives/index.go", 0},
 	{"T←⍉`a`b#1 2⋄T[1]", "a b\n1 2", small},
 	{"T←⍉`a`b#(1;3;)⋄T[1]", "a b\n1 3", small},
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a b\n1 3", small},             // single row as a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1;]", "(1;3;)", small},              // single row as a list
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3]", "a b\n1 3\n3 5", small},      // multiple rows as a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3;]", "a b\n1 3\n3 5", small},     // multiple rows are always a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[0 1]", "a b\n3 5\n1 3", small},      // 0 or negative indexes
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;`b]", "b\n4\n5\n6", small}, // single column table
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", small},    // single column table as a vector
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", small}, // subtable if any index is multiple
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", small},        // single value
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a b\n1 3", small},                               // single row as a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1;]", "(1;3;)", small},                                // single row as a list
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3]", "a b\n1 3\n3 5", small},                        // multiple rows as a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3;]", "a b\n1 3\n3 5", small},                       // multiple rows are always a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[0 1]", "a b\n3 5\n1 3", small},                        // 0 or negative indexes
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;`b]", "b\n4\n5\n6", small},                   // single column table
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", small},                      // single column table as a vector
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", small},                   // subtable if any index is multiple
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", small},                          // single value
+	{"T←⍉`a`b`c#(1 2 3;4.1 5.2 6.3;7 8 9;)⋄T[]", "1 4.1 7\n2 5.2 8\n3 6.3 9", small}, // empty index converts to array
 
 	{"⍝ Table updates", "apl/operators/assign.go", 0},
 	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T", "a b\n1 3\n2 2\n3 1", small},

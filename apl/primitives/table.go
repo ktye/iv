@@ -358,3 +358,22 @@ func dict2table(a *apl.Apl, d *apl.Dict) (apl.Table, error) {
 	}
 	return apl.Table{Dict: d, Rows: rows}, nil
 }
+
+func table2array(a *apl.Apl, t apl.Table) (apl.Array, error) {
+	keys := t.Keys()
+	rows := t.Rows
+	res := apl.MixedArray{
+		Dims:   []int{rows, len(keys)},
+		Values: make([]apl.Value, len(keys)*rows),
+	}
+	n := len(keys)
+	for k, key := range keys {
+		col := t.At(a, key).(apl.Array)
+		for i := 0; i < rows; i++ {
+			v := col.At(i)
+			res.Values[i*n+k] = v // TODO: copy
+		}
+	}
+	u, _ := a.Unify(res, true)
+	return u, nil
+}
