@@ -334,6 +334,23 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		R = &d
 	}
 
+	// TODO: this version of modified table assignment works on scalar values.
+	// Maybe it should work on arrays or a subtable instead.
+	update := func(col apl.ArraySetter, i int, v apl.Value) (err error) {
+		if f != nil {
+			ot := reflect.TypeOf(v)
+			v, err = f.Call(a, col.At(i), v)
+			nt := reflect.TypeOf(v)
+			if ot != nt {
+				return fmt.Errorf("mod changed type from %s to %s", ot, nt)
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return col.Set(i, v)
+	}
+
 	o, ok := R.(apl.Object)
 	if ok == false {
 		return fmt.Errorf("table-update: illegal right argument: %T", R)
@@ -365,7 +382,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 			}
 			ru := nc.(apl.Uniform)
 			for i, n := range rows {
-				if err := col.Set(n, ru.At(i)); err != nil {
+				if err := update(col, n, ru.At(i)); err != nil {
 					return fmt.Errorf("table-update: %s", err)
 				}
 			}
@@ -378,7 +395,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 				return fmt.Errorf("table-update: cannot convert %T to %T", rv, z)
 			}
 			for _, n := range rows {
-				if err := col.Set(n, v); err != nil {
+				if err := update(col, n, v); err != nil {
 					return fmt.Errorf("table-update: %s", err)
 				}
 			}

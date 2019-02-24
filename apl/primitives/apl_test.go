@@ -964,6 +964,7 @@ var testCases = []struct {
 	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[;`b]←5 6 7 ⋄ T", "a b\n1 5\n2 6\n3 7", small},                // update column
 	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[{⍺<3};`b]←9 ⋄ T", "a b\n1 9\n2 9\n3 1", small},               // update column with row selection function
 	{"T←⍉`A`B#(⍳3;4-⍳3;) ⋄ T[{B<3};`A]←9 ⋄ T", "A B\n1 3\n9 2\n9 1", small},               // update column with row selection function using a key value
+	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T[1 3]+←1 ⋄ T", "a b\n2 4\n2 2\n4 2", small},                   // update with modification function
 
 	{"⍝ Elementary functions on dicts and tables", "apl/primitives/elementary.go", 0},
 	{"A←`a`b#(1 2;3 4;)⋄-A", "a: ¯1 ¯2\nb: ¯3 ¯4", small},
