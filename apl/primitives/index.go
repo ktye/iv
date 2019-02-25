@@ -489,10 +489,29 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 
 	var colidx []int
 	cols := T.Dict.Keys()
+	colmap := make(map[apl.Value]int)
+	for i := range cols {
+		colmap[cols[i]] = i
+	}
 	if len(spec) < 2 {
-		colidx = make([]int, len(cols))
-		for i := range colidx {
-			colidx[i] = i
+		// special case: spec[0] is a string, or string vector.
+		to := ToStringArray(nil)
+		if sa, ok := to.To(a, spec[0]); ok {
+			strings := sa.(apl.StringArray).Strings
+			colidx = make([]int, len(strings))
+			for i, s := range strings {
+				n, ok := colmap[apl.String(s)]
+				if ok == false {
+					return idx, fmt.Errorf("table-select: columns does not exist: %s", s)
+				}
+				colidx[i] = n
+			}
+			spec[0] = apl.EmptyArray{}
+		} else {
+			colidx = make([]int, len(cols))
+			for i := range colidx {
+				colidx[i] = i
+			}
 		}
 	} else {
 		ar, ok := spec[1].(apl.Array)
@@ -505,15 +524,11 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		colidx = make([]int, ar.Size())
 		for i := 0; i < ar.Size(); i++ {
 			key := ar.At(i)
-			for k := range cols {
-				if key == cols[k] {
-					colidx[i] = k
-					break
-				}
-				if k == len(cols)-1 {
-					return idx, fmt.Errorf("table-select: column does not exist: %s", key.String(a))
-				}
+			n, ok := colmap[key]
+			if ok == false {
+				return idx, fmt.Errorf("table-select: column does not exist: %s", key.String(a))
 			}
+			colidx[i] = n
 		}
 	}
 
