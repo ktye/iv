@@ -28,6 +28,12 @@ func init() {
 	})
 	register(primitive{
 		symbol: "⊃",
+		doc:    "first",
+		Domain: Monadic(IsList(nil)),
+		fn:     first,
+	})
+	register(primitive{
+		symbol: "⊃",
 		doc:    "split string",
 		Domain: Dyadic(Split(IsString(nil), IsString(nil))),
 		fn:     strsplit,
@@ -98,4 +104,12 @@ func strsplit(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		v = strings.Split(string(r), string(l))
 	}
 	return apl.StringArray{Dims: []int{len(v)}, Strings: v}, nil
+}
+
+func first(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	r := R.(apl.List)
+	if len(r) == 0 {
+		return apl.EmptyArray{}, nil
+	}
+	return r[0], nil
 }
