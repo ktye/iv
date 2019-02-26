@@ -37,3 +37,39 @@ Time,Name,Mark,Count,Number,Comp,Mult
 2019-02-07T13:25,Jack,0,0xc8,50,2.236@63.4,
 2019-02-07T13:25,Thomas,1,0x12c,33.3333,3.162@71.6,7.89123
 
+A   B   C   D
+1.1 2.1 3.1 1
+1.2 2.2 3.2 2
+1.3 2.3 3.3 1
+
+column sum:
+A   B   C   D
+3.6 6.6 9.6 4
+
+A   C
+3.6 9.6
+
+named aggregations:
+min max
+1.1 1.3
+
+non-aggregating functions:
+min max
+1.1 1.1
+1.1 1.2
+1.1 1.3
+
+individual functions per column:
+minA maxC
+1.1  3.3
+
+group by D:
+D A   C
+1 2.4 6.4
+2 1.2 3.2
+
+grouping function:
+D is even A   C
+0         2.4 6.4
+1         1.2 3.2
+

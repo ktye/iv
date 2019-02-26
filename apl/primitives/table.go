@@ -377,3 +377,207 @@ func table2array(a *apl.Apl, t apl.Table) (apl.Array, error) {
 	u, _ := a.Unify(res, true)
 	return u, nil
 }
+
+// tableQuery applies the aggregation function to the columns of the table.
+// The result is always a table.
+// The function may return a scalar (row aggregation) or a vector.
+// If a grouping is given, the aggregation is applied to each group.
+//
+// The function can be given as a single function or as a dictionary of functions.
+// If it is given as a dictionary, the keys are used for the aggregated columns.
+// Otherwise the resulting columns keep their names.
+//
+// The number of columns and functions must conform.
+// A single function is applied to multiple columns,
+// multiple functions may be applied to a column resulting in multiple aggregation columns,
+// or the number of functions must match the number of columns.
+//
+// The group must be a single column key that selects the group column,
+// or a function that is applied to the table.
+// The function gets variables initialized with the column names, if they are strings:
+//	{`w ⌊Date} rounds the Date column to weeks
+// The group column should not be part of the aggregation.
+// An anonymous group function always replaces the first column with the group result,
+// before applying the aggregation.
+func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) {
+
+	keys := t.Keys()
+	var gf apl.Function              // function to create group column
+	var groupcol apl.Uniform         // group data column in input table
+	var groupmap map[apl.Value][]int // map from group value to row indexes
+	var groups []apl.Value           // distinct group values
+	var groupres []apl.Value         // group column of result table
+	var groupname apl.Value          // name of group column in result table
+	if grp != nil {
+		if o, ok := grp.(apl.Object); ok {
+			if ks := o.Keys(); len(ks) != 1 {
+				return nil, fmt.Errorf("groups object must have a single value")
+			} else if f, ok := o.At(a, ks[0]).(apl.Function); ok {
+				gf = f
+				groupname = ks[0]
+			} else {
+				return nil, fmt.Errorf("groups object must contain a function: %T", o.At(a, ks[0]))
+			}
+			vars := make(map[string]apl.Value)
+			for _, key := range keys {
+				if s, ok := key.(apl.String); ok {
+					vars[string(s)] = t.At(a, key)
+				}
+			}
+			if len(keys) > 0 {
+				keys = keys[1:]
+			}
+
+			v, err := a.EnvCall(gf, nil, apl.Int(t.Rows), vars)
+			if err != nil {
+				return nil, fmt.Errorf("group function: %s", err)
+			}
+			if ar, ok := v.(apl.Array); ok == false {
+				return nil, fmt.Errorf("group function must return an array")
+			} else if as := ar.Shape(); len(as) != 1 || as[0] != t.Rows {
+				return nil, fmt.Errorf("group function result has wrong shape: %v != %d", as, t.Rows)
+			} else if u, ok := a.Unify(ar, true); ok == false {
+				return nil, fmt.Errorf("cannot unify group column")
+			} else {
+				groupcol = u.(apl.Uniform)
+			}
+		} else {
+			vec := make([]apl.Value, 0, len(keys))
+			for _, k := range keys {
+				if k != grp {
+					vec = append(vec, k)
+				} else {
+					groupname = k
+				}
+			}
+			keys = vec
+			if groupname == nil {
+				return nil, fmt.Errorf("group does not exist")
+			}
+			groupcol = t.At(a, groupname).(apl.Uniform)
+		}
+
+		groupmap = make(map[apl.Value][]int)
+		for i := 0; i < groupcol.Size(); i++ {
+			v := groupcol.At(i)
+			vec, ok := groupmap[v]
+			vec = append(vec, i)
+			groupmap[v] = vec
+			if ok == false {
+				groups = append(groups, v)
+			}
+		}
+	}
+
+	var names []apl.Value
+	var fns []apl.Function
+	if f, ok := agg.(apl.Function); ok {
+		fns = make([]apl.Function, len(keys))
+		for i := range fns {
+			fns[i] = f
+		}
+		names = keys
+	} else if o, ok := agg.(apl.Object); ok {
+		names = o.Keys()
+		if len(names) == 1 && len(keys) > 1 {
+			ext := make([]apl.Value, len(keys))
+			for i := range ext {
+				ext[i] = names[0]
+			}
+			names = ext
+		} else if len(keys) == 1 && len(names) > 1 {
+			k := keys[0]
+			keys = make([]apl.Value, len(names))
+			for i := range keys {
+				keys[i] = k
+			}
+		} else if len(names) != len(keys) {
+			return nil, fmt.Errorf("number of aggregation functions and keys must conform")
+		}
+		fns = make([]apl.Function, len(names))
+		for i, key := range names {
+			f, ok := o.At(a, key).(apl.Function)
+			if ok == false {
+				return nil, fmt.Errorf("aggregation is not a function: %T", o.At(a, key))
+			}
+			fns[i] = f
+		}
+	} else {
+		return nil, fmt.Errorf("aggregation functions must be passed in a dict: %T", agg)
+	}
+
+	// If no group is given, make a single one.
+	if groupmap == nil {
+		groupmap = make(map[apl.Value][]int)
+		groups = []apl.Value{apl.Int(0)}
+		idx := make([]int, t.Rows)
+		for i := range idx {
+			idx[i] = i
+		}
+		groupmap[apl.Int(0)] = idx
+	}
+
+	numrows := 0
+	d := apl.Dict{M: make(map[apl.Value]apl.Value)}
+	for k, key := range keys {
+		column := t.At(a, key).(apl.Uniform)
+		rescol := apl.MixedArray{Dims: []int{0}}
+		f := fns[k]
+		for _, gv := range groups {
+			g := groupmap[gv]
+			y := column.Make([]int{len(g)})
+			ys, ok := y.(apl.ArraySetter)
+			if ok == false {
+				return nil, fmt.Errorf("array is not settable: %T", y)
+			}
+			for n, m := range g {
+				ys.Set(n, column.At(m)) // TODO: copy
+			}
+			r, err := f.Call(a, nil, ys)
+			if err != nil {
+				return nil, err
+			}
+			ar, ok := r.(apl.Array)
+			if ok == false {
+				ar = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{r}}
+			}
+			for n := 0; n < ar.Size(); n++ {
+				rescol.Values = append(rescol.Values, ar.At(n))
+				rescol.Dims[0]++
+			}
+			if k == 0 {
+				for n := 0; n < ar.Size(); n++ {
+					groupres = append(groupres, gv)
+				}
+			}
+		}
+		u, ok := a.Unify(rescol, true)
+		if ok == false {
+			return nil, fmt.Errorf("column cannot be unified")
+		}
+		us := u.Shape()
+		if len(us) != 1 {
+			return nil, fmt.Errorf("aggregation result has rank %d", len(us))
+		}
+
+		d.K = append(d.K, names[k])
+		d.M[names[k]] = u
+
+		if k == 0 {
+			numrows = us[0]
+		} else if us[0] != numrows {
+			return nil, fmt.Errorf("aggregation results in different number of rows")
+		}
+	}
+
+	if groupname != nil {
+		ug, ok := a.Unify(apl.MixedArray{Dims: []int{len(groupres)}, Values: groupres}, true)
+		if ok == false {
+			return nil, fmt.Errorf("cannot unify group column")
+		}
+		d.K = append([]apl.Value{groupname}, d.K...)
+		d.M[groupname] = ug
+	}
+
+	return apl.Table{Rows: numrows, Dict: &d}, nil
+}

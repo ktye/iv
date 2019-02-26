@@ -530,6 +530,12 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 			}
 			colidx[i] = n
 		}
+		if _, ok := spec[1].(apl.EmptyArray); ok {
+			colidx = make([]int, len(cols))
+			for i := range colidx {
+				colidx[i] = i
+			}
+		}
 	}
 
 	toIdx := ToIndexArray(nil)
@@ -599,106 +605,107 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 }
 
 // tableIndex indexes into a table.
-// The result is always a (sub-)table, expect for two cases:
-//	- a single row is given with a trailing semicolon: T[3;] returns a List.
-//	- a single row and single key returns the value: T[3;`a]
-//	- an empty selection converts to array: T[]
+//	- empty index
+//		T[]      converts to array
+//	- single column (only for string keys)
+//		T[`a]    returns a vector
+//		T[1⍴`a]  returns a single-column table
+//	- single row and column
+//		T[3;`a]  returns the scalar value
+//	- single row
+//		T[3]     returns a dict
+//		T[1⍴3]   returns a single-row table
+//	- multiple rows or columns
+//		T[1 3]     return a sub-table with all column
+//		T[;`a`b]   return a sub-table with all rows
+//		T[⍳3;`a`c] return a sub-table
+//	- functional row index
+//		T[{⍺>1}]  return a table
 func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	t := R.(apl.Table)
 	spec := L.(apl.IdxSpec)
+
+	// Empty spec: convert to array.
 	if len(spec) == 0 {
 		return table2array(a, t) // table.go
 	}
 
-	if len(spec) < 1 || len(spec) > 2 {
-		return nil, fmt.Errorf("table index: index spec must have one or two fields")
+	conv := true
+	var agg, grp apl.Value
+	if len(spec) > 4 {
+		return nil, fmt.Errorf("table: index specification is too long: %d", len(spec))
+	}
+	if len(spec) > 3 {
+		grp = spec[3]
+	}
+	if len(spec) > 2 {
+		agg = spec[2]
+		spec = spec[:2]
+		conv = false
+	}
+	if conv == true {
+		for i := range spec {
+			if _, ok := spec[i].(apl.Function); ok {
+				conv = false
+			}
+			if _, ok := spec[i].(apl.EmptyArray); ok {
+				continue
+			}
+			if _, ok := spec[i].(apl.Array); ok {
+				conv = false
+			}
+		}
 	}
 
-	tostr := ToStringArray(IsVector(nil))
-	toidx := ToIndexArray(IsVector(nil))
+	idx, err := tableSelection(a, spec, t)
+	if err != nil {
+		return nil, err
+	}
 
-	emptykeys := false // true: semicolon is present but 2nd field is empty
-	var rows []int
+	// Both row and column index are stored on a single axis in an unusual way.
+	rows := idx.Ints[:idx.Dims[0]]
+	cols := idx.Ints[idx.Dims[0]:]
 	keys := t.Keys()
-	if len(spec) == 2 {
-		if _, ok := spec[1].(apl.EmptyArray); ok {
-			emptykeys = true
-		} else if as, ok := tostr.To(a, spec[1]); ok == false {
-			return nil, fmt.Errorf("table index: second part must be a string or string vector: %T", spec[1])
-		} else {
-			strings := as.(apl.StringArray).Strings
-			keys = make([]apl.Value, len(strings))
-			for i, s := range strings {
-				keys[i] = apl.String(s)
+
+	// Return a single value.
+	if conv && len(rows) == 1 && len(cols) == 1 {
+		return t.At(a, keys[cols[0]]).(apl.Array).At(rows[0]), nil // TODO copy
+	}
+
+	// Return a single column as an array.
+	if conv && len(cols) == 1 {
+		return t.At(a, keys[cols[0]]), nil // TODO copy
+	}
+
+	res := apl.Table{Rows: len(rows)}
+	d := apl.Dict{}
+	d.K = make([]apl.Value, len(cols))
+	d.M = make(map[apl.Value]apl.Value)
+	for i, k := range cols {
+		key := keys[k] // TODO: copy
+		d.K[i] = key
+		srccol := t.At(a, key).(apl.Uniform)
+		dstcol := srccol.Make([]int{len(rows)})
+		col, ok := dstcol.(apl.ArraySetter)
+		if ok == false {
+			return nil, fmt.Errorf("column is not settable: %T", dstcol)
+		}
+		for n, m := range rows {
+			if err := col.Set(n, srccol.At(m)); err != nil {
+				return nil, err
 			}
 		}
-	}
-	if _, ok := spec[0].(apl.EmptyArray); ok {
-		emptykeys = true
-	} else if ai, ok := toidx.To(a, spec[0]); ok == false {
-		return nil, fmt.Errorf("table index: first part must be an index or index vector: %T", spec[0])
-	} else {
-		rows = ai.(apl.IntArray).Ints
+		d.M[key] = col
 	}
 
-	for i := range rows {
-		rows[i] = rows[i] - a.Origin
-		if rows[i] < 0 {
-			rows[i] = rows[i] + t.Rows
-		}
-		if rows[i] < 0 || rows[i] >= t.Rows {
-			return nil, fmt.Errorf("table index out of range")
-		}
+	// Return a dict for a single row.
+	if conv && len(rows) == 1 {
+		return &d, nil
 	}
+	res.Dict = &d
 
-	// Special case, single row with semicolon.
-	if emptykeys && len(rows) == 1 {
-		res := make(apl.List, len(keys))
-		for i, k := range keys {
-			col := t.M[k].(apl.Array)
-			v := col.At(rows[0])
-			res[i] = v
-		}
-		return res, nil
+	if agg != nil {
+		return tableQuery(a, res, agg, grp)
 	}
-
-	// Special case, single row and single key.
-	if len(spec) == 2 && len(keys) == 1 && len(rows) == 1 {
-		col := t.At(a, keys[0])
-		if col == nil {
-			return nil, fmt.Errorf("table index: column does not exist")
-		}
-		ar := col.(apl.Array)
-		return ar.At(rows[0]), nil
-	}
-
-	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
-	nrows := len(rows)
-	if rows == nil {
-		nrows = t.Rows
-	}
-	for i, k := range keys {
-		d.K[i] = k // TODO: copy?
-		col := t.At(a, k)
-		if col == nil {
-			return nil, fmt.Errorf("table index: column does not exist")
-		}
-		ar := col.(apl.Array)
-		as := apl.MakeArray(ar, []int{nrows})
-		if rows == nil {
-			for i := 0; i < nrows; i++ {
-				if err := as.Set(i, ar.At(i)); err != nil {
-					return nil, err
-				}
-			}
-		} else {
-			for i, j := range rows {
-				if err := as.Set(i, ar.At(j)); err != nil {
-					return nil, err
-				}
-			}
-		}
-		d.M[k] = as
-	}
-	return dict2table(a, &d) // table.go
+	return res, nil
 }

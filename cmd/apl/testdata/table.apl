@@ -42,3 +42,29 @@ F⍕T
 "custom format with csv:"
 F[`CSV]←1 ⍝ Add the special key CSV with value 1
 F⍕T
+
+⍝ Table aggregations
+T←⍉`A`B`C`D#(1.1 1.2 1.3;2.1 2.2 2.3; 3.1 3.2 3.3;1 2 1;)
+T
+"column sum:"
+T[;;+/]
+T[;`A`C;+/]
+
+"named aggregations:"
+F←`min`max #(⌊/;⌈/;)
+T[;`A;F]
+
+"non-aggregating functions:"
+F←`min`max #(⌊\;⌈\;)
+T[;`A;F]
+
+"individual functions per column:"
+F←`minA`maxC #(⌊/;⌈/;)
+T[;`A`C;F]
+
+"group by D:"
+T[;`A`C`D;+/;`D]
+
+"grouping function:"
+F←"D is even"#⊃({0=2|D};)
+T[;`D`A`C;+/;F]

@@ -942,19 +942,20 @@ var testCases = []struct {
 	{"⍴`a`b#(1 2 3;4 5 6;)", "2", 0},
 	{"⍴⍉`a`b#(1 2 3;4 5 6;)", "3 2", small},
 
-	{"⍝ Indexing tables", "apl/primitives/index.go", 0},
-	{"T←⍉`a`b#1 2⋄T[1]", "a b\n1 2", small},
-	{"T←⍉`a`b#(1;3;)⋄T[1]", "a b\n1 3", small},
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a b\n1 3", small},                               // single row as a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1;]", "(1;3;)", small},                                // single row as a list
+	{"⍝ Indexing tables", "apl/primitives/index.go", 0},                              // see cmd/apl/testdata/table.apl for queries
+	{"T←⍉`a`b#1 2⋄T[1]", "a: 1\nb: 2", small},                                        // single row as a dict
+	{"T←⍉`a`b#(1;3;)⋄T[1]", "a: 1\nb: 3", small},                                     // single row as a dict
+	{"T←⍉`a`b#1 2⋄T[1⍴1]", "a b\n1 2", small},                                        // single row as a table
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1]", "a: 1\nb: 3", small},                             // single row as a dict
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[2;`b]", "4", small},                                   // scalar value
 	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3]", "a b\n1 3\n3 5", small},                        // multiple rows as a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[1 3;]", "a b\n1 3\n3 5", small},                       // multiple rows are always a table
-	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[0 1]", "a b\n3 5\n1 3", small},                        // 0 or negative indexes
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;`b]", "b\n4\n5\n6", small},                   // single column table
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄(⍉T)[`b]", "4 5 6", small},                      // single column table as a vector
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;`b]", "4 5 6", small},                        // single column as a vector
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[`b]", "4 5 6", small},                         // single column as a vector (string key)
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[;1⍴`b]", "b\n4\n5\n6", small},                 // single column table
 	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[1 2;`b]", "b\n4\n5", small},                   // subtable if any index is multiple
-	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T[¯1;`c]", "8", small},                          // single value
 	{"T←⍉`a`b`c#(1 2 3;4.1 5.2 6.3;7 8 9;)⋄T[]", "1 4.1 7\n2 5.2 8\n3 6.3 9", small}, // empty index converts to array
+	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[{⍺>2}]", "a b\n3 5", small},                           // functional row index
+	{"T←⍉`A`B#(1 2 3;3 4 5;)⋄T[{6=A+B};`B]", "B\n4", small},                          // functional row index with column variable
 
 	{"⍝ Table updates", "apl/operators/assign.go", 0},
 	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T", "a b\n1 3\n2 2\n3 1", small},
@@ -987,6 +988,7 @@ var testCases = []struct {
 	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A,B", "a b\n5 7\n6 8", small},
 	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`b`c#(5 6;7 8;)⋄A,B", "a b c\n1 5 7\n2 6 8", small},
 	{"A←⍉`a`b#(1 2;3 4;)⋄B←⍉`a`b#(5 6;7 8;)⋄A⍪B", "a b\n1 3\n2 4\n5 7\n6 8", small},
+	{"T←⍉`a`b#(1 2;3 4;)⋄T,←⍉`c#5 6⋄T", "a b c\n1 3 5\n2 4 6", small}, // catenate a column
 	{"A←⍉`a`b#(1 2;3 4;)⋄A⍪5", "a b\n1 3\n2 4\n5 5", small},
 	{"A←⍉`a`b#(1 2;3 4;)⋄A,5 6", "a b\n1 3\n2 4\n5 5\n6 6", small},
 	{"A←⍉`a`b#(1 2;3 4;)⋄5 6,A", "a b\n5 5\n6 6\n1 3\n2 4", small},
@@ -1000,7 +1002,7 @@ var testCases = []struct {
 	{"+\\⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)", "a b c\n1 4 7\n3 9 15\n6 15 24", small},
 	{"2+/`a`b#(1 2 3;4 6 7;)", "a: 3 5\nb: 10 13", small},
 	{"2+/⍉`a`b#(1 2 3;4 6 7;)", "a b\n3 10\n5 13", small},
-	// TODO {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", small}, // table with avg value.
+	{"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T⍪(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", small},
 
 	{"⍝ Object, go example", "apl/xgo/register.go", 0},
 	{"X←go→t 0⋄X[`V]←`a`b⋄X[`V]", "a b", 0},
