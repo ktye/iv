@@ -3,9 +3,11 @@ package primitives
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
+	"github.com/ktye/iv/apl/numbers"
 )
 
 func init() {
@@ -22,7 +24,7 @@ func init() {
 		{"*", "exponential", "power", pow, pow2},
 		{"⍟", "natural logarithm", "log, logarithm", log, log2},
 		{"|", "magnitude, absolute value", "residue, modulo", abs, abs2},
-		{"⌊", "floor", "min, minumum", min, min2},
+		{"⌊", "floor", "min, minimum", min, min2},
 		{"⌈", "ceil", "max, maximum", max, max2},
 		{"!", "factorial", "binomial", factorial, binomial},
 		{"○", "pi times", "circular, trigonometric", pitimes, circular},
@@ -88,6 +90,20 @@ func init() {
 			doc:    e.doc2,
 			Domain: Dyadic(Split(nil, IsChannel(nil))),
 			fn:     channel2(e.symbol, e.dyadic),
+		})
+		register(primitive{
+			symbol: e.symbol,
+			doc:    "round date",
+			Domain: Dyadic(
+				Split(
+					IsString(nil),
+					Or(
+						IsType(reflect.TypeOf(numbers.Time(time.Time{})), nil),
+						IsType(reflect.TypeOf(numbers.TimeArray{}), nil),
+					),
+				),
+			),
+			fn: roundTime,
 		})
 	}
 }
@@ -488,4 +504,26 @@ func gcd(a *apl.Apl, L, R apl.Value) (apl.Value, bool) {
 		return g.Gcd(R)
 	}
 	return nil, false
+}
+
+// roundTime rounds (usually truncates) a time or duration.
+// L is a string:
+//	Y, M, D, h, m, s, W (week), Q (quarter) for time input
+//	h, m, s, ms, us, μs, ns for duration input
+// R is a Time value (or duration).
+func roundTime(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+	s := L.(apl.String)
+	ta, ok := R.(numbers.TimeArray)
+	if ok {
+		res := numbers.TimeArray{Dims: apl.CopyShape(ta), Times: make([]time.Time, ta.Size())}
+		for i := 0; i < ta.Size(); i++ {
+			if t, err := numbers.Time(ta.Times[i]).Round(string(s)); err != nil {
+				return nil, err
+			} else {
+				res.Times[i] = time.Time(t)
+			}
+		}
+		return res, nil
+	}
+	return R.(numbers.Time).Round(string(s))
 }

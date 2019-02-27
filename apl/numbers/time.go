@@ -1,6 +1,7 @@
 package numbers
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -186,8 +187,87 @@ func (t Time) Ceil2() (apl.Value, bool) {
 	return Time(time.Time(t).Add(500 * time.Millisecond).Truncate(time.Second)), true
 }
 
+func (t Time) Round(period string) (Time, error) {
+	if d, ok := t.Duration(); ok {
+		return roundDuration(d, period)
+	}
+	t1 := time.Time(t)
+	Y, M, D := t1.Date()
+	h := t1.Hour()
+	m := t1.Minute()
+	s := t1.Second()
+	switch period {
+	case "Y":
+		return Time(time.Date(Y, 1, 1, 0, 0, 0, 0, time.UTC)), nil
+	case "M":
+		return Time(time.Date(Y, M, 1, 0, 0, 0, 0, time.UTC)), nil
+	case "D":
+		return Time(time.Date(Y, M, D, 0, 0, 0, 0, time.UTC)), nil
+	case "h":
+		return Time(time.Date(Y, M, D, h, 0, 0, 0, time.UTC)), nil
+	case "m":
+		return Time(time.Date(Y, M, D, h, m, 0, 0, time.UTC)), nil
+	case "s":
+		return Time(time.Date(Y, M, D, h, m, s, 0, time.UTC)), nil
+	case "Q":
+		if t1.Before(time.Date(Y, time.April, 1, 0, 0, 0, 0, time.UTC)) {
+			return Time(time.Date(Y, time.January, 1, 0, 0, 0, 0, time.UTC)), nil
+		} else if t1.Before(time.Date(Y, time.July, 1, 0, 0, 0, 0, time.UTC)) {
+			return Time(time.Date(Y, time.April, 1, 0, 0, 0, 0, time.UTC)), nil
+		} else if t1.Before(time.Date(Y, time.October, 1, 0, 0, 0, 0, time.UTC)) {
+			return Time(time.Date(Y, time.July, 1, 0, 0, 0, 0, time.UTC)), nil
+		}
+		return Time(time.Date(Y, time.October, 1, 0, 0, 0, 0, time.UTC)), nil
+	case "W":
+		year, wk := t1.ISOWeek()
+		return Time(roundWeek(year, wk, time.UTC)), nil
+	default:
+		return t, fmt.Errorf("cannot round time to %s", period)
+	}
+
+	return t, fmt.Errorf("TODO: round time")
+}
+
+func roundWeek(year int, week int, timezone *time.Location) time.Time {
+	date := time.Date(year, 0, 0, 0, 0, 0, 0, timezone)
+	isoYear, isoWeek := date.ISOWeek()
+	for date.Weekday() != time.Monday {
+		date = date.AddDate(0, 0, -1)
+		isoYear, isoWeek = date.ISOWeek()
+	}
+	for isoYear < year {
+		date = date.AddDate(0, 0, 1)
+		isoYear, isoWeek = date.ISOWeek()
+	}
+	for isoWeek < week {
+		date = date.AddDate(0, 0, 1)
+		isoYear, isoWeek = date.ISOWeek()
+	}
+	return date
+}
+
+func roundDuration(t time.Duration, s string) (Time, error) {
+	var d time.Duration
+	switch s {
+	case "h":
+		d = time.Hour
+	case "m":
+		d = time.Minute
+	case "s":
+		d = time.Second
+	case "ms":
+		d = time.Millisecond
+	case "us", "μs":
+		d = time.Microsecond
+	case "ns":
+		d = time.Nanosecond
+	default:
+		return Time(y0), fmt.Errorf("round duration: not supported: %s", s)
+	}
+	return Time(y0.Add(t.Round(d))), nil
+}
+
 // Not supported by elementary arithmetics on time numbers:
-// - Truncate to other durations instead of seconds, e.g. days.
 // - Add non-constant intervals to time, e.g. 2016.01.01 + 1 year (go: time.AddDate)
 //	Currently we can only do:
 //      	2015.01.01 + 365×24h
