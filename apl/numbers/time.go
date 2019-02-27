@@ -55,9 +55,18 @@ func (t Time) String(a *apl.Apl) string {
 		}
 	}
 
+	if format == "W" {
+		year, wk := time.Time(t).ISOWeek()
+		return fmt.Sprintf("%04dw%02d", year, wk)
+	} else if format == "Q" {
+		_, year, quarter := roundQuarter(time.Time(t))
+		return fmt.Sprintf("%04dQ%d", year, quarter)
+	}
+
 	if format == "" {
 		format = "2006.01.02T15.04.05.000"
 	}
+
 	return time.Time(t).Format(format)
 }
 
@@ -210,14 +219,8 @@ func (t Time) Round(period string) (Time, error) {
 	case "s":
 		return Time(time.Date(Y, M, D, h, m, s, 0, time.UTC)), nil
 	case "Q":
-		if t1.Before(time.Date(Y, time.April, 1, 0, 0, 0, 0, time.UTC)) {
-			return Time(time.Date(Y, time.January, 1, 0, 0, 0, 0, time.UTC)), nil
-		} else if t1.Before(time.Date(Y, time.July, 1, 0, 0, 0, 0, time.UTC)) {
-			return Time(time.Date(Y, time.April, 1, 0, 0, 0, 0, time.UTC)), nil
-		} else if t1.Before(time.Date(Y, time.October, 1, 0, 0, 0, 0, time.UTC)) {
-			return Time(time.Date(Y, time.July, 1, 0, 0, 0, 0, time.UTC)), nil
-		}
-		return Time(time.Date(Y, time.October, 1, 0, 0, 0, 0, time.UTC)), nil
+		rt, _, _ := roundQuarter(t1)
+		return Time(rt), nil
 	case "W":
 		year, wk := t1.ISOWeek()
 		return Time(roundWeek(year, wk, time.UTC)), nil
@@ -226,6 +229,18 @@ func (t Time) Round(period string) (Time, error) {
 	}
 
 	return t, fmt.Errorf("TODO: round time")
+}
+
+func roundQuarter(t time.Time) (time.Time, int, int) {
+	Y, _, _ := t.Date()
+	if t.Before(time.Date(Y, time.April, 1, 0, 0, 0, 0, time.UTC)) {
+		return time.Date(Y, time.January, 1, 0, 0, 0, 0, time.UTC), Y, 1
+	} else if t.Before(time.Date(Y, time.July, 1, 0, 0, 0, 0, time.UTC)) {
+		return time.Date(Y, time.April, 1, 0, 0, 0, 0, time.UTC), Y, 2
+	} else if t.Before(time.Date(Y, time.October, 1, 0, 0, 0, 0, time.UTC)) {
+		return time.Date(Y, time.July, 1, 0, 0, 0, 0, time.UTC), Y, 3
+	}
+	return time.Date(Y, time.October, 1, 0, 0, 0, 0, time.UTC), Y, 4
 }
 
 func roundWeek(year int, week int, timezone *time.Location) time.Time {

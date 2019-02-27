@@ -641,23 +641,26 @@ var testCases = []struct {
 	// 0=⌈/⌈/|B-A+.×B⌹A
 
 	{"⍝ Dates, Times and durations", "apl/numbers/time.go", small},
-	{"2018.12.23", "2018.12.23T00.00.00.000", small},       // Parse a time
-	{"2018.12.23+12s", "2018.12.23T00.00.12.000", small},   // Add a duration to a time
-	{"2018.12.24<2018.12.23", "0", small},                  // Times are comparable
-	{"⌊/3s 2s 10s 4s", "2s", small},                        // Durations are comparable
-	{"2018.12.23-1s", "2018.12.22T23.59.59.000", small},    // Substract a duration from a time
-	{"2017.03.01-2017.02.28", "24h0m0s", small},            // Substract two times returns a duration
-	{"2016.03.01-2016.02.28", "48h0m0s", small},            // Leap years are covered
-	{"3m-62s", "1m58s", small},                             // Substract two durations
-	{"-3s", "¯3s", small},                                  // Negate a duration
-	{"×¯3h 0s 2m 2015.01.02", "¯1 0 1 1", small},           // Signum
-	{"(|¯1s)+|1s", "2s", small},                            // Absolute value of a duration
-	{"3×1h", "3h0m0s", small},                              // Uptype numbers to seconds and multiply durations
-	{"1m × ⍳5", "1m0s 2m0s 3m0s 4m0s 5m0s", small},         // Generate a duration vector
-	{"⍴⍪2018.12.23 + 1h×(¯1+⍳24)", "24 1", small},          // Table with all starting hours in a day
-	{"4m×42.195", "2h48m46.8s", small},                     //
-	{"⌈2018.12.23+3.5s", "2018.12.23T00.00.04.000", small}, // Ceil rounds to seconds
-	{"⌊3h÷42.195", "4m15s", small},                         // Floor truncates seconds.
+	{"2018.12.23", "2018.12.23T00.00.00.000", small},                            // Parse a time
+	{"2018.12.23+12s", "2018.12.23T00.00.12.000", small},                        // Add a duration to a time
+	{"2018.12.24<2018.12.23", "0", small},                                       // Times are comparable
+	{"⌊/3s 2s 10s 4s", "2s", small},                                             // Durations are comparable
+	{"2018.12.23-1s", "2018.12.22T23.59.59.000", small},                         // Substract a duration from a time
+	{"2017.03.01-2017.02.28", "24h0m0s", small},                                 // Substract two times returns a duration
+	{"2016.03.01-2016.02.28", "48h0m0s", small},                                 // Leap years are covered
+	{"3m-62s", "1m58s", small},                                                  // Substract two durations
+	{"-3s", "¯3s", small},                                                       // Negate a duration
+	{"×¯3h 0s 2m 2015.01.02", "¯1 0 1 1", small},                                // Signum
+	{"(|¯1s)+|1s", "2s", small},                                                 // Absolute value of a duration
+	{"3×1h", "3h0m0s", small},                                                   // Uptype numbers to seconds and multiply durations
+	{"1m × ⍳5", "1m0s 2m0s 3m0s 4m0s 5m0s", small},                              // Generate a duration vector
+	{"⍴⍪2018.12.23 + 1h×(¯1+⍳24)", "24 1", small},                               // Table with all starting hours in a day
+	{"4m×42.195", "2h48m46.8s", small},                                          //
+	{"⌈2018.12.23+3.5s", "2018.12.23T00.00.04.000", small},                      // Ceil rounds to seconds
+	{"⌊3h÷42.195", "4m15s", small},                                              // Floor truncates seconds.
+	{`"2006-01-02 15:04:05"⍕2019.02.17T15.39.23`, "2019-02-17 15:39:23", small}, // custom date format
+	{`"W"⍕2019.02.27T15.39.23`, "2019w09", small},                               // format calendar week
+	{`"Q"⍕2019.02.27T15.39.23`, "2019Q1", small},                                // format quarter
 
 	{"⍝ Round times and durations", "apl/numbers/time.go", small},
 	{"`Y ⌊2019.02.27T13.39.02", "2019.01.01T00.00.00.000", small},
