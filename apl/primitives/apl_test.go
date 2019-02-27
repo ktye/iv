@@ -21,8 +21,6 @@ var testCases = []struct {
 	in, exp string
 	flag    int
 }{
-	// {"T←⍉`a`b`c#(1 2 3;4 5 6;7 8 9;)⋄T,(+⌿÷≢)T", "a b c\n1 4 7\n2 5 8\n3 6 9\n2 5 8", 0}, // table with avg value.
-
 	{"⍝ Basic numbers and arithmetics", "", 0},
 	{"1", "1", 0},
 	{"1b", "1", 0},

@@ -474,11 +474,11 @@ func listSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 // It returns a flat index vector (0-based) with catenated row and col indexes.
 // The shape only counts row indexes.
 // A rowfunc can be used as a selection function.
-// It is called in an environment with variables with the names of the
-// keys predeclared (if they are strings, and valid variable names).
-// The left and right argument is the row index.
-// E.g. T[{(⍵>10)^Time>2015.11.22}]
-// Rows are selected, if the the function returns 1, otherwise it must return 0 or empty.
+// It is called in an environment with column variables predeclared with the names of the
+// keys (if they are strings, and valid variable names).
+// The left is the row index vector and right argument is the table itself.
+// E.g. T[{(⍺>10)^Time>2015.11.22}]
+// The function should returns a boolean selection vector of the size of number of columns.
 func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	T := R.(apl.Table)
 	spec := L.(apl.IdxSpec)
@@ -554,38 +554,34 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		if ok == false {
 			return idx, fmt.Errorf("table-select: first spec must be an index vector or a function: %T", spec[0])
 		}
-		ints := make([]int, 0, T.Rows)
-		columns := make([]apl.Array, len(cols))
-		for i, k := range cols {
-			columns[i] = T.Dict.At(a, k).(apl.Array)
-		}
+
 		vars := make(map[string]apl.Value)
-		for i := 0; i < T.Rows; i++ {
-			for k, key := range cols {
-				if s, ok := key.(apl.String); ok {
-					vars[string(s)] = columns[k].At(i)
-				}
-			}
-			v, err := a.EnvCall(f, apl.Int(a.Origin+i), apl.Int(a.Origin+i), vars)
-			if err != nil {
-				return idx, fmt.Errorf("table-select-func: %s", err)
-			}
-			if _, ok := v.(apl.EmptyArray); ok {
-				continue
-			}
-			num, ok := v.(apl.Number)
-			if ok == false {
-				return idx, fmt.Errorf("table-select-func: return value is not a number: %T", v)
-			}
-			n, ok := num.ToIndex()
-			if ok == false || n < 0 || n > 1 {
-				return idx, fmt.Errorf("table-select-func: return value is invalid: %T %s", v, num.String(a))
-			} else if ok && n == 1 {
-				ints = append(ints, i+a.Origin)
+		for _, key := range cols {
+			if s, ok := key.(apl.String); ok {
+				vars[string(s)] = T.Dict.At(a, key)
 			}
 		}
-		ia.Ints = ints
-		ia.Dims = []int{len(ints)}
+		iv, err := interval(a, nil, apl.Int(T.Rows))
+		if err != nil {
+			return idx, fmt.Errorf("table-select-func: %s", err)
+		}
+		v, err := a.EnvCall(f, iv, T, vars)
+		if err != nil {
+			return idx, fmt.Errorf("table-select-func: %s", err)
+		}
+
+		to := ToIndexArray(nil)
+		ints, ok := to.To(a, v)
+		if ok == false {
+			return idx, fmt.Errorf("table-select-func: does not return a boolean vector: %T", v)
+		}
+		if v, err := where(a, nil, ints); err != nil {
+			return idx, fmt.Errorf("table-select-func: %s", err)
+		} else {
+			ar := v.(apl.IntArray)
+			ia.Ints = ar.Ints
+			ia.Dims = []int{len(ia.Ints)}
+		}
 	} else {
 		ia = iav.(apl.IntArray)
 	}
