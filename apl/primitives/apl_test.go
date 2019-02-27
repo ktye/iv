@@ -954,6 +954,7 @@ var testCases = []struct {
 	{"T←⍉`a`b`c#(1 2 3;4.1 5.2 6.3;7 8 9;)⋄T[]", "1 4.1 7\n2 5.2 8\n3 6.3 9", small}, // empty index converts to array
 	{"T←⍉`a`b#(1 2 3;3 4 5;)⋄T[{⍺>2}]", "a b\n3 5", small},                           // functional row index
 	{"T←⍉`A`B#(1 2 3;3 4 5;)⋄T[{6=A+B};`B]", "B\n4", small},                          // functional row index with column variable
+	{"T←⍉`A`B`C`D#(1.1 1.2 1.3;2.1 2.2 2.3; 3.1 3.2 3.3;1 2 1;)⋄T[;`A;`min`max #(⌊/;⌈/;)]", "min max\n1.1 1.3", small},
 
 	{"⍝ Table updates", "apl/operators/assign.go", 0},
 	{"T←⍉`a`b#(⍳3;4-⍳3;) ⋄ T", "a b\n1 3\n2 2\n3 1", small},

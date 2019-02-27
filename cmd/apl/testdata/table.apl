@@ -51,20 +51,16 @@ T[;;+/]
 T[;`A`C;+/]
 
 "named aggregations:"
-F←`min`max #(⌊/;⌈/;)
-T[;`A;F]
+T[;`A;`min`max #(⌊/;⌈/;)]
 
 "non-aggregating functions:"
-F←`min`max #(⌊\;⌈\;)
-T[;`A;F]
+T[;`A;`min`max #(⌊\;⌈\;)]
 
 "individual functions per column:"
-F←`minA`maxC #(⌊/;⌈/;)
-T[;`A`C;F]
+T[;`A`C;`minA`maxC #(⌊/;⌈/;)]
 
 "group by D:"
 T[;`A`C`D;+/;`D]
 
 "grouping function:"
-F←"D is even"#⊃({0=2|D};)
-T[;`D`A`C;+/;F]
+T[;`D`A`C;+/;"D is even"#⊃({0=2|D};)]

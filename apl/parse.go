@@ -281,7 +281,7 @@ rev:
 
 // parseList parses a list expression, that always evaluates as a noun.
 func (p *parser) parseList() (item, error) {
-	l := p.splitTokens(scan.Semicolon, scan.LeftParen, scan.RightParen)
+	l := p.splitTokens(scan.Semicolon, []scan.Type{scan.LeftParen}, []scan.Type{scan.RightParen})
 	if len(l) > 0 {
 		// Remove empty tail caused by trailing semicolon
 		l = l[:len(l)-1]
@@ -301,7 +301,10 @@ func (p *parser) parseList() (item, error) {
 // ParseBrackets parses the expression within brackets [...].
 // This may be an index or axis specification.
 func (p *parser) parseBrackets() (item, error) {
-	l := p.splitTokens(scan.Semicolon, scan.LeftBrack, scan.RightBrack)
+	//l := p.splitTokens(scan.Semicolon, scan.LeftBrack, scan.RightBrack)
+	// Allow lists in index specifications. If nested brackets are needed, splitTokens mut be modified
+	// to use multiple nesting tokens.
+	l := p.splitTokens(scan.Semicolon, []scan.Type{scan.LeftParen, scan.LeftBrack}, []scan.Type{scan.RightParen, scan.RightBrack})
 	spec := make(idxSpec, len(l))
 	for i := range l {
 		q := &parser{a: p.a, tokens: l[i]}
@@ -325,7 +328,7 @@ func (p *parser) parseBrackets() (item, error) {
 // Lambdas are calles dfns in dyalog: DyaProg p. 131
 func (p *parser) parseLambda() (item, error) {
 	// Entries of the guardList are separated by diamonds.
-	l := p.splitTokens(scan.Diamond, scan.LeftBrace, scan.RightBrace)
+	l := p.splitTokens(scan.Diamond, []scan.Type{scan.LeftBrace}, []scan.Type{scan.RightBrace})
 	body := make(guardList, len(l))
 	for i := range l {
 		q := &parser{a: p.a, tokens: l[i]}
@@ -354,7 +357,7 @@ func (p *parser) parseLambda() (item, error) {
 //	cond:expr
 //	cond:expr:expr2 (short ternary form, only for the last in the list).
 func (p *parser) guardExpr() (*guardExpr, expr, error) {
-	l := p.splitTokens(scan.Colon, scan.LeftBrace, scan.RightBrace)
+	l := p.splitTokens(scan.Colon, []scan.Type{scan.LeftBrace}, []scan.Type{scan.RightBrace})
 	if len(l) > 3 {
 		return nil, nil, fmt.Errorf("lambda has too many colons")
 	}
@@ -838,14 +841,22 @@ func (p *parser) setRight(r int, i item) {
 
 // Split Tokens splits the parses's tokens at the given separator.
 // It ignores sub-expressions nested by inc and dec tokens.
-func (p *parser) splitTokens(at, inc, dec scan.Type) [][]scan.Token {
+func (p *parser) splitTokens(at scan.Type, inc, dec []scan.Type) [][]scan.Token {
+	any := func(t scan.Type, l []scan.Type) bool {
+		for i := range l {
+			if t == l[i] {
+				return true
+			}
+		}
+		return false
+	}
 	var l [][]scan.Token
 	lv := 0
 	n := 0
 	for i, t := range p.tokens {
-		if t.T == inc {
+		if any(t.T, inc) {
 			lv++
-		} else if t.T == dec {
+		} else if any(t.T, dec) {
 			lv--
 		}
 		if lv == 0 && t.T == at {
