@@ -39,6 +39,7 @@ type Image struct {
 func (i Image) String(a *Apl) string {
 	return i.toIntArray().String(a)
 }
+func (i Image) Copy() Value { return i } // Image is copied by reference.
 
 func (i Image) At(k int) Value {
 	ic, idx := NewIdxConverter(i.Dims)

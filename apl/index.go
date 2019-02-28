@@ -23,6 +23,13 @@ func (x IdxSpec) String(a *Apl) string {
 	}
 	return "[" + strings.Join(v, ";") + "]"
 }
+func (x IdxSpec) Copy() Value {
+	r := make(IdxSpec, len(x))
+	for i := range r {
+		r[i] = x[i].Copy()
+	}
+	return r
+}
 
 func (x IdxSpec) Eval(a *Apl) (Value, error) {
 	return x, nil
@@ -68,4 +75,14 @@ type Axis struct {
 
 func (ax Axis) String(a *Apl) string {
 	return fmt.Sprintf("[%s]%s", ax.A.String(a), ax.R.String(a))
+}
+func (ax Axis) Copy() Value {
+	r := Axis{}
+	if ax.R != nil {
+		r.R = ax.R.Copy()
+	}
+	if ax.A != nil {
+		r.A = ax.A.Copy()
+	}
+	return r
 }

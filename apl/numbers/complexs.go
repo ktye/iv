@@ -16,6 +16,12 @@ func (f ComplexArray) String(a *apl.Apl) string {
 	return apl.ArrayString(a, f)
 }
 
+func (f ComplexArray) Copy() apl.Value {
+	r := ComplexArray{Dims: apl.CopyShape(f), Cmplx: make([]complex128, len(f.Cmplx))}
+	copy(r.Cmplx, f.Cmplx)
+	return f
+}
+
 func (f ComplexArray) At(i int) apl.Value {
 	return Complex(f.Cmplx[i])
 }

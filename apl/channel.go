@@ -33,6 +33,7 @@ func NewChannel() Channel {
 func (c Channel) String(a *Apl) string {
 	return "apl.Channel"
 }
+func (c Channel) Copy() Value { return c }
 
 // Close closes the write channel and drains the read channel.
 func (c Channel) Close() {

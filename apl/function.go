@@ -114,6 +114,7 @@ func (p Primitive) Eval(a *Apl) (Value, error) {
 func (p Primitive) String(a *Apl) string {
 	return string(p)
 }
+func (p Primitive) Copy() Value { return p }
 
 // Call looks up the handlers within registered primitives.
 // It calls the handle with the left and right argument.
@@ -201,3 +202,4 @@ func (f ToFunction) Call(a *Apl, L, R Value) (Value, error) {
 func (f ToFunction) String(a *Apl) string {
 	return "anonymous function"
 }
+func (f ToFunction) Copy() Value { return f }

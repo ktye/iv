@@ -22,6 +22,13 @@ func (l List) String(a *Apl) string {
 	buf.WriteRune(')')
 	return buf.String()
 }
+func (l List) Copy() Value {
+	r := make(List, len(l))
+	for i := range l {
+		r[i] = l[i].Copy()
+	}
+	return r
+}
 
 func (l List) At(i int) Value {
 	return l[i]

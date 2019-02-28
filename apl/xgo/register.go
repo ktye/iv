@@ -62,6 +62,7 @@ type source struct{}
 func (_ source) String(a *apl.Apl) string {
 	return "source"
 }
+func (s source) Copy() apl.Value { return s }
 
 func (s source) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	num, ok := R.(apl.Number)
@@ -94,6 +95,7 @@ type echo struct{}
 func (_ echo) String(a *apl.Apl) string {
 	return "echo"
 }
+func (e echo) Copy() apl.Value { return e }
 
 func (_ echo) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	p := ""

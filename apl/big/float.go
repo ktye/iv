@@ -15,6 +15,12 @@ type Float struct {
 	*big.Float
 }
 
+func (f Float) Copy() apl.Value {
+	var re *big.Float
+	re = re.Copy(f.Float)
+	return Float{re}
+}
+
 func (f Float) String(a *apl.Apl) string {
 	format, minus := getformat(a, f)
 	if format == "" {

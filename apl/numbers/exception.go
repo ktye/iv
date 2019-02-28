@@ -18,6 +18,7 @@ type exception string
 func (e exception) String(a *apl.Apl) string {
 	return string(e)
 }
+func (e exception) Copy() apl.Value { return e }
 
 func isException(n apl.Number) (exception, bool) {
 	if f, ok := n.(Float); ok {

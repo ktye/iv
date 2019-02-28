@@ -21,6 +21,7 @@ func (t train) String(a *Apl) string {
 	}
 	return "(" + strings.Join(v, ", ") + ")"
 }
+func (t train) Copy() Value { return t }
 
 func (t train) Call(a *Apl, L, R Value) (Value, error) {
 	if len(t) < 2 {

@@ -18,6 +18,7 @@ func (b Bool) String(a *Apl) string {
 	}
 	return "0"
 }
+func (b Bool) Copy() Value { return b }
 
 func (i Bool) Less(v Value) (Bool, bool) {
 	j, ok := v.(Bool)
@@ -42,6 +43,11 @@ type BoolArray struct {
 
 func (b BoolArray) String(a *Apl) string {
 	return ArrayString(a, b)
+}
+
+func (b BoolArray) Copy() Value {
+	r := BoolArray{Dims: CopyShape(b), Bools: make([]bool, len(b.Bools))}
+	return r
 }
 
 func (b BoolArray) At(i int) Value {

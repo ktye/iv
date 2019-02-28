@@ -15,6 +15,7 @@ type assignment struct {
 func (as assignment) String(a *Apl) string {
 	return "specification " + as.e.String(a)
 }
+func (as assignment) Copy() Value { return as } // This does not do a deep copy.
 
 func (as assignment) Eval(a *Apl) (Value, error) {
 	return as, nil
@@ -26,7 +27,24 @@ type Assignment struct {
 	Identifier  string
 	Identifiers []string // Multiple identifiers for vector assignment
 	Indexes     Value    // Should be convertible to an Index vector
-	Modifier    Value
+	Modifier    Function
+}
+
+func (as *Assignment) Copy() Value {
+	r := Assignment{
+		Identifier: as.Identifier,
+	}
+	if as.Identifiers != nil {
+		r.Identifiers = make([]string, len(as.Identifiers))
+		copy(r.Identifiers, as.Identifiers)
+	}
+	if as.Indexes != nil {
+		r.Indexes = as.Indexes.Copy()
+	}
+	if as.Modifier != nil {
+		r.Modifier = as.Modifier
+	}
+	return &r
 }
 
 func (as *Assignment) String(a *Apl) string {
@@ -47,7 +65,7 @@ func (as *Assignment) String(a *Apl) string {
 // EvalAssign evalutes the left part of an assignment and
 // returns it as an Assignment value.
 // It handles indexed, selective and modified assignment.
-func evalAssign(a *Apl, e expr, modifier Value) (Value, error) {
+func evalAssign(a *Apl, e expr, modifier Function) (Value, error) {
 	as := Assignment{
 		Modifier: modifier,
 	}

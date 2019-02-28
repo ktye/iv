@@ -10,9 +10,9 @@ import (
 // See README.md
 func Register(a *apl.Apl, name string) {
 	pkg := map[string]apl.Value{
-		"dial":  dial{},
-		"call":  call{},
-		"close": closeconn{},
+		"dial":  apl.ToFunction(dial),
+		"call":  apl.ToFunction(call),
+		"close": apl.ToFunction(closeconn),
 	}
 	if name == "" {
 		name = "rpc"
@@ -20,13 +20,7 @@ func Register(a *apl.Apl, name string) {
 	a.RegisterPackage(name, pkg)
 }
 
-type dial struct{}
-
-func (_ dial) String(a *apl.Apl) string {
-	return "rpc dial"
-}
-
-func (_ dial) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+func dial(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if L != nil {
 		return nil, fmt.Errorf("rpc dial must be called monadically")
 	}
@@ -37,13 +31,7 @@ func (_ dial) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 }
 
-type call struct{}
-
-func (_ call) String(a *apl.Apl) string {
-	return "rpc call"
-}
-
-func (_ call) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+func call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if L != nil {
 		return nil, fmt.Errorf("rpc call must be called monadically")
 	}
@@ -76,13 +64,7 @@ func (_ call) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return c.Call(string(f), Larg, Rarg)
 }
 
-type closeconn struct{}
-
-func (_ closeconn) String(a *apl.Apl) string {
-	return "rpc close"
-}
-
-func (_ closeconn) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+func closeconn(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	c, ok := R.(Conn)
 	if ok == false {
 		return nil, fmt.Errorf("right argument must be a connection")

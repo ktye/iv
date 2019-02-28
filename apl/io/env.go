@@ -31,6 +31,7 @@ func (e Env) String(a *apl.Apl) string {
 	tw.Flush()
 	return b.String()
 }
+func (e Env) Copy() apl.Value { return e }
 
 func (e Env) Keys() []apl.Value {
 	v := os.Environ()

@@ -23,6 +23,10 @@ func (s String) String(a *Apl) string {
 	return fmt.Sprintf("%q", string(s))
 }
 
+func (s String) Copy() Value {
+	return s
+}
+
 func (s String) Eval(a *Apl) (Value, error) {
 	return s, nil
 }
@@ -56,6 +60,12 @@ type StringArray struct {
 
 func (s StringArray) String(a *Apl) string {
 	return ArrayString(a, s)
+}
+
+func (s StringArray) Copy() Value {
+	r := StringArray{Dims: CopyShape(s), Strings: make([]string, len(s.Strings))}
+	copy(r.Strings, s.Strings)
+	return r
 }
 
 func (s StringArray) At(i int) Value {

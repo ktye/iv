@@ -24,6 +24,11 @@ func (i Int) String(a *apl.Apl) string {
 	}
 	return s
 }
+func (i Int) Copy() apl.Value {
+	r := big.NewInt(0)
+	r = r.Set(i.Int)
+	return Int{r}
+}
 
 func ParseInt(s string) (apl.Number, bool) {
 	s = strings.Replace(s, "¯", "-", -1)

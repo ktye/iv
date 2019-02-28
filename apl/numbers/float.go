@@ -35,6 +35,7 @@ func (n Float) String(a *apl.Apl) string {
 	}
 	return s
 }
+func (f Float) Copy() apl.Value { return f }
 
 // ParseFloat parses a Float. It replaces ¯ with -, then uses ParseFloat.
 // A trailing . is stripped, so that "2." is parsed as a float.

@@ -62,6 +62,7 @@ func (c Complex) String(a *apl.Apl) string {
 	}
 	return s
 }
+func (z Complex) Copy() apl.Value { return z }
 
 // ParseComplex parses a Complex from a string.
 // The number may be given as MAGNITUDEaANGLE with the angle in degree,

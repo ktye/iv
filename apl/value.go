@@ -13,19 +13,10 @@ import "io"
 // The *Apl argument may be used for formatting.
 // A type should return a useful string if it is nil.
 //
-// If the Value implementation has the method
-//	Call(*Apl, Value, Value) (Value, error)
-// then it's also a Function.
-//
-// If it implements Array, it is an array.
+// A Value may implement further interfaces such as Array, Uniform or Function.
 type Value interface {
 	String(*Apl) string
-
-	// TODO: should there be a Copy or Clone interface?
-	// All primitives would have to use it if present.
-
-	// TODO: should we require a serialization interface?
-	// or serialize optionally if a Value implements an Encoder?
+	Copy() Value
 }
 
 // VarReader is implemented by Values that are able to parse from a Reader.

@@ -42,6 +42,10 @@ func (i Int) String(a *Apl) string {
 	return s
 }
 
+func (i Int) Copy() Value {
+	return i
+}
+
 func (i Int) Export() reflect.Value {
 	return reflect.ValueOf(int(i))
 }

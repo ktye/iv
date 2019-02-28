@@ -28,6 +28,7 @@ func (c Conn) String(a *apl.Apl) string {
 	}
 	return fmt.Sprintf("rpc→conn to %s", remote.String())
 }
+func (c Conn) Copy() apl.Value { return c }
 
 func (c Conn) Close() (apl.Value, error) {
 	if c.Conn == nil {

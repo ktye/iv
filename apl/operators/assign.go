@@ -46,7 +46,7 @@ func assign(a *apl.Apl, f, g apl.Value) apl.Function {
 
 // AssignVector does a vector assignment from R to the given names.
 // A modifier function may be applied.
-func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.Value, error) {
+func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Function) (apl.Value, error) {
 	var ar apl.Array
 	if v, ok := R.(apl.Array); ok {
 		ar = v
@@ -89,23 +89,14 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Value) (apl.V
 // AssignScalar assigns to a named scalar variable.
 // If indexes is non-nil, it must be an IndexArray for indexed assignment.
 // Mod may be a dyadic modifying function.
-func assignScalar(a *apl.Apl, name string, indexes apl.Value, mod apl.Value, R apl.Value) error {
-	if mod == nil && indexes == nil {
+func assignScalar(a *apl.Apl, name string, indexes apl.Value, f apl.Function, R apl.Value) error {
+	if f == nil && indexes == nil {
 		return a.Assign(name, R)
 	}
 
 	w, env := a.LookupEnv(name)
 	if w == nil {
 		return fmt.Errorf("assign %s: modified/indexed: variable does not exist", name)
-	}
-
-	var f apl.Function
-	if mod != nil {
-		if fp, ok := mod.(apl.Function); ok {
-			f = fp
-		} else {
-			return fmt.Errorf("assign %s: modifier is not a function: %T", name, mod)
-		}
 	}
 
 	v, err := assignValue(a, w, indexes, f, R)

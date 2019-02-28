@@ -24,6 +24,7 @@ func (λ *lambda) String(a *Apl) string {
 	}
 	return fmt.Sprintf("{%s}", λ.body.String(a))
 }
+func (λ *lambda) Copy() Value { return λ }
 
 func (λ *lambda) Eval(a *Apl) (Value, error) {
 	return λ, nil
@@ -174,6 +175,7 @@ type self struct{}
 func (s self) String(a *Apl) string {
 	return "∇"
 }
+func (s self) Copy() Value { return s }
 
 func (s self) Eval(a *Apl) (Value, error) {
 	return s, nil
@@ -202,3 +204,4 @@ type tail struct {
 func (t tail) String(a *Apl) string {
 	return fmt.Sprintf("tail{%s %s}", t.left.String(a), t.right.String(a))
 }
+func (t tail) Copy() Value { return t }

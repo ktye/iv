@@ -13,3 +13,4 @@ func (e Error) String(a *Apl) string {
 	}
 	return e.E.Error()
 }
+func (e Error) Copy() Value { return e }

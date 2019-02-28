@@ -17,6 +17,11 @@ type Rat struct {
 	*big.Rat
 }
 
+func (r Rat) Copy() apl.Value {
+	t := big.NewRat(1, 1)
+	t = t.Set(r.Rat)
+	return Rat{t}
+}
 func (r Rat) String(a *apl.Apl) string {
 	format, minus := getformat(a, r)
 	if format == "" {

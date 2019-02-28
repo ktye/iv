@@ -11,7 +11,7 @@ import (
 
 func Register(a *apl.Apl, name string) {
 	pkg := map[string]apl.Value{
-		"set": settower{},
+		"set": apl.ToFunction(settower),
 	}
 	if name == "" {
 		name = "big"
@@ -86,11 +86,7 @@ func SetPreciseTower(a *apl.Apl, prec uint) {
 	}
 }
 
-type settower struct{}
-
-func (s settower) String(a *apl.Apl) string { return "set" }
-
-func (_ settower) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
+func settower(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	n, ok := R.(apl.Number)
 	if ok == false {
 		return nil, fmt.Errorf("set needs a number (0, 1, 256...)")

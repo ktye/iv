@@ -17,6 +17,11 @@ func New(t reflect.Type) create {
 
 type Value reflect.Value
 
+// xgo values are copied by reference.
+func (v Value) Copy() apl.Value {
+	return v
+}
+
 func (v Value) String(a *apl.Apl) string {
 	keys := v.Keys()
 	if keys == nil {
@@ -131,6 +136,9 @@ type create struct {
 
 func (t create) String(a *apl.Apl) string {
 	return fmt.Sprintf("new %v", t.Type)
+}
+func (t create) Copy() apl.Value {
+	return t
 }
 
 func (t create) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {

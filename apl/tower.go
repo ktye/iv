@@ -186,7 +186,7 @@ type Numeric struct {
 // Number is the interface that a numeric type must implement.
 // It's a scalar numeric value that can be part of the current tower.
 type Number interface {
-	String(*Apl) string
+	Value
 	ToIndex() (int, bool)
 }
 

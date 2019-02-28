@@ -68,6 +68,11 @@ type PlotArray struct {
 	Dims []int
 }
 
+func (p PlotArray) Copy() apl.Value {
+	r := PlotArray{Dims: apl.CopyShape(p), p: make([]Plot, len(p.p))}
+	copy(r.p, p.p)
+	return r
+}
 func (p PlotArray) String(a *apl.Apl) string {
 	if gui {
 		return fmt.Sprintf("p.PlotArray %v", p.Dims)

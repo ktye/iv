@@ -60,6 +60,7 @@ func (d *derived) String(a *Apl) string {
 	}
 	return fmt.Sprintf("(%s %s%s)", left, d.op, right)
 }
+func (d *derived) Copy() Value { return d }
 
 // Call tries to call a derived function.
 // l and r are the left and right values to the derived function.
@@ -97,7 +98,15 @@ func (d *derived) Call(a *Apl, l, r Value) (Value, error) {
 			if ok == false {
 				return nil, fmt.Errorf("modified assignment: expected assignment target expr on the left: %T", l)
 			}
-			lo, err = evalAssign(a, as, d.lo)
+			var f Function
+			if d.lo != nil {
+				if pf, ok := d.lo.(Function); ok {
+					f = pf
+				} else {
+					return nil, fmt.Errorf("modifier is not a function: %T", d.lo)
+				}
+			}
+			lo, err = evalAssign(a, as, f)
 			if err != nil {
 				return nil, err
 			}

@@ -15,6 +15,7 @@ type Function struct {
 func (f Function) String(a *apl.Apl) string {
 	return f.Name
 }
+func (f Function) Copy() apl.Value { return f }
 
 // Call a go function.
 // If it requires 1 argument, that is taken from the right value.

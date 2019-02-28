@@ -88,7 +88,7 @@ func (ar array) String(a *Apl) string {
 // Examples are GeneralArray, BitArray.
 // Arrays can be implemented externally.
 type Array interface {
-	String(*Apl) string
+	Value
 	At(int) Value
 	Shape() []int
 	Size() int
@@ -224,6 +224,14 @@ func (v MixedArray) String(a *Apl) string {
 	return ArrayString(a, v)
 }
 
+func (v MixedArray) Copy() Value {
+	r := MixedArray{Dims: CopyShape(v), Values: make([]Value, len(v.Values))}
+	for i := range v.Values {
+		r.Values[i] = v.Values[i].Copy()
+	}
+	return r
+}
+
 func (v MixedArray) At(i int) Value {
 	return v.Values[i]
 }
@@ -261,6 +269,7 @@ func (v MixedArray) Reshape(shape []int) Value {
 type EmptyArray struct{}
 
 func (e EmptyArray) String(a *Apl) string       { return "" }
+func (e EmptyArray) Copy() Value                { return EmptyArray{} }
 func (e EmptyArray) Eval(a *Apl) (Value, error) { return e, nil }
 func (e EmptyArray) At(i int) Value             { return nil }
 func (e EmptyArray) Shape() []int               { return nil }
@@ -285,6 +294,12 @@ type IntArray struct {
 
 func (ar IntArray) String(a *Apl) string {
 	return ArrayString(a, ar)
+}
+
+func (ar IntArray) Copy() Value {
+	r := IntArray{Dims: CopyShape(ar), Ints: make([]int, len(ar.Ints))}
+	copy(r.Ints, ar.Ints)
+	return r
 }
 
 func (ar IntArray) At(i int) Value {

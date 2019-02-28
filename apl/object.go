@@ -29,7 +29,7 @@ import (
 //	f←Object[`f] ⋄ f R
 //      Object[`f]⍨R
 type Object interface {
-	String(*Apl) string
+	Value
 	Keys() []Value
 	At(*Apl, Value) Value
 	Set(*Apl, Value, Value) error
@@ -91,6 +91,23 @@ func (d *Dict) String(a *Apl) string {
 		return s[:len(s)-1]
 	}
 	return s
+}
+
+func (d *Dict) Copy() Value {
+	r := Dict{}
+	if d.K != nil {
+		r.K = make([]Value, len(d.K))
+		for i := range r.K {
+			r.K[i] = d.K[i].Copy()
+		}
+	}
+	if d.M != nil {
+		d.M = make(map[Value]Value)
+		for k, v := range d.M {
+			r.M[k.Copy()] = v.Copy()
+		}
+	}
+	return &r
 }
 
 func (d *Dict) jsonString(a *Apl) string {

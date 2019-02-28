@@ -17,6 +17,10 @@ func (id Identifier) String(a *Apl) string {
 	return string(id)
 }
 
+func (id Identifier) Copy() Value {
+	return id
+}
+
 func (id Identifier) Eval(a *Apl) (Value, error) {
 	return id, nil
 }
@@ -182,6 +186,7 @@ type fnVar string
 func (f fnVar) String(a *Apl) string {
 	return string(f)
 }
+func (f fnVar) Copy() Value { return f }
 
 func (f fnVar) Eval(a *Apl) (Value, error) {
 	return f, nil

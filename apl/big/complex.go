@@ -13,6 +13,13 @@ type Complex struct {
 	re, im *big.Float
 }
 
+func (c Complex) Copy() apl.Value {
+	var re, im *big.Float
+	re = re.Copy(c.re)
+	im = im.Copy(c.im)
+	return Complex{re, im}
+}
+
 // String formats a complex as a string. The polar form is not supported.
 func (c Complex) String(a *apl.Apl) string {
 	// TODO parse MAGaDEG

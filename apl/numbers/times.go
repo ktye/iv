@@ -17,6 +17,12 @@ func (t TimeArray) String(a *apl.Apl) string {
 	return apl.ArrayString(a, t)
 }
 
+func (t TimeArray) Copy() apl.Value {
+	r := TimeArray{Dims: apl.CopyShape(t), Times: make([]time.Time, len(t.Times))}
+	copy(r.Times, t.Times)
+	return r
+}
+
 func (t TimeArray) At(i int) apl.Value {
 	return Time(t.Times[i])
 }

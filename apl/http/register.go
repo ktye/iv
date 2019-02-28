@@ -9,7 +9,7 @@ import (
 
 func Register(a *apl.Apl, name string) {
 	pkg := map[string]apl.Value{
-		"get": get{},
+		"get": apl.ToFunction(get),
 	}
 	if name == "" {
 		name = "http"
@@ -17,14 +17,8 @@ func Register(a *apl.Apl, name string) {
 	a.RegisterPackage(name, pkg)
 }
 
-type get struct{}
-
-func (_ get) String(a *apl.Apl) string {
-	return "http get"
-}
-
 // http→get returns a channel to read strings from a http connection.
-func (_ get) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+func get(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	addr, ok := R.(apl.String)
 	if ok == false {
 		return nil, fmt.Errorf("http get: right argument must be a string")

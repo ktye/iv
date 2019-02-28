@@ -69,6 +69,7 @@ func (t Time) String(a *apl.Apl) string {
 
 	return time.Time(t).Format(format)
 }
+func (t Time) Copy() apl.Value { return t }
 
 func (t Time) ToIndex() (int, bool) {
 	return 0, false
