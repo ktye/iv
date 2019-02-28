@@ -40,6 +40,13 @@ func (t Table) String(a *Apl) string {
 	}
 	return string(b.Bytes())
 }
+func (t Table) Copy() Value {
+	r := Table{Rows: t.Rows}
+	if t.Dict != nil {
+		r.Dict = t.Dict.Copy().(*Dict)
+	}
+	return r
+}
 
 // Csv writes a table in csv format.
 // If L is nil, it uses ⍕V on each value.
