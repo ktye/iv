@@ -91,21 +91,21 @@ func init() {
 			Domain: Dyadic(Split(nil, IsChannel(nil))),
 			fn:     channel2(e.symbol, e.dyadic),
 		})
-		register(primitive{
-			symbol: e.symbol,
-			doc:    "round date",
-			Domain: Dyadic(
-				Split(
-					IsString(nil),
-					Or(
-						IsType(reflect.TypeOf(numbers.Time(time.Time{})), nil),
-						IsType(reflect.TypeOf(numbers.TimeArray{}), nil),
-					),
+	}
+	register(primitive{
+		symbol: "⌊",
+		doc:    "round date",
+		Domain: Dyadic(
+			Split(
+				IsString(nil),
+				Or(
+					IsType(reflect.TypeOf(numbers.Time(time.Time{})), nil),
+					IsType(reflect.TypeOf(numbers.TimeArray{}), nil),
 				),
 			),
-			fn: roundTime,
-		})
-	}
+		),
+		fn: roundTime,
+	})
 }
 
 // arith1 tries to apply fn to the right argument.
