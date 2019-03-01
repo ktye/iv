@@ -50,7 +50,7 @@ func (i indexSpec) To(a *apl.Apl, v apl.Value) (apl.Value, bool) {
 	}
 	return v, false
 }
-func (i indexSpec) String(a *apl.Apl) string {
+func (i indexSpec) String(f apl.Format) string {
 	return "[index specification]"
 }
 
@@ -129,13 +129,13 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		if idx, ok := keys[spec[0]]; ok == false {
 			if isd {
 				// Index-assignment into a non-existing key in a dict, creates a new key.
-				if err := d.Set(a, spec[0], apl.EmptyArray{}); err != nil {
+				if err := d.Set(spec[0], apl.EmptyArray{}); err != nil {
 					return apl.IntArray{}, err
 				} else {
 					return apl.IntArray{Dims: []int{1}, Ints: []int{len(keys) + a.Origin}}, nil
 				}
 			} else {
-				return apl.IntArray{}, fmt.Errorf("key does not exist: %s", spec[0].String(a))
+				return apl.IntArray{}, fmt.Errorf("key does not exist: %s", spec[0].String(apl.Format{}))
 			}
 		} else {
 			return apl.IntArray{Dims: []int{1}, Ints: []int{idx}}, nil
@@ -148,14 +148,14 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		k, ok := keys[key]
 		if ok == false {
 			if isd {
-				if err := d.Set(a, key, apl.EmptyArray{}); err != nil {
+				if err := d.Set(key, apl.EmptyArray{}); err != nil {
 					return apl.IntArray{}, err
 				} else {
 					k = len(keys) + a.Origin
 					keys[key] = k
 				}
 			} else {
-				return apl.IntArray{}, fmt.Errorf("key does not exist: %s", key.String(a))
+				return apl.IntArray{}, fmt.Errorf("key does not exist: %s", key.String(apl.Format{}))
 			}
 		}
 		ai.Ints[i] = k
@@ -168,7 +168,7 @@ func objSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 // to distinguish them from vector indexes (multiple keys at the same level).
 func objDepthSelection(a *apl.Apl, o apl.Object, spec apl.IdxSpec, ia apl.IntArray) (apl.IntArray, error) {
 	key := spec[0]
-	val := o.At(a, key)
+	val := o.At(key)
 	if val == nil {
 		return ia, fmt.Errorf("obj depth sel: key does not exist: %v", key)
 	}
@@ -325,7 +325,7 @@ func funcArrayIndex(a *apl.Apl, f apl.Function, A apl.Array) (apl.IntArray, erro
 		}
 		n, ok := num.ToIndex()
 		if ok == false || (i < 0 && i > 1) {
-			return res, fmt.Errorf("func-array-index: return value is not boolean: %T %s", v, v.String(a))
+			return res, fmt.Errorf("func-array-index: return value is not boolean: %T %s", v, v.String(apl.Format{}))
 		}
 		if n == 1 {
 			res.Ints = append(res.Ints, i)
@@ -348,7 +348,7 @@ func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// If the spec is a single value, return the value for the key.
 	sv, ok := spec[0].(apl.Array)
 	if ok == false {
-		v := obj.At(a, spec[0])
+		v := obj.At(spec[0])
 		if v == nil {
 			return nil, fmt.Errorf("key does not exist")
 		}
@@ -364,9 +364,9 @@ func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	m := make(map[apl.Value]apl.Value)
 	for i := 0; i < ls[0]; i++ {
 		key := sv.At(i)
-		v := obj.At(a, key)
+		v := obj.At(key)
 		if v == nil {
-			return nil, fmt.Errorf("key does not exist: %s", key.String(a))
+			return nil, fmt.Errorf("key does not exist: %s", key.String(a.Format))
 		}
 		k[i] = key // TODO: copy?
 		m[key] = v // TODO: copy?
@@ -376,9 +376,9 @@ func objIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 func objDepthIndex(a *apl.Apl, obj apl.Object, spec apl.IdxSpec) (apl.Value, error) {
 	key := spec[0]
-	v := obj.At(a, key)
+	v := obj.At(key)
 	if v == nil {
-		return nil, fmt.Errorf("key does not exist: %q", key.String(a))
+		return nil, fmt.Errorf("key does not exist: %q", key.String(apl.Format{}))
 	}
 	if len(spec) == 1 {
 		return v, nil
@@ -526,7 +526,7 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 			key := ar.At(i)
 			n, ok := colmap[key]
 			if ok == false {
-				return idx, fmt.Errorf("table-select: column does not exist: %s", key.String(a))
+				return idx, fmt.Errorf("table-select: column does not exist: %s", key.String(apl.Format{}))
 			}
 			colidx[i] = n
 		}
@@ -558,7 +558,7 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 		vars := make(map[string]apl.Value)
 		for _, key := range cols {
 			if s, ok := key.(apl.String); ok {
-				vars[string(s)] = T.Dict.At(a, key)
+				vars[string(s)] = T.Dict.At(key)
 			}
 		}
 		iv, err := interval(a, nil, apl.Int(T.Rows))
@@ -665,12 +665,12 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// Return a single value.
 	if conv && len(rows) == 1 && len(cols) == 1 {
-		return t.At(a, keys[cols[0]]).(apl.Array).At(rows[0]), nil // TODO copy
+		return t.At(keys[cols[0]]).(apl.Array).At(rows[0]), nil // TODO copy
 	}
 
 	// Return a single column as an array.
 	if conv && len(cols) == 1 {
-		return t.At(a, keys[cols[0]]), nil // TODO copy
+		return t.At(keys[cols[0]]), nil // TODO copy
 	}
 
 	res := apl.Table{Rows: len(rows)}
@@ -680,7 +680,7 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	for i, k := range cols {
 		key := keys[k] // TODO: copy
 		d.K[i] = key
-		srccol := t.At(a, key).(apl.Uniform)
+		srccol := t.At(key).(apl.Uniform)
 		dstcol := srccol.Make([]int{len(rows)})
 		col, ok := dstcol.(apl.ArraySetter)
 		if ok == false {

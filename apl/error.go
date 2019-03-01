@@ -7,7 +7,7 @@ type Error struct {
 	E error
 }
 
-func (e Error) String(a *Apl) string {
+func (e Error) String(f Format) string {
 	if e.E == nil {
 		return "<nil error>"
 	}

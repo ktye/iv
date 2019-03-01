@@ -12,7 +12,7 @@ type Function struct {
 	Fn   reflect.Value
 }
 
-func (f Function) String(a *apl.Apl) string {
+func (f Function) String(af apl.Format) string {
 	return f.Name
 }
 func (f Function) Copy() apl.Value { return f }
@@ -34,16 +34,16 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	var err error
 	if args == 0 {
 	} else if args == 1 {
-		in[0], err = export(a, R, t.In(0))
+		in[0], err = export(R, t.In(0))
 		if err != nil {
 			return nil, errarg(0, err)
 		}
 	} else if args == 2 && L != nil {
-		in[0], err = export(a, R, t.In(0))
+		in[0], err = export(R, t.In(0))
 		if err != nil {
 			return nil, errarg(0, err)
 		}
-		in[1], err = export(a, L, t.In(1))
+		in[1], err = export(L, t.In(1))
 		if err != nil {
 			return nil, errarg(1, err)
 		}
@@ -60,7 +60,7 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return nil, fmt.Errorf("function %s requires %d arguments, R has size %d", f.Name, args, n)
 		} else {
 			for i := 0; i < args; i++ {
-				in[i], err = export(a, ar.At(i), t.In(i))
+				in[i], err = export(ar.At(i), t.In(i))
 				if err != nil {
 					return nil, errarg(i, err)
 				}
@@ -83,11 +83,11 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if len(out) == 0 {
 		return apl.EmptyArray{}, nil
 	} else if len(out) == 1 {
-		return Convert(a, out[0])
+		return Convert(out[0])
 	} else {
 		res := make(apl.List, len(out))
 		for i := range out {
-			if v, err := Convert(a, out[i]); err != nil {
+			if v, err := Convert(out[i]); err != nil {
 				return nil, err
 			} else {
 				res[i] = v

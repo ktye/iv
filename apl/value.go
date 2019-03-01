@@ -10,12 +10,9 @@ import "io"
 // Mosty types have no input respresentation at all.
 // They are the result of a computation.
 //
-// The *Apl argument may be used for formatting.
-// A type should return a useful string if it is nil.
-//
 // A Value may implement further interfaces such as Array, Uniform or Function.
 type Value interface {
-	String(*Apl) string
+	String(Format) string
 	Copy() Value
 }
 

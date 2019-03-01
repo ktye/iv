@@ -40,13 +40,13 @@ func (r rw0) Rewrite(t []scan.Token) []scan.Token {
 func printvar(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	s, ok := R.(apl.String)
 	if !ok {
-		return apl.String(R.String(a)), nil
+		return apl.String(R.String(a.Format)), nil
 	}
 	v := a.Lookup(string(s))
 	if v == nil {
 		return s, nil
 	}
-	return apl.String(v.String(a)), nil
+	return apl.String(v.String(a.Format)), nil
 }
 
 func printCmd(t []scan.Token) []scan.Token {

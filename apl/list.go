@@ -9,14 +9,14 @@ import (
 // It also acts as a vector (a rank 1 array) but cannot be reshaped.
 type List []Value
 
-func (l List) String(a *Apl) string {
-	if a.PP == -2 {
-		return l.jsonString(a)
+func (l List) String(f Format) string {
+	if f.PP == -2 {
+		return l.jsonString(f)
 	}
 	var buf strings.Builder
 	buf.WriteRune('(')
 	for i := range l {
-		buf.WriteString(l[i].String(a))
+		buf.WriteString(l[i].String(f))
 		buf.WriteRune(';')
 	}
 	buf.WriteRune(')')
@@ -77,14 +77,14 @@ func (l List) getset(idx []int, v Value) (Value, error) {
 }
 
 // jsonString formats the list as a json object.
-func (l List) jsonString(a *Apl) string {
+func (l List) jsonString(f Format) string {
 	var b strings.Builder
 	b.WriteRune('[')
 	for i, v := range l {
 		if i > 0 {
 			b.WriteRune(',')
 		}
-		b.WriteString(v.String(a))
+		b.WriteString(v.String(f))
 	}
 	b.WriteRune(']')
 	return b.String()
@@ -108,11 +108,11 @@ func (l list) Eval(a *Apl) (Value, error) {
 	return lst, nil
 }
 
-func (l list) String(a *Apl) string {
+func (l list) String(f Format) string {
 	var buf strings.Builder
 	buf.WriteRune('(')
 	for i := range l {
-		buf.WriteString(l[i].String(a))
+		buf.WriteString(l[i].String(f))
 		buf.WriteRune(';')
 	}
 	buf.WriteRune(')')

@@ -25,11 +25,11 @@ type Line struct {
 }
 
 // String overwrites the stringer if gui is 0.
-func (p Plot) String(a *apl.Apl) string {
+func (p Plot) String(f apl.Format) string {
 	if gui {
-		return p.Value.String(a)
+		return p.Value.String(f)
 	}
-	m, err := plotToImage(a, nil, p)
+	m, err := plotToImage(nil, nil, p)
 	if err != nil {
 		return err.Error()
 	}
@@ -73,11 +73,11 @@ func (p PlotArray) Copy() apl.Value {
 	copy(r.p, p.p)
 	return r
 }
-func (p PlotArray) String(a *apl.Apl) string {
+func (p PlotArray) String(f apl.Format) string {
 	if gui {
 		return fmt.Sprintf("p.PlotArray %v", p.Dims)
 	}
-	m, err := plotToImage(a, nil, p)
+	m, err := plotToImage(nil, nil, p)
 	if err != nil {
 		return err.Error()
 	}
@@ -167,7 +167,7 @@ func plotToImage(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 	if rows == 1 {
-		return toImage(a, plots, w, h)
+		return toImage(plots, w, h)
 	}
 
 	// Draw multiple rows, if the PlotArray has rank > 1.
@@ -175,7 +175,7 @@ func plotToImage(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	cols := len(plots) / rows
 	dst := image.Rectangle{Max: image.Point{w, h / rows}}
 	for i := 0; i < len(plots); i += cols {
-		m, err := toImage(a, plots[i:i+cols], w, h/rows)
+		m, err := toImage(plots[i:i+cols], w, h/rows)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +185,7 @@ func plotToImage(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return apl.Image{im, []int{w, h}}, nil
 }
 
-func toImage(a *apl.Apl, plots plot.Plots, w, h int) (apl.Image, error) {
+func toImage(plots plot.Plots, w, h int) (apl.Image, error) {
 	ip, err := plots.IPlots(w, h)
 	if err != nil {
 		return apl.Image{}, err

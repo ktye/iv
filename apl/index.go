@@ -13,13 +13,13 @@ import (
 // IdxSpec is origin dependend.
 type IdxSpec []Value
 
-func (x IdxSpec) String(a *Apl) string {
+func (x IdxSpec) String(f Format) string {
 	if x == nil {
 		return "[nil]"
 	}
 	v := make([]string, len(x))
 	for i, e := range x {
-		v[i] = e.String(a)
+		v[i] = e.String(f)
 	}
 	return "[" + strings.Join(v, ";") + "]"
 }
@@ -44,13 +44,13 @@ func (x IdxSpec) Shape(src []int) ([]int, error) {
 // That is what is in square brackets following an array.
 type idxSpec []expr
 
-func (x idxSpec) String(a *Apl) string {
+func (x idxSpec) String(f Format) string {
 	if x == nil {
 		return "[nil]"
 	}
 	v := make([]string, len(x))
 	for i, e := range x {
-		v[i] = e.String(a)
+		v[i] = e.String(f)
 	}
 	return "[" + strings.Join(v, ";") + "]"
 }
@@ -73,8 +73,8 @@ type Axis struct {
 	A Value
 }
 
-func (ax Axis) String(a *Apl) string {
-	return fmt.Sprintf("[%s]%s", ax.A.String(a), ax.R.String(a))
+func (ax Axis) String(f Format) string {
+	return fmt.Sprintf("[%s]%s", ax.A.String(f), ax.R.String(f))
 }
 func (ax Axis) Copy() Value {
 	r := Axis{}

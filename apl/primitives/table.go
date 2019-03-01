@@ -27,9 +27,9 @@ func table1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 		var err error
 		for i, k := range keys {
 			d.K[i] = k // TODO: copy?
-			v := src.At(a, k)
+			v := src.At(k)
 			if v == nil {
-				return nil, fmt.Errorf("missing value for key %s", k.String(a))
+				return nil, fmt.Errorf("missing value for key %s", k.String(apl.Format{}))
 			}
 			ar, ok := v.(apl.Array)
 			if ok {
@@ -47,7 +47,7 @@ func table1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 		}
 
 		if istable {
-			return dict2table(a, &d)
+			return dict2table(&d)
 		}
 		return &d, nil
 	}
@@ -90,8 +90,8 @@ func tableBoth(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 		var err error
 		var v apl.Value
 		for i, k := range keys {
-			lv := l.At(a, k)
-			rv := r.At(a, k)
+			lv := l.At(k)
+			rv := r.At(k)
 			if rv == nil {
 				rv = zero(lv)
 			}
@@ -110,11 +110,11 @@ func tableBoth(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 		// Loop over all keys in the right dict, only use keys that are not present in left.
 		keys = r.Keys()
 		for _, k := range keys {
-			lv := l.At(a, k)
+			lv := l.At(k)
 			if lv != nil {
 				continue
 			}
-			rv := r.At(a, k)
+			rv := r.At(k)
 			lv = zero(rv)
 			if la, ra, ok := toArrays.To(a, lv, rv); ok {
 				v, err = array(a, la, ra)
@@ -129,7 +129,7 @@ func tableBoth(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 		}
 
 		if istable {
-			return dict2table(a, &d)
+			return dict2table(&d)
 		}
 		return &d, nil
 	}
@@ -165,7 +165,7 @@ func tableAny(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value,
 		var err error
 		var v, r, l apl.Value
 		for i, k := range keys {
-			l = o.At(a, k) // TODO: copy?
+			l = o.At(k) // TODO: copy?
 			r = R
 			if leftarray {
 				l, r = L, l
@@ -183,7 +183,7 @@ func tableAny(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value,
 		}
 
 		if istable {
-			return dict2table(a, &d)
+			return dict2table(&d)
 		}
 		return &d, nil
 	}
@@ -257,7 +257,7 @@ func catenateTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error) {
 	var err error
 	for i, k := range keys {
 		d.K[i] = k // TODO: copy?
-		v := o.At(a, k)
+		v := o.At(k)
 		if leftarray {
 			rv = v
 		} else {
@@ -271,7 +271,7 @@ func catenateTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error) {
 	}
 
 	if istable {
-		return dict2table(a, &d)
+		return dict2table(&d)
 	}
 	return &d, nil
 }
@@ -298,13 +298,13 @@ func catenateTwoTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error
 	if first {
 		for i, k := range keys {
 			d.K[i] = k // TODO: Copy?
-			d.M[k] = l.At(a, k)
+			d.M[k] = l.At(k)
 		}
 		for _, k := range r.Keys() {
 			if _, ok := d.M[k]; !ok {
 				d.K = append(d.K, k)
 			}
-			d.M[k] = r.At(a, k)
+			d.M[k] = r.At(k)
 		}
 	} else {
 		rkeys := r.Keys()
@@ -313,8 +313,8 @@ func catenateTwoTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error
 		}
 		for i, k := range keys {
 			d.K[i] = k // TODO: Copy?
-			lv := l.At(a, k)
-			rv := r.At(a, k)
+			lv := l.At(k)
+			rv := r.At(k)
 			if rv == nil {
 				if istable {
 					return nil, fmt.Errorf("catenate table on first axis: tables have different columns")
@@ -334,21 +334,21 @@ func catenateTwoTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error
 					return nil, fmt.Errorf("catenate table on first axis: tables have different columns")
 				}
 				d.K = append(d.K, k)
-				d.M[k] = r.At(a, k)
+				d.M[k] = r.At(k)
 			}
 		}
 	}
 
 	if istable {
-		return dict2table(a, &d)
+		return dict2table(&d)
 	}
 	return &d, nil
 }
 
-func dict2table(a *apl.Apl, d *apl.Dict) (apl.Table, error) {
+func dict2table(d *apl.Dict) (apl.Table, error) {
 	rows := 0
 	if len(d.K) > 0 {
-		v := d.At(a, d.K[0])
+		v := d.At(d.K[0])
 		if ar, ok := v.(apl.Array); ok {
 			shape := ar.Shape()
 			if len(shape) == 1 {
@@ -368,7 +368,7 @@ func table2array(a *apl.Apl, t apl.Table) (apl.Array, error) {
 	}
 	n := len(keys)
 	for k, key := range keys {
-		col := t.At(a, key).(apl.Array)
+		col := t.At(key).(apl.Array)
 		for i := 0; i < rows; i++ {
 			v := col.At(i)
 			res.Values[i*n+k] = v // TODO: copy
@@ -412,16 +412,16 @@ func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) 
 		if o, ok := grp.(apl.Object); ok {
 			if ks := o.Keys(); len(ks) != 1 {
 				return nil, fmt.Errorf("groups object must have a single value")
-			} else if f, ok := o.At(a, ks[0]).(apl.Function); ok {
+			} else if f, ok := o.At(ks[0]).(apl.Function); ok {
 				gf = f
 				groupname = ks[0]
 			} else {
-				return nil, fmt.Errorf("groups object must contain a function: %T", o.At(a, ks[0]))
+				return nil, fmt.Errorf("groups object must contain a function: %T", o.At(ks[0]))
 			}
 			vars := make(map[string]apl.Value)
 			for _, key := range keys {
 				if s, ok := key.(apl.String); ok {
-					vars[string(s)] = t.At(a, key)
+					vars[string(s)] = t.At(key)
 				}
 			}
 			if len(keys) > 0 {
@@ -454,7 +454,7 @@ func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) 
 			if groupname == nil {
 				return nil, fmt.Errorf("group does not exist")
 			}
-			groupcol = t.At(a, groupname).(apl.Uniform)
+			groupcol = t.At(groupname).(apl.Uniform)
 		}
 
 		groupmap = make(map[apl.Value][]int)
@@ -496,9 +496,9 @@ func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) 
 		}
 		fns = make([]apl.Function, len(names))
 		for i, key := range names {
-			f, ok := o.At(a, key).(apl.Function)
+			f, ok := o.At(key).(apl.Function)
 			if ok == false {
-				return nil, fmt.Errorf("aggregation is not a function: %T", o.At(a, key))
+				return nil, fmt.Errorf("aggregation is not a function: %T", o.At(key))
 			}
 			fns[i] = f
 		}
@@ -520,7 +520,7 @@ func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) 
 	numrows := 0
 	d := apl.Dict{M: make(map[apl.Value]apl.Value)}
 	for k, key := range keys {
-		column := t.At(a, key).(apl.Uniform)
+		column := t.At(key).(apl.Uniform)
 		rescol := apl.MixedArray{Dims: []int{0}}
 		f := fns[k]
 		for _, gv := range groups {

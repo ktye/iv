@@ -12,8 +12,8 @@ type FloatArray struct {
 	Floats []float64
 }
 
-func (f FloatArray) String(a *apl.Apl) string {
-	return apl.ArrayString(a, f)
+func (f FloatArray) String(af apl.Format) string {
+	return apl.ArrayString(af, f)
 }
 func (f FloatArray) Copy() apl.Value {
 	r := FloatArray{Dims: apl.CopyShape(f), Floats: make([]float64, len(f.Floats))}

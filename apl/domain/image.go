@@ -22,7 +22,7 @@ type image struct {
 	conv  bool
 }
 
-func (i image) String(a *apl.Apl) string {
+func (i image) String(f apl.Format) string {
 	name := "image"
 	if i.conv {
 		name = "toimage"
@@ -30,7 +30,7 @@ func (i image) String(a *apl.Apl) string {
 	if i.child == nil {
 		return name
 	}
-	return name + " " + i.child.String(a)
+	return name + " " + i.child.String(f)
 }
 
 func (im image) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {

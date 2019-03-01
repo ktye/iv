@@ -22,7 +22,7 @@ func (a *Apl) Eval(p Program) (err error) {
 	v := make([]string, len(p))
 	if a.debug {
 		for i, e := range p {
-			v[i] = e.String(a)
+			v[i] = e.String(a.Format)
 		}
 		fmt.Fprintln(a.stdout, strings.Join(v, " ⋄ "))
 	}
@@ -33,10 +33,10 @@ func (a *Apl) Eval(p Program) (err error) {
 			if a.stdimg != nil {
 				a.stdimg.WriteImage(v)
 			} else {
-				fmt.Fprintln(a.stdout, val.String(a))
+				fmt.Fprintln(a.stdout, val.String(a.Format))
 			}
 		default:
-			fmt.Fprintln(a.stdout, val.String(a))
+			fmt.Fprintln(a.stdout, val.String(a.Format))
 		}
 	}
 
@@ -85,10 +85,10 @@ func (a *Apl) EvalProgram(p Program) ([]Value, error) {
 	return res, nil
 }
 
-func (p Program) String(a *Apl) string {
+func (p Program) String(f Format) string {
 	v := make([]string, len(p))
 	for i := range p {
-		v[i] = p[i].String(a)
+		v[i] = p[i].String(f)
 	}
 	return strings.Join(v, "⋄")
 }
@@ -145,7 +145,7 @@ func (f fileError) Error() string {
 
 type expr interface {
 	Eval(*Apl) (Value, error)
-	String(*Apl) string
+	String(f Format) string
 }
 
 func isAssignment(e expr) bool {

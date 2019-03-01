@@ -716,7 +716,7 @@ func reduceTable(a *apl.Apl, f apl.Function, L, R apl.Value, scan bool) (apl.Val
 	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
 	var err error
 	for i, k := range keys {
-		col := o.At(a, k)
+		col := o.At(k)
 		var ar apl.Array
 		if v, ok := col.(apl.Array); ok {
 			ar = v
@@ -749,7 +749,7 @@ func reduceTable(a *apl.Apl, f apl.Function, L, R apl.Value, scan bool) (apl.Val
 func dict2table(a *apl.Apl, d *apl.Dict) (apl.Table, error) {
 	rows := 0
 	if len(d.K) > 0 {
-		v := d.At(a, d.K[0])
+		v := d.At(d.K[0])
 		if ar, ok := v.(apl.Array); ok {
 			shape := ar.Shape()
 			if len(shape) == 1 {

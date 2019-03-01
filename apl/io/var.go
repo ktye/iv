@@ -121,7 +121,7 @@ func (v varfs) Open(name, mpt string) (io.ReadCloser, error) {
 	// Print a variable.
 	x := v.Apl.Lookup(name)
 	if x != nil {
-		return ioutil.NopCloser(strings.NewReader(x.String(v.Apl))), nil
+		return ioutil.NopCloser(strings.NewReader(x.String(v.Apl.Format))), nil
 	}
 
 	return nil, &os.PathError{

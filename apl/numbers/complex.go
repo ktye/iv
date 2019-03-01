@@ -21,20 +21,20 @@ type Complex complex128
 // starts with -.
 // Examples:
 //	"%.3f", "%ga%.0f", "-%v", "%.5fJ%.5f"
-func (c Complex) String(a *apl.Apl) string {
-	format, minus := getformat(a, c)
+func (c Complex) String(f apl.Format) string {
+	format, minus := getformat(f, c)
 	if format == "" {
-		if a.PP < 0 {
+		if f.PP < 0 {
 			format = "%vJ%v"
-			if a.PP == -2 { // json: there is no standard.
+			if f.PP == -2 { // json: there is no standard.
 				format = "[%v,%v]"
-			} else if a.PP == -3 { // matlab
+			} else if f.PP == -3 { // matlab
 				format = "%v" // prints as "(1-2i)"
 			}
-		} else if a.PP == 0 {
+		} else if f.PP == 0 {
 			format = "%.6GJ%.6G"
 		} else {
-			format = fmt.Sprintf("%%.%dGJ%%.%dG", a.PP, a.PP)
+			format = fmt.Sprintf("%%.%dGJ%%.%dG", f.PP, f.PP)
 		}
 	}
 	var s string

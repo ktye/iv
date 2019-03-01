@@ -34,7 +34,7 @@ func (v array) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return propagate(a, ga, v.child)
 }
-func (v array) String(a *apl.Apl) string {
+func (v array) String(f apl.Format) string {
 	name := "array"
 	if v.conv {
 		name = "toarray"
@@ -42,7 +42,7 @@ func (v array) String(a *apl.Apl) string {
 	if v.child == nil {
 		return name
 	}
-	return name + " " + v.child.String(a)
+	return name + " " + v.child.String(f)
 }
 
 // ToVector converts scalars and arrays with only one dimension > 0 to a vector.
@@ -113,7 +113,7 @@ func (v vector) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return propagate(a, ret, v.child)
 }
-func (v vector) String(a *apl.Apl) string {
+func (v vector) String(f apl.Format) string {
 	name := "vector"
 	if v.conv {
 		name = "tovector"
@@ -121,7 +121,7 @@ func (v vector) String(a *apl.Apl) string {
 	if v.child == nil {
 		return name
 	}
-	return name + " " + v.child.String(a)
+	return name + " " + v.child.String(f)
 }
 
 // ToIndexArray accepts arrays that contain only numbers that are convertibel to ints.
@@ -209,7 +209,7 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return propagate(a, res, ia.child)
 }
-func (ia indexarray) String(a *apl.Apl) string {
+func (ia indexarray) String(f apl.Format) string {
 	name := "indexarray"
 	if ia.conv == true {
 		name = "toindexarray"
@@ -217,5 +217,5 @@ func (ia indexarray) String(a *apl.Apl) string {
 	if ia.child == nil {
 		return name
 	}
-	return name + " " + ia.child.String(a)
+	return name + " " + ia.child.String(f)
 }

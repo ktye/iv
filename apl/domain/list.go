@@ -27,7 +27,7 @@ func (v list) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	// enlist
 	return propagate(a, apl.List{V}, v.child)
 }
-func (v list) String(a *apl.Apl) string {
+func (v list) String(f apl.Format) string {
 	name := "list"
 	if v.conv {
 		name = "tolist"
@@ -35,5 +35,5 @@ func (v list) String(a *apl.Apl) string {
 	if v.child == nil {
 		return name
 	}
-	return name + " " + v.child.String(a)
+	return name + " " + v.child.String(f)
 }

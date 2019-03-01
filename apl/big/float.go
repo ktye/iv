@@ -21,15 +21,15 @@ func (f Float) Copy() apl.Value {
 	return Float{re}
 }
 
-func (f Float) String(a *apl.Apl) string {
-	format, minus := getformat(a, f)
+func (f Float) String(af apl.Format) string {
+	format, minus := getformat(af, f)
 	if format == "" {
-		if a.PP < 0 {
+		if af.PP < 0 {
 			format = "%v"
-		} else if a.PP == 0 {
+		} else if af.PP == 0 {
 			format = "%.6G"
 		} else {
-			format = fmt.Sprintf("%%.%dG", a.PP)
+			format = fmt.Sprintf("%%.%dG", af.PP)
 		}
 	}
 	s := fmt.Sprintf(format, f.Float)

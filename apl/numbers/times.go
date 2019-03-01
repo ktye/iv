@@ -13,8 +13,8 @@ type TimeArray struct {
 	Times []time.Time
 }
 
-func (t TimeArray) String(a *apl.Apl) string {
-	return apl.ArrayString(a, t)
+func (t TimeArray) String(f apl.Format) string {
+	return apl.ArrayString(f, t)
 }
 
 func (t TimeArray) Copy() apl.Value {

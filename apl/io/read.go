@@ -48,7 +48,7 @@ func exec(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		if ok {
 			in = bufio.NewReader(apl.NewChannelReader(a, c))
 		} else {
-			in = strings.NewReader(R.String(a))
+			in = strings.NewReader(R.String(a.Format))
 		}
 	}
 

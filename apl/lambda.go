@@ -18,11 +18,11 @@ type lambda struct {
 	body guardList
 }
 
-func (λ *lambda) String(a *Apl) string {
+func (λ *lambda) String(f Format) string {
 	if λ.body == nil {
 		return "{}"
 	}
-	return fmt.Sprintf("{%s}", λ.body.String(a))
+	return fmt.Sprintf("{%s}", λ.body.String(f))
 }
 func (λ *lambda) Copy() Value { return λ }
 
@@ -71,10 +71,10 @@ tail:
 // It represents a list of guarded expressions.
 type guardList []*guardExpr
 
-func (l guardList) String(a *Apl) string {
+func (l guardList) String(f Format) string {
 	v := make([]string, len(l))
 	for i, g := range l {
-		v[i] = g.String(a)
+		v[i] = g.String(f)
 	}
 	return strings.Join(v, "⋄")
 }
@@ -127,11 +127,11 @@ type guardExpr struct {
 	e    expr
 }
 
-func (g *guardExpr) String(a *Apl) string {
+func (g *guardExpr) String(f Format) string {
 	if g.cond == nil {
-		return g.e.String(a)
+		return g.e.String(f)
 	} else {
-		return g.cond.String(a) + ":" + g.e.String(a)
+		return g.cond.String(f) + ":" + g.e.String(f)
 	}
 }
 
@@ -159,7 +159,7 @@ func (g *guardExpr) Eval(a *Apl) (Value, error) {
 		}
 	}
 	if isbool == false {
-		return nil, fmt.Errorf("λ condition does not return a bool: %s", b.String(a))
+		return nil, fmt.Errorf("λ condition does not return a bool: %s", b.String(a.Format))
 	}
 
 	if b == false {
@@ -172,7 +172,7 @@ func (g *guardExpr) Eval(a *Apl) (Value, error) {
 // Self is both an expression and a Value self-pointing to a lambda function.
 type self struct{}
 
-func (s self) String(a *Apl) string {
+func (s self) String(f Format) string {
 	return "∇"
 }
 func (s self) Copy() Value { return s }
@@ -201,7 +201,7 @@ type tail struct {
 	left, right expr
 }
 
-func (t tail) String(a *Apl) string {
-	return fmt.Sprintf("tail{%s %s}", t.left.String(a), t.right.String(a))
+func (t tail) String(f Format) string {
+	return fmt.Sprintf("tail{%s %s}", t.left.String(f), t.right.String(f))
 }
 func (t tail) Copy() Value { return t }

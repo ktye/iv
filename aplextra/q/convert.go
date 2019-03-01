@@ -119,7 +119,7 @@ func encodeObject(a *apl.Apl, v apl.Value) (*kdb.K, error) {
 			return nil, fmt.Errorf("encode dict: only string keys are supported: %T", key)
 		}
 		keystrings[i] = string(s)
-		v := o.At(a, key)
+		v := o.At(key)
 		if v == nil {
 			return nil, fmt.Errorf("encode dict: key %s does not exist", s)
 		}

@@ -59,7 +59,7 @@ func (s S) Sum() int {
 // It is used for demonstrating apl.Channel.
 type source struct{}
 
-func (_ source) String(a *apl.Apl) string {
+func (_ source) String(f apl.Format) string {
 	return "source"
 }
 func (s source) Copy() apl.Value { return s }
@@ -92,7 +92,7 @@ func (s source) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 // echo returns a Channel which echos what was send to it.
 type echo struct{}
 
-func (_ echo) String(a *apl.Apl) string {
+func (_ echo) String(f apl.Format) string {
 	return "echo"
 }
 func (e echo) Copy() apl.Value { return e }
@@ -117,14 +117,14 @@ func (_ echo) Call(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 				}
 				buf = append(buf, r)
 				if len(buf) == 1 {
-					s = p + r.String(a)
+					s = p + r.String(a.Format)
 				}
 			case c[0] <- apl.String(s):
 				if len(buf) > 1 {
 					copy(buf, buf[1:])
 					buf = buf[:len(buf)-1]
 					if len(buf) > 0 {
-						s = p + buf[0].String(a)
+						s = p + buf[0].String(a.Format)
 					}
 				} else if len(buf) == 1 {
 					buf = buf[:0]

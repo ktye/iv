@@ -71,10 +71,10 @@ func (ar array) Eval(a *Apl) (Value, error) {
 	return MixedArray{Values: v, Dims: []int{len(ar)}}, nil
 }
 
-func (ar array) String(a *Apl) string {
+func (ar array) String(f Format) string {
 	v := make([]string, len(ar))
 	for i, e := range ar {
-		s := e.String(a)
+		s := e.String(f)
 		if _, ok := e.(String); ok {
 			s = `"` + strings.Replace(s, `"`, `""`, -1) + `"`
 		}
@@ -220,8 +220,8 @@ type MixedArray struct {
 	Dims   []int
 }
 
-func (v MixedArray) String(a *Apl) string {
-	return ArrayString(a, v)
+func (v MixedArray) String(f Format) string {
+	return ArrayString(f, v)
 }
 
 func (v MixedArray) Copy() Value {
@@ -268,7 +268,7 @@ func (v MixedArray) Reshape(shape []int) Value {
 
 type EmptyArray struct{}
 
-func (e EmptyArray) String(a *Apl) string       { return "" }
+func (e EmptyArray) String(f Format) string     { return "" }
 func (e EmptyArray) Copy() Value                { return EmptyArray{} }
 func (e EmptyArray) Eval(a *Apl) (Value, error) { return e, nil }
 func (e EmptyArray) At(i int) Value             { return nil }
@@ -292,8 +292,8 @@ type IntArray struct {
 	Dims []int
 }
 
-func (ar IntArray) String(a *Apl) string {
-	return ArrayString(a, ar)
+func (ar IntArray) String(f Format) string {
+	return ArrayString(f, ar)
 }
 
 func (ar IntArray) Copy() Value {

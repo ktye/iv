@@ -16,7 +16,7 @@ func init() {
 		doc:    "format, convert to string",
 		Domain: Monadic(nil),
 		fn: func(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-			return apl.String(R.String(a)), nil
+			return apl.String(R.String(a.Format)), nil
 		},
 	})
 	register(primitive{
@@ -51,34 +51,34 @@ func init() {
 // If L is a string L is used as a format string.
 // Special formatting is used, if the string is "csv", "json", "mat" or "x".
 func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	pp := a.PP
-	defer func() {
-		a.PP = pp
-	}()
+	f := apl.Format{
+		PP:  a.Format.PP,
+		Fmt: make(map[reflect.Type]string),
+	}
+	for k, v := range a.Format.Fmt {
+		f.Fmt[k] = v
+	}
+
 	if n, ok := L.(apl.Number); ok {
 		if i, ok := n.ToIndex(); ok {
-			a.PP = i
+			f.PP = i
 		}
 	} else if s, ok := L.(apl.String); ok {
 		switch s {
 		case "csv":
-			return formatCsv(a, nil, R)
+			return formatCsv(f, nil, R)
 		case "json":
-			a.PP = -2
+			f.PP = -2
 		case "mat":
-			a.PP = -3
+			f.PP = -3
 		case "x":
-			a.PP = -16
+			f.PP = -16
 		default:
 			t := reflect.TypeOf(R)
-			f := a.Fmt[t]
-			defer func() {
-				a.Fmt[t] = f
-			}()
-			a.Fmt[t] = string(s)
+			f.Fmt[t] = string(s)
 		}
 	}
-	return apl.String(R.String(a)), nil
+	return apl.String(R.String(f)), nil
 }
 
 // L is an object and R a Table.
@@ -87,11 +87,11 @@ func format(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 func formatTable(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	t := R.(apl.Table)
 	d := L.(apl.Object)
-	if d.At(a, apl.String("CSV")) != nil {
-		return formatCsv(a, d, R)
+	if d.At(apl.String("CSV")) != nil {
+		return formatCsv(a.Format, d, R)
 	}
 	var b bytes.Buffer
-	if err := t.WriteFormatted(a, d, &b); err != nil {
+	if err := t.WriteFormatted(a.Format, d, &b); err != nil {
 		return nil, err
 	}
 	return apl.String(b.Bytes()), nil
@@ -100,7 +100,7 @@ func formatTable(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // formatCSV formats R in csv format.
 // R must be a rank 2 array or a table.
 // If L with corresponding keys.
-func formatCsv(a *apl.Apl, L apl.Object, R apl.Value) (apl.Value, error) {
+func formatCsv(f apl.Format, L apl.Object, R apl.Value) (apl.Value, error) {
 	var b bytes.Buffer
 	w := csv.NewWriter(&b)
 
@@ -117,7 +117,7 @@ func formatCsv(a *apl.Apl, L apl.Object, R apl.Value) (apl.Value, error) {
 		idx := 0
 		for i := 0; i < shape[0]; i++ {
 			for k := 0; k < shape[1]; k++ {
-				records[k] = ar.At(idx).String(a)
+				records[k] = ar.At(idx).String(f)
 				idx++
 			}
 			if err := w.Write(records); err != nil {
@@ -128,7 +128,7 @@ func formatCsv(a *apl.Apl, L apl.Object, R apl.Value) (apl.Value, error) {
 		return apl.String(b.Bytes()), nil
 	} else if t, ok := R.(apl.Table); ok {
 		var b bytes.Buffer
-		if err := t.Csv(a, L, &b); err != nil {
+		if err := t.Csv(f, L, &b); err != nil {
 			return nil, err
 		}
 		return apl.String(b.Bytes()), nil
@@ -152,7 +152,7 @@ func execute(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 	for _, v := range values[:len(values)-1] {
 		// TODO: do not display shy values.
-		fmt.Fprintln(a.GetOutput(), v.String(a))
+		fmt.Fprintln(a.GetOutput(), v.String(a.Format))
 	}
 	return values[len(values)-1], nil
 }

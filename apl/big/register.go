@@ -107,11 +107,11 @@ func settower(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	return R, nil
 }
 
-func getformat(a *apl.Apl, num apl.Value) (string, bool) {
-	if a == nil {
+func getformat(f apl.Format, num apl.Value) (string, bool) {
+	if f.Fmt == nil {
 		return "", false
 	}
-	s := a.Fmt[reflect.TypeOf(num)]
+	s := f.Fmt[reflect.TypeOf(num)]
 	if len(s) > 0 && s[0] == '-' {
 		return s[1:], true
 	}

@@ -8,7 +8,7 @@ import (
 
 type SingleDomain interface {
 	To(*apl.Apl, apl.Value) (apl.Value, bool)
-	String(*apl.Apl) string
+	String(apl.Format) string
 }
 
 // propagate is used by a SingleDomain function for successive values to propagate
@@ -46,11 +46,11 @@ func (b both) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	}
 	return l, r, true
 }
-func (b both) String(a *apl.Apl) string {
+func (b both) String(f apl.Format) string {
 	if b.same == nil {
 		return "any"
 	}
-	return "both " + b.same.String(a)
+	return "both " + b.same.String(f)
 }
 
 // Any tests if either the left or the right arguments satisfy the child domain.
@@ -73,8 +73,8 @@ func (b any) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	}
 	return L, R, false
 }
-func (b any) String(a *apl.Apl) string {
-	return "any " + b.child.String(a)
+func (b any) String(f apl.Format) string {
+	return "any " + b.child.String(f)
 }
 
 func Split(left, right SingleDomain) apl.Domain {
@@ -103,16 +103,16 @@ func (s split) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	}
 	return l, r, true
 }
-func (s split) String(a *apl.Apl) string {
+func (s split) String(f apl.Format) string {
 	// TODO: if we use domain for both function and operators,
 	// for operators, L and R should print as LO and RO.
 	ls := "any"
 	rs := "any"
 	if s.left != nil {
-		ls = s.left.String(a)
+		ls = s.left.String(f)
 	}
 	if s.right != nil {
-		rs = s.right.String(a)
+		rs = s.right.String(f)
 	}
 	return fmt.Sprintf("L %s R %s", ls, rs)
 }
@@ -141,11 +141,11 @@ func (m monadic) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	return L, R, false
 }
 func (m monadic) IsDyadic() bool { return false }
-func (m monadic) String(a *apl.Apl) string {
+func (m monadic) String(f apl.Format) string {
 	if m.right == nil {
 		return "R any"
 	}
-	return m.right.String(a)
+	return m.right.String(f)
 }
 
 // Dyadic is a Domain which checks if the left argument of a primitive function is not nil
@@ -169,11 +169,11 @@ func (d dyadic) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	return d.child.To(a, L, R)
 }
 func (d dyadic) IsDyadic() bool { return true }
-func (d dyadic) String(a *apl.Apl) string {
+func (d dyadic) String(f apl.Format) string {
 	if d.child == nil {
 		return "L any, R any"
 	}
-	return d.child.String(a)
+	return d.child.String(f)
 }
 
 func Not(child SingleDomain) SingleDomain {
@@ -192,11 +192,11 @@ func (n not) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	return v, !ok
 }
 
-func (n not) String(a *apl.Apl) string {
+func (n not) String(f apl.Format) string {
 	if n.child == nil {
 		return "never (Not(nil))" // This should not be done.
 	}
-	return "!" + n.child.String(a)
+	return "!" + n.child.String(f)
 }
 
 func Or(child1, child2 SingleDomain) SingleDomain {
@@ -219,6 +219,6 @@ func (n or) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	return V, false
 }
 
-func (n or) String(a *apl.Apl) string {
-	return "(" + n.child1.String(a) + " or " + n.child2.String(a) + ")"
+func (n or) String(f apl.Format) string {
+	return "(" + n.child1.String(f) + " or " + n.child2.String(f) + ")"
 }

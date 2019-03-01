@@ -21,11 +21,11 @@ func (m monop) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	return L, R, false
 }
 func (m monop) DyadicOp() bool { return false }
-func (m monop) String(a *apl.Apl) string {
+func (m monop) String(f apl.Format) string {
 	if m.left == nil {
 		return "LO any"
 	}
-	return "LO " + m.left.String(a)
+	return "LO " + m.left.String(f)
 }
 
 // DyadicOp is used to define a dyadic operator.
@@ -47,9 +47,9 @@ func (d dyop) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	return d.child.To(a, L, R)
 }
 func (d dyop) DyadicOp() bool { return true }
-func (d dyop) String(a *apl.Apl) string {
+func (d dyop) String(f apl.Format) string {
 	if d.child == nil {
 		return "any"
 	}
-	return d.child.String(a)
+	return d.child.String(f)
 }

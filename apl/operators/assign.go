@@ -289,7 +289,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		}
 		m := make(map[apl.Value]apl.Value)
 		for k, key := range keys {
-			u := t.At(a, key).(apl.Uniform)
+			u := t.At(key).(apl.Uniform)
 			column := u.Make([]int{len(rows)})
 			col, ok := column.(apl.ArraySetter)
 			if ok == false {
@@ -357,7 +357,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		}
 	}
 	for _, key := range keys {
-		column := t.Dict.At(a, key)
+		column := t.Dict.At(key)
 		col, ok := column.(apl.ArraySetter)
 		if ok == false {
 			return fmt.Errorf("table-update: column is not settable: %T", column)
@@ -365,7 +365,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		u := column.(apl.Uniform)
 
 		if rt, ok := R.(apl.Table); ok {
-			rc := rt.At(a, key)
+			rc := rt.At(key)
 			to := ToType(reflect.TypeOf(column), nil)
 			nc, ok := to.To(a, rc)
 			if ok == false {
@@ -380,7 +380,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		} else {
 			z := u.Zero()
 			to := ToType(reflect.TypeOf(z), nil)
-			rv := o.At(a, key)
+			rv := o.At(key)
 			v, ok := to.To(a, rv)
 			if ok == false {
 				return fmt.Errorf("table-update: cannot convert %T to %T", rv, z)
@@ -392,7 +392,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 			}
 
 		}
-		if err := t.Dict.Set(a, key, column); err != nil {
+		if err := t.Dict.Set(key, column); err != nil {
 			return fmt.Errorf("table-update: %s", err)
 		}
 	}
@@ -434,7 +434,7 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Function, 
 			}
 			v = ar.At(i)
 		}
-		if err := obj.Set(a, k, v); err != nil {
+		if err := obj.Set(k, v); err != nil {
 			return err
 		}
 	}
@@ -448,7 +448,7 @@ func assignObjectDepth(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Funct
 		return fmt.Errorf("assign obj-depth: index out of range")
 	}
 	key := keys[k]
-	v := obj.At(a, key)
+	v := obj.At(key)
 	if v == nil {
 		return fmt.Errorf("assign obj-depth: nil value")
 	}
@@ -470,7 +470,7 @@ func assignObjectDepth(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Funct
 		err = fmt.Errorf("TODO: assign obj-depth: unsupported type: %T", v)
 	}
 	if err == nil {
-		return obj.Set(a, key, v)
+		return obj.Set(key, v)
 	}
 	return err
 }

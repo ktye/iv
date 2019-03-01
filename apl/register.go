@@ -96,7 +96,7 @@ func (a *Apl) Doc(w io.Writer) {
 			handlers := a.primitives[k.symbol]
 			fmt.Fprintf(w, "%s\t\t\n", symbol)
 			for _, h := range handlers {
-				dom := h.String(a)
+				dom := h.String(a.Format)
 				domain := fmt.Sprintf("L%sR  %s", symbol, dom)
 				if strings.Index(dom, "L") == -1 {
 					domain = fmt.Sprintf("%sR  %s", symbol, dom)
@@ -129,7 +129,7 @@ func (a *Apl) Doc(w io.Writer) {
 			handlers := a.operators[k.symbol]
 			fmt.Fprintf(w, "%s\t\t\n", symbol)
 			for _, h := range handlers {
-				dom := h.String(a)
+				dom := h.String(a.Format)
 				domain := fmt.Sprintf("LO%sRO  %s", symbol, dom)
 				if strings.Index(dom, "LO") == -1 {
 					domain = fmt.Sprintf("%sRO  %s", symbol, dom)

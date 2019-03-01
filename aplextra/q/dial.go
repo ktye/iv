@@ -20,7 +20,7 @@ type Conn struct {
 }
 
 func (c Conn) Copy() apl.Value { return c }
-func (c Conn) String(a *apl.Apl) string {
+func (c Conn) String(f apl.Format) string {
 	if c.KDBConn == nil {
 		return "q not connected"
 	}

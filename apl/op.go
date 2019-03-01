@@ -42,23 +42,19 @@ func (d *derived) Eval(a *Apl) (Value, error) {
 	return d, nil
 }
 
-func (d *derived) String(a *Apl) string {
-	ops, ok := a.operators[d.op]
-	if ok == false {
-		return "<unknown operator>"
-	}
+func (d *derived) String(f Format) string {
+	left := ""
+	right := ""
 	if d.lo == nil && d.ro == nil {
 		return d.op
 	}
-	right := ""
-	if ops[0].DyadicOp() {
-		right = fmt.Sprintf(" %s", d.ro.String(a))
-	}
-	left := "?"
 	if d.lo != nil {
-		left = fmt.Sprintf("%s", d.lo.String(a))
+		left = d.lo.String(f) + " "
 	}
-	return fmt.Sprintf("(%s %s%s)", left, d.op, right)
+	if d.ro != nil {
+		right = " " + d.ro.String(f)
+	}
+	return "(" + left + d.op + right + ")"
 }
 func (d *derived) Copy() Value { return d }
 

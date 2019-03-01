@@ -70,7 +70,7 @@ func (ars arrays) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	}
 	return L, R, false
 }
-func (ars arrays) String(a *apl.Apl) string { return "arithmetic arrays" }
+func (ars arrays) String(f apl.Format) string { return "arithmetic arrays" }
 
 // ArraysWithAxis is the domain for binary arithmetic functions
 // with an axis specification.
@@ -105,7 +105,7 @@ func (ars arraysWithAxis) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, 
 
 	return al, apl.Axis{A: x, R: ar}, true
 }
-func (ars arraysWithAxis) String(a *apl.Apl) string { return "arithmetic arrays with axis" }
+func (ars arraysWithAxis) String(f apl.Format) string { return "arithmetic arrays with axis" }
 
 // array1 tries to apply the elementary function returned by arith1(fn)
 // monadically to each element of the array R

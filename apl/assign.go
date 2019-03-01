@@ -12,8 +12,8 @@ type assignment struct {
 	e expr
 }
 
-func (as assignment) String(a *Apl) string {
-	return "specification " + as.e.String(a)
+func (as assignment) String(f Format) string {
+	return "specification " + as.e.String(f)
 }
 func (as assignment) Copy() Value { return as } // This does not do a deep copy.
 
@@ -47,7 +47,7 @@ func (as *Assignment) Copy() Value {
 	return &r
 }
 
-func (as *Assignment) String(a *Apl) string {
+func (as *Assignment) String(f Format) string {
 	s := ""
 	if as.Indexes != nil {
 		s = "indexed/selective "

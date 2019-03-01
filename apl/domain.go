@@ -12,5 +12,5 @@ package apl
 // are in the domain package.
 type Domain interface {
 	To(*Apl, Value, Value) (Value, Value, bool)
-	String(*Apl) string
+	String(Format) string
 }

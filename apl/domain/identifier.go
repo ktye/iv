@@ -16,10 +16,10 @@ func (id identifier) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	return propagate(a, V, id.child)
 }
 
-func (id identifier) String(a *apl.Apl) string {
+func (id identifier) String(f apl.Format) string {
 	name := "identfier"
 	if id.child == nil {
 		return name
 	}
-	return name + " " + id.child.String(a)
+	return name + " " + id.child.String(f)
 }

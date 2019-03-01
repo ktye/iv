@@ -20,7 +20,7 @@ func env(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 type Env struct{}
 
-func (e Env) String(a *apl.Apl) string {
+func (e Env) String(f apl.Format) string {
 	v := os.Environ()
 	var b strings.Builder
 	tw := tabwriter.NewWriter(&b, 1, 0, 1, ' ', 0)

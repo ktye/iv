@@ -92,7 +92,7 @@ func sam(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			defer func() {
 				d := a.Lookup("Dot")
 				if d != nil {
-					newdot := d.String(a)
+					newdot := d.String(a.Format)
 					if newdot != t {
 						sam.Edt.Edit("c/" + sam.Edt.Escape(newdot) + "/")
 					}
@@ -153,7 +153,7 @@ func read(a *apl.Apl, R apl.Value) (cmd string, edt rope.Rope) {
 				}
 			}
 			n++
-			edt = rope.Append(edt, rope.New(e.String(a)+"\n"))
+			edt = rope.Append(edt, rope.New(e.String(a.Format)+"\n"))
 		}
 		ts := "mixed"
 		if t != nil {
@@ -164,15 +164,15 @@ func read(a *apl.Apl, R apl.Value) (cmd string, edt rope.Rope) {
 	case apl.String:
 		if val := a.Lookup(string(v)); val != nil {
 			s := fmt.Sprintf("var %s %s\n⍎ %s← ⍎Dot\n", v, reflect.TypeOf(val).String(), v)
-			return s, rope.New(val.String(a))
+			return s, rope.New(val.String(a.Format))
 		}
-		return reflect.TypeOf(R).String(), rope.New(R.String(a))
+		return reflect.TypeOf(R).String(), rope.New(R.String(a.Format))
 	default:
 		shape := ""
 		if ar, ok := R.(apl.Array); ok {
 			shape = fmt.Sprintf(" %v", ar.Shape())
 		}
-		return reflect.TypeOf(R).String() + shape, rope.New(R.String(a))
+		return reflect.TypeOf(R).String() + shape, rope.New(R.String(a.Format))
 	}
 }
 

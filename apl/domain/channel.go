@@ -18,10 +18,10 @@ func (c channel) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	return V, false
 }
 
-func (c channel) String(a *apl.Apl) string {
+func (c channel) String(f apl.Format) string {
 	name := "channel"
 	if c.child == nil {
 		return name
 	}
-	return name + " " + c.child.String(a)
+	return name + " " + c.child.String(f)
 }

@@ -16,7 +16,7 @@ type Int struct {
 	*big.Int
 }
 
-func (i Int) String(a *apl.Apl) string {
+func (i Int) String(f apl.Format) string {
 	// TODO formats
 	s := i.Int.String()
 	if s[0] == '-' {

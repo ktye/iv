@@ -31,8 +31,8 @@ import (
 type Object interface {
 	Value
 	Keys() []Value
-	At(*Apl, Value) Value
-	Set(*Apl, Value, Value) error
+	At(Value) Value
+	Set(Value, Value) error
 }
 
 // Dict is a dictionary object.
@@ -53,7 +53,7 @@ func (d *Dict) Keys() []Value {
 	return d.K
 }
 
-func (d *Dict) At(a *Apl, key Value) Value {
+func (d *Dict) At(key Value) Value {
 	if d.M == nil {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (d *Dict) At(a *Apl, key Value) Value {
 // Set updates the value for the given key, or creates a new one,
 // if the key does not exist.
 // Keys must be valid variable names.
-func (d *Dict) Set(a *Apl, key Value, v Value) error {
+func (d *Dict) Set(key Value, v Value) error {
 	if d.M == nil {
 		d.M = make(map[Value]Value)
 	}
@@ -74,16 +74,16 @@ func (d *Dict) Set(a *Apl, key Value, v Value) error {
 	return nil
 }
 
-func (d *Dict) String(a *Apl) string {
-	if a.PP == -2 {
-		return d.jsonString(a)
-	} else if a.PP == -3 {
-		return d.matString(a)
+func (d *Dict) String(f Format) string {
+	if f.PP == -2 {
+		return d.jsonString(f)
+	} else if f.PP == -3 {
+		return d.matString(f)
 	}
 	var buf strings.Builder
 	tw := tabwriter.NewWriter(&buf, 1, 0, 1, ' ', 0)
 	for _, k := range d.K {
-		fmt.Fprintf(tw, "%s:\t%s\n", k.String(a), d.M[k].String(a))
+		fmt.Fprintf(tw, "%s:\t%s\n", k.String(f), d.M[k].String(f))
 	}
 	tw.Flush()
 	s := buf.String()
@@ -110,7 +110,7 @@ func (d *Dict) Copy() Value {
 	return &r
 }
 
-func (d *Dict) jsonString(a *Apl) string {
+func (d *Dict) jsonString(f Format) string {
 	var b strings.Builder
 	b.WriteRune('{')
 	keys := d.Keys()
@@ -118,9 +118,9 @@ func (d *Dict) jsonString(a *Apl) string {
 		if i > 0 {
 			b.WriteRune(',')
 		}
-		k := key.String(a)
-		val := d.At(a, key)
-		v := val.String(a)
+		k := key.String(f)
+		val := d.At(key)
+		v := val.String(f)
 		b.WriteString(k)
 		b.WriteRune(':')
 		b.WriteString(v)
@@ -129,7 +129,7 @@ func (d *Dict) jsonString(a *Apl) string {
 	return b.String()
 }
 
-func (d *Dict) matString(a *Apl) string {
+func (d *Dict) matString(f Format) string {
 	var b strings.Builder
 	b.WriteString("struct(")
 	keys := d.Keys()
@@ -137,9 +137,9 @@ func (d *Dict) matString(a *Apl) string {
 		if i > 0 {
 			b.WriteRune(',')
 		}
-		k := key.String(a)
-		val := d.At(a, key)
-		v := val.String(a)
+		k := key.String(f)
+		val := d.At(key)
+		v := val.String(f)
 		b.WriteString(k)
 		b.WriteRune(',')
 		b.WriteString(v)

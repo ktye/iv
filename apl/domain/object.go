@@ -15,11 +15,11 @@ func (s objtype) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return V, false
 }
-func (s objtype) String(a *apl.Apl) string {
+func (s objtype) String(f apl.Format) string {
 	if s.child == nil {
 		return "object"
 	}
-	return "object" + " " + s.child.String(a)
+	return "object" + " " + s.child.String(f)
 }
 
 // IsTable accepts objects
@@ -35,9 +35,9 @@ func (s table) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return V, false
 }
-func (s table) String(a *apl.Apl) string {
+func (s table) String(f apl.Format) string {
 	if s.child == nil {
 		return "table"
 	}
-	return "table" + " " + s.child.String(a)
+	return "table" + " " + s.child.String(f)
 }

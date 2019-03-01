@@ -41,7 +41,7 @@ func (n number) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return V, false
 }
-func (n number) String(a *apl.Apl) string {
+func (n number) String(f apl.Format) string {
 	name := "number"
 	if n.convert {
 		name = "tonumber"
@@ -49,7 +49,7 @@ func (n number) String(a *apl.Apl) string {
 	if n.child == nil {
 		return name
 	}
-	return name + " " + n.child.String(a)
+	return name + " " + n.child.String(f)
 }
 
 // ToIndex converts the scalar to an Index.
@@ -81,10 +81,10 @@ func (idx index) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		}
 	}
 }
-func (idx index) String(a *apl.Apl) string {
+func (idx index) String(f apl.Format) string {
 	if idx.child == nil {
 		return "index"
 	} else {
-		return "index " + idx.child.String(a)
+		return "index " + idx.child.String(f)
 	}
 }

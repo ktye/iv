@@ -12,8 +12,8 @@ type ComplexArray struct {
 	Cmplx []complex128
 }
 
-func (f ComplexArray) String(a *apl.Apl) string {
-	return apl.ArrayString(a, f)
+func (f ComplexArray) String(af apl.Format) string {
+	return apl.ArrayString(af, f)
 }
 
 func (f ComplexArray) Copy() apl.Value {

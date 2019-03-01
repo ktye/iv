@@ -15,10 +15,10 @@ type Float float64
 // String formats a Float as a string.
 // The format string is passed to fmt and - is replaced by ¯,
 // except if the first rune is -.
-func (n Float) String(a *apl.Apl) string {
-	format, minus := getformat(a, n)
+func (n Float) String(f apl.Format) string {
+	format, minus := getformat(f, n)
 	if format == "" {
-		switch prec := a.PP; {
+		switch prec := f.PP; {
 		case prec == 0:
 			format = "%.6G"
 		case prec == -16:

@@ -27,24 +27,22 @@ import (
 // -16:  integers formatted as hexadecimal numbers with 0x prefix, floats with %b (-123456p-78)
 func (a *Apl) SetPP(R Value) error {
 	if _, ok := R.(EmptyArray); ok {
-		a.PP = 0
-		for k := range a.Fmt {
-			delete(a.Fmt, k)
-		}
+		a.Format.PP = 0
+		a.Format.Fmt = make(map[reflect.Type]string)
 		return nil
 	} else if d, ok := R.(Object); ok {
 		keys := d.Keys()
 		for _, k := range keys {
-			v := d.At(a, k)
+			v := d.At(k)
 			if v != nil {
 				if s, ok := v.(String); ok {
-					a.Fmt[reflect.TypeOf(k)] = string(s)
+					a.Format.Fmt[reflect.TypeOf(k)] = string(s)
 				}
 			}
 		}
 	} else if n, ok := R.(Number); ok {
 		if i, ok := n.ToIndex(); ok {
-			a.PP = i
+			a.Format.PP = i
 			return nil
 		}
 	}
@@ -56,11 +54,11 @@ func (a *Apl) SetPP(R Value) error {
 // Each dimension is terminated by k newlines, where k is the dimension index.
 // For PP==-2, it uses a single line json notation with nested brackets and
 // for PP==-3, it formats in a single line matlab syntax (rank <= 2).
-func ArrayString(a *Apl, v Array) string {
-	if a.PP == -2 {
-		return jsonArray(a, v)
-	} else if a.PP == -3 {
-		return matArray(a, v)
+func ArrayString(f Format, v Array) string {
+	if f.PP == -2 {
+		return jsonArray(f, v)
+	} else if f.PP == -3 {
+		return matArray(f, v)
 	}
 	shape := v.Shape()
 	if len(shape) == 0 {
@@ -68,7 +66,7 @@ func ArrayString(a *Apl, v Array) string {
 	} else if len(shape) == 1 {
 		s := make([]string, shape[0])
 		for i := 0; i < shape[0]; i++ {
-			s[i] = v.At(i).String(a)
+			s[i] = v.At(i).String(f)
 		}
 		return strings.Join(s, " ")
 	}
@@ -93,7 +91,7 @@ func ArrayString(a *Apl, v Array) string {
 	var buf strings.Builder
 	tw := tabwriter.NewWriter(&buf, 1, 0, 1, ' ', tabwriter.AlignRight) // tabwriter.AlignRight)
 	for i := 0; i < size; i++ {
-		fmt.Fprintf(tw, "%s\t", v.At(i).String(a))
+		fmt.Fprintf(tw, "%s\t", v.At(i).String(f))
 		if term := inc(); term > 0 {
 			for k := 0; k < term; k++ {
 				fmt.Fprintln(tw)
@@ -113,17 +111,17 @@ func ArrayString(a *Apl, v Array) string {
 
 // stringArray converts the array to a string array of the same shape.
 // All elements are printed with the current PP.
-func stringArray(a *Apl, v Array) StringArray {
+func stringArray(f Format, v Array) StringArray {
 	sa := StringArray{Dims: CopyShape(v), Strings: make([]string, v.Size())}
 	for i := range sa.Strings {
-		sa.Strings[i] = v.At(i).String(a)
+		sa.Strings[i] = v.At(i).String(f)
 	}
 	return sa
 }
 
 // jsonArray is used for PP=-2
-func jsonArray(a *Apl, v Array) string {
-	sa := stringArray(a, v)
+func jsonArray(f Format, v Array) string {
+	sa := stringArray(f, v)
 	var vector func(v StringArray) string
 	vector = func(S StringArray) string {
 		if len(S.Dims) == 1 {
@@ -141,8 +139,8 @@ func jsonArray(a *Apl, v Array) string {
 }
 
 // matArray is used for PP=-3. It only supported for rank 1 and 2.
-func matArray(a *Apl, v Array) string {
-	sa := stringArray(a, v)
+func matArray(f Format, v Array) string {
+	sa := stringArray(f, v)
 	if len(sa.Dims) == 1 {
 		return "[" + strings.Join(sa.Strings, ",") + "]"
 	} else if len(sa.Dims) != 2 {

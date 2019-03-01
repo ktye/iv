@@ -30,12 +30,12 @@ type Table struct {
 
 // String formats a table using a tabwriter.
 // Each value is printed using by it's String method, same as ⍕V.
-func (t Table) String(a *Apl) string {
-	if a.PP == -2 || a.PP == -3 {
-		return t.Dict.String(a)
+func (t Table) String(f Format) string {
+	if f.PP == -2 || f.PP == -3 {
+		return t.Dict.String(f)
 	}
 	var b bytes.Buffer
-	if err := t.WriteFormatted(a, nil, &b); err != nil {
+	if err := t.WriteFormatted(f, nil, &b); err != nil {
 		return ""
 	}
 	return string(b.Bytes())
@@ -52,12 +52,9 @@ func (t Table) Copy() Value {
 // If L is nil, it uses ⍕V on each value.
 // If L is a dict with conforming keys, it uses the values as left arguments to format (L[Key])⍕V
 // for columns of the corresponding keys.
-func (t Table) Csv(a *Apl, L Object, w io.Writer) error {
-	f := t.newFormatter(a, L)
-	defer f.Close()
-
+func (t Table) Csv(f Format, L Object, w io.Writer) error {
 	cw := csv.NewWriter(w)
-	if err := t.write(a, f, csvTable{cw}); err != nil {
+	if err := t.write(f, L, csvTable{cw}); err != nil {
 		return err
 	}
 	cw.Flush()
@@ -66,60 +63,75 @@ func (t Table) Csv(a *Apl, L Object, w io.Writer) error {
 
 // WriteFormatted writes the table with a tablwriter.
 // The format of the values is given by L in the same way as for Csv.
-func (t Table) WriteFormatted(a *Apl, L Object, w io.Writer) error {
-	f := t.newFormatter(a, L)
-	defer f.Close()
-
+func (t Table) WriteFormatted(f Format, L Object, w io.Writer) error {
 	tw := tabwriter.NewWriter(w, 1, 0, 1, ' ', 0)
-	if err := t.write(a, f, wsTable{tw}); err != nil {
+	if err := t.write(f, L, wsTable{tw}); err != nil {
 		return err
 	}
 	return tw.Flush()
 }
 
-func (t Table) write(a *Apl, f *tableFormatter, rw rowWriter) error {
+func (t Table) write(af Format, L Object, rw rowWriter) error {
 	keys := t.Keys()
 	if len(keys) == 0 {
 		return nil
 	}
 
+	var colfmt map[Value]string
+	if L != nil {
+		colfmt = make(map[Value]string)
+		for _, k := range L.Keys() {
+			v := L.At(k)
+			if s, ok := v.(String); ok {
+				colfmt[k.Copy()] = string(s)
+			}
+		}
+	}
+
+	f := Format{
+		PP:  af.PP,
+		Fmt: make(map[reflect.Type]string),
+	}
+	for k, v := range af.Fmt {
+		f.Fmt[k] = v
+	}
+
 	r := make([]string, len(keys))
 	for i := range r {
-		r[i] = keys[i].String(a) // The header is always formatted with String.
+		r[i] = keys[i].String(f) // The header is always formatted with String.
 	}
 	if err := rw.writeRow(r); err != nil {
 		return err
 	}
 
-	setnumformat := func(v, k Value) {
-		if f.fmt == nil {
-			return
-		}
-		t := reflect.TypeOf(v)
-		s, ok := f.fmt[k]
-		if ok == false {
-			s = f.rst[t]
-		}
-		a.Fmt[t] = s
-	}
 	for n := 0; n < t.Rows; n++ {
 		for i, k := range keys {
-			v := t.At(a, k).(Array).At(n)
-			setnumformat(v, k)
+			custom := ""
+			if colfmt != nil {
+				if s, ok := colfmt[k]; ok {
+					custom = s
+				}
+			}
+			v := t.At(k).(Array).At(n)
+			t := reflect.TypeOf(v)
+			if custom == "" {
+				delete(f.Fmt, t)
+			} else {
+				f.Fmt[t] = custom
+			}
 			if ar, ok := v.(Array); ok {
 				size := ar.Size()
 				vec := make([]string, size)
 				for j := 0; j < size; j++ {
 					e := ar.At(j)
-					setnumformat(e, k)
-					vec[j] = e.String(a)
+					vec[j] = e.String(f)
 				}
 				r[i] = strings.Join(vec, " ")
-				if a.PP < 0 {
+				if f.PP < 0 {
 					r[i] = "[" + r[i] + "]"
 				}
 			} else {
-				r[i] = v.String(a)
+				r[i] = v.String(f)
 			}
 		}
 		if err := rw.writeRow(r); err != nil {
@@ -146,40 +158,6 @@ type wsTable struct {
 func (w wsTable) writeRow(records []string) error {
 	_, err := fmt.Fprintln(w, strings.Join(records, "\t"))
 	return err
-}
-
-func (t Table) newFormatter(a *Apl, L Object) *tableFormatter {
-	var f tableFormatter
-	if L == nil {
-		return &f
-	}
-	f.a = a
-	f.rst = make(map[reflect.Type]string)
-	for t, s := range a.Fmt {
-		f.rst[t] = s
-	}
-
-	f.fmt = make(map[Value]string)
-	keys := L.Keys()
-	for _, k := range keys {
-		v := L.At(a, k)
-		if s, ok := v.(String); ok {
-			f.fmt[k] = string(s)
-		}
-	}
-	return &f
-}
-
-type tableFormatter struct {
-	a   *Apl
-	rst map[reflect.Type]string
-	fmt map[Value]string
-}
-
-func (f *tableFormatter) Close() {
-	if f.a != nil {
-		f.a.Fmt = f.rst
-	}
 }
 
 func (a *Apl) ParseTable(prototype Value, s string) (Table, error) {

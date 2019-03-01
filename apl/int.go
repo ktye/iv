@@ -18,15 +18,15 @@ func (i Int) ToIndex() (int, bool) {
 // String formats an integer as a string.
 // The format string is passed to fmt and - is replaced by ¯,
 // except if the first rune is -.
-func (i Int) String(a *Apl) string {
-	format := a.Fmt[reflect.TypeOf(i)]
+func (i Int) String(f Format) string {
+	format := f.Fmt[reflect.TypeOf(i)]
 	minus := false
 	if len(format) > 1 && format[0] == '-' {
 		minus = true
 		format = format[1:]
 	}
 	if format == "" {
-		switch a.PP {
+		switch f.PP {
 		case -8:
 			format = "0%o"
 		case -16:

@@ -22,7 +22,7 @@ type typ struct {
 	conv  bool
 }
 
-func (t typ) String(a *apl.Apl) string {
+func (t typ) String(f apl.Format) string {
 	name := "type"
 	if t.conv {
 		name = "totype"
@@ -30,7 +30,7 @@ func (t typ) String(a *apl.Apl) string {
 	if t.child == nil {
 		return name
 	}
-	return name + " " + t.child.String(a)
+	return name + " " + t.child.String(f)
 }
 
 func (t typ) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {

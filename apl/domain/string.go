@@ -20,11 +20,11 @@ func (s stringtype) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return V, false
 }
-func (s stringtype) String(a *apl.Apl) string {
+func (s stringtype) String(f apl.Format) string {
 	if s.child == nil {
 		return "string"
 	}
-	return "string" + " " + s.child.String(a)
+	return "string" + " " + s.child.String(f)
 }
 
 // IsStringArray accepts uniform.Strings
@@ -72,7 +72,7 @@ func (s stringstype) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		}
 	}
 }
-func (s stringstype) String(a *apl.Apl) string {
+func (s stringstype) String(f apl.Format) string {
 	name := "string array"
 	if s.convert {
 		name = "to string array"
@@ -80,5 +80,5 @@ func (s stringstype) String(a *apl.Apl) string {
 	if s.child == nil {
 		return name
 	}
-	return name + " " + s.child.String(a)
+	return name + " " + s.child.String(f)
 }

@@ -30,7 +30,7 @@ func NewChannel() Channel {
 	return c
 }
 
-func (c Channel) String(a *Apl) string {
+func (c Channel) String(f Format) string {
 	return "apl.Channel"
 }
 func (c Channel) Copy() Value { return c }
@@ -59,7 +59,7 @@ func (R Channel) Scope(a *Apl) Channel {
 				if ok == false {
 					return
 				}
-				fmt.Fprintf(a.stdout, "%s\n", v.String(a))
+				fmt.Fprintf(a.stdout, "%s\n", v.String(a.Format))
 				select {
 				case _, ok := <-c[1]:
 					if ok == false {
@@ -206,7 +206,7 @@ func (r *ChannelReader) Read(p []byte) (n int, err error) {
 				} else {
 					r.buf.WriteRune('\n')
 				}
-				r.buf.WriteString(v.String(r.a)) // TODO: this could be a race when formatting.
+				r.buf.WriteString(v.String(r.a.Format))
 			}
 		}
 	}

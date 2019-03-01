@@ -91,9 +91,9 @@ func TestScanRankArray(t *testing.T) {
 			} else {
 				s := ""
 				if _, ok := v.(Array); !ok {
-					s = v.String(a)
+					s = v.String(a.Format)
 				} else {
-					s = fmt.Sprintf("%v %v", v.String(a), v.(Array).Shape())
+					s = fmt.Sprintf("%v %v", v.String(a.Format), v.(Array).Shape())
 				}
 				if s != tc.out[i] {
 					t.Fatalf("#%d:%d: expected:\n%s\ngot:\n%s", k, i, tc.out[i], s)

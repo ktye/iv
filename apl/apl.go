@@ -14,11 +14,12 @@ import (
 // New starts a new interpreter.
 func New(w io.Writer) *Apl {
 	a := Apl{
-		stdout:     w,
-		env:        newEnv(),
-		Origin:     1,
-		PP:         0,
-		Fmt:        make(map[reflect.Type]string),
+		stdout: w,
+		env:    newEnv(),
+		Origin: 1,
+		Format: Format{Fmt: make(map[reflect.Type]string)},
+		//PP:         0,
+		//Fmt:        make(map[reflect.Type]string),
 		primitives: make(map[Primitive][]PrimitiveHandler),
 		operators:  make(map[string][]Operator),
 		symbols:    make(map[rune]string),
@@ -31,13 +32,14 @@ func New(w io.Writer) *Apl {
 // Apl stores the interpreter state.
 type Apl struct {
 	scan.Scanner
+	Format Format
 	parser
-	stdout     io.Writer
-	stdimg     ImageWriter
-	Tower      Tower
-	Origin     int
-	PP         int
-	Fmt        map[reflect.Type]string
+	stdout io.Writer
+	stdimg ImageWriter
+	Tower  Tower
+	Origin int
+	//PP         int
+	//Fmt        map[reflect.Type]string
 	env        *env
 	primitives map[Primitive][]PrimitiveHandler
 	operators  map[string][]Operator
@@ -45,6 +47,11 @@ type Apl struct {
 	pkg        map[string]*env
 	scaninit   bool
 	debug      bool
+}
+
+type Format struct {
+	PP  int
+	Fmt map[reflect.Type]string
 }
 
 // LoadPkg loads a package from a file.
@@ -79,7 +86,7 @@ func (a *Apl) Parse(line string) (Program, error) {
 
 	p, err := a.parse(tokens)
 	if a.debug {
-		fmt.Fprintf(a.stdout, "%s\n", p.String(a))
+		fmt.Fprintf(a.stdout, "%s\n", p.String(a.Format))
 	}
 
 	if err != nil {

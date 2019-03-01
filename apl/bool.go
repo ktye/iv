@@ -6,8 +6,8 @@ import (
 
 type Bool bool
 
-func (b Bool) String(a *Apl) string {
-	if a.PP < 0 {
+func (b Bool) String(f Format) string {
+	if f.PP < 0 {
 		if b {
 			return "1b"
 		}
@@ -41,8 +41,8 @@ type BoolArray struct {
 	Bools []bool
 }
 
-func (b BoolArray) String(a *Apl) string {
-	return ArrayString(a, b)
+func (b BoolArray) String(f Format) string {
+	return ArrayString(f, b)
 }
 
 func (b BoolArray) Copy() Value {

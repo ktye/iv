@@ -162,12 +162,12 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	keys := o.Keys()
 	n := 0
 	for i, k := range keys {
-		col := o.At(a, k)
+		col := o.At(k)
 		if col == nil {
-			return nil, fmt.Errorf("table: column %s does not exist", k.String(a))
+			return nil, fmt.Errorf("table: column %s does not exist", k.String(apl.Format{}))
 		}
 		if _, ok := col.(apl.Object); ok {
-			return nil, fmt.Errorf("table: contains an object: %s", k.String(a))
+			return nil, fmt.Errorf("table: contains an object: %s", k.String(apl.Format{}))
 		}
 		if _, ok := col.(apl.Array); ok == false {
 			col = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{col}}
@@ -176,13 +176,13 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		size := 1
 		ar := col.(apl.Array)
 		if shape := ar.Shape(); len(shape) != 1 {
-			return nil, fmt.Errorf("table: column %s has rank != 1", k.String(a))
+			return nil, fmt.Errorf("table: column %s has rank != 1", k.String(apl.Format{}))
 		} else {
 			size = shape[0]
 		}
 		u, ok := a.Unify(ar, true)
 		if ok == false {
-			return nil, fmt.Errorf("table: cannot unify column %s (mixed types)", k.String(a))
+			return nil, fmt.Errorf("table: cannot unify column %s (mixed types)", k.String(apl.Format{}))
 		}
 
 		if i == 0 {

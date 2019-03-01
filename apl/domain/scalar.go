@@ -30,7 +30,7 @@ func (s scalar) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return propagate(a, v, s.child)
 }
-func (s scalar) String(a *apl.Apl) string {
+func (s scalar) String(f apl.Format) string {
 	name := "scalar"
 	if s.convert {
 		name = "toscalar"
@@ -38,5 +38,5 @@ func (s scalar) String(a *apl.Apl) string {
 	if s.child == nil {
 		return name
 	}
-	return name + " " + s.child.String(a)
+	return name + " " + s.child.String(f)
 }

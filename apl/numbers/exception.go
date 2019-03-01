@@ -15,7 +15,7 @@ const (
 
 type exception string
 
-func (e exception) String(a *apl.Apl) string {
+func (e exception) String(f apl.Format) string {
 	return string(e)
 }
 func (e exception) Copy() apl.Value { return e }

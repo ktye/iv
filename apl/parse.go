@@ -896,7 +896,7 @@ func (p *parser) linkFuncAssign() {
 
 func (p *parser) printStack() {
 	for k, i := range p.stack {
-		fmt.Printf("#%d: %s %s\n", k, i.class.String(), i.e.String(p.a))
+		fmt.Printf("#%d: %s %s\n", k, i.class.String(), i.e.String(p.a.Format))
 	}
 }
 

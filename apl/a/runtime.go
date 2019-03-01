@@ -12,7 +12,7 @@ import (
 func Memstats(p *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	return xgo.Convert(p, reflect.ValueOf(m))
+	return xgo.Convert(reflect.ValueOf(m))
 }
 
 func cpus(p *apl.Apl, _, R apl.Value) (apl.Value, error) {

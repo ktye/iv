@@ -60,7 +60,7 @@ func (s strvec) To(a *apl.Apl, v apl.Value) (apl.Value, bool) {
 	}
 	return vec, true
 }
-func (s strvec) String(a *apl.Apl) string {
+func (s strvec) String(f apl.Format) string {
 	return "array of strings"
 }
 

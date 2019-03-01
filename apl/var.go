@@ -13,7 +13,7 @@ import (
 // It evaluates to itself, not the stored Value.
 type Identifier string
 
-func (id Identifier) String(a *Apl) string {
+func (id Identifier) String(f Format) string {
 	return string(id)
 }
 
@@ -43,7 +43,7 @@ func (a *Apl) AssignEnv(name string, v Value, env *env) error {
 
 	// Assignment to the special variable ⎕ prints the value.
 	if name == "⎕" {
-		fmt.Fprintf(a.stdout, "%s\n", v.String(a))
+		fmt.Fprintf(a.stdout, "%s\n", v.String(a.Format))
 		return nil
 	} else if name == "⎕IO" {
 		if n, ok := v.(Number); ok {
@@ -94,7 +94,7 @@ func (a *Apl) LookupEnv(name string) (Value, *env) {
 	if name == "⎕IO" {
 		return Int(a.Origin), nil
 	} else if name == "⎕PP" {
-		return Int(a.PP), nil
+		return Int(a.Format.PP), nil
 	}
 
 	if idx := strings.Index(name, "→"); idx != -1 {
@@ -166,7 +166,7 @@ type numVar struct {
 	name string
 }
 
-func (v numVar) String(a *Apl) string {
+func (v numVar) String(f Format) string {
 	return v.name
 }
 
@@ -183,7 +183,7 @@ func (v numVar) Eval(a *Apl) (Value, error) {
 // FnVar evaluates to the stored value or to an Identifier if it is undeclared.
 type fnVar string
 
-func (f fnVar) String(a *Apl) string {
+func (f fnVar) String(af Format) string {
 	return string(f)
 }
 func (f fnVar) Copy() Value { return f }

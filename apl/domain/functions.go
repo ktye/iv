@@ -22,11 +22,11 @@ func (f function) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return V, false
 }
-func (f function) String(a *apl.Apl) string {
+func (f function) String(af apl.Format) string {
 	if f.child == nil {
 		return "function"
 	}
-	return "function " + f.child.String(a)
+	return "function " + f.child.String(af)
 }
 
 func IsPrimitive(p string) SingleDomain {
@@ -41,6 +41,6 @@ func (p primitive) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return V, false
 }
-func (p primitive) String(a *apl.Apl) string {
+func (p primitive) String(f apl.Format) string {
 	return string(p)
 }

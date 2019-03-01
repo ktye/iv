@@ -69,12 +69,12 @@ func (f *function) Eval(a *Apl) (Value, error) {
 	return f.Function.Call(a, l, r)
 }
 
-func (f *function) String(a *Apl) string {
+func (f *function) String(af Format) string {
 	s := "nil"
 	if f.Function != nil {
 		switch p := f.Function.(type) {
 		case *derived:
-			s = p.String(a)
+			s = p.String(af)
 		case Primitive:
 			s = string(p)
 		case fnVar:
@@ -82,15 +82,15 @@ func (f *function) String(a *Apl) string {
 		case self:
 			s = "∇"
 		case *lambda:
-			s = p.String(a)
+			s = p.String(af)
 		}
 	}
 
-	r := f.right.String(a)
+	r := f.right.String(af)
 	if f.left == nil {
 		return fmt.Sprintf("(%s %s)", s, r)
 	}
-	l := f.left.String(a)
+	l := f.left.String(af)
 	return fmt.Sprintf("(%s %s %s)", l, s, r)
 }
 
@@ -111,7 +111,7 @@ func (p Primitive) Eval(a *Apl) (Value, error) {
 	return p, nil
 }
 
-func (p Primitive) String(a *Apl) string {
+func (p Primitive) String(f Format) string {
 	return string(p)
 }
 func (p Primitive) Copy() Value { return p }
@@ -182,8 +182,8 @@ func (h pHandler) Call(a *Apl, L, R Value) (Value, error) {
 func (h pHandler) To(a *Apl, L, R Value) (Value, Value, bool) {
 	return h.d.To(a, L, R)
 }
-func (h pHandler) String(a *Apl) string {
-	return h.d.String(a)
+func (h pHandler) String(f Format) string {
+	return h.d.String(f)
 }
 func (h pHandler) Doc() string {
 	return h.s
@@ -199,7 +199,7 @@ func (f ToFunction) Call(a *Apl, L, R Value) (Value, error) {
 	return f(a, L, R)
 }
 
-func (f ToFunction) String(a *Apl) string {
+func (f ToFunction) String(af Format) string {
 	return "anonymous function"
 }
 func (f ToFunction) Copy() Value { return f }

@@ -14,10 +14,10 @@ func (t train) Eval(a *Apl) (Value, error) {
 	return t, nil
 }
 
-func (t train) String(a *Apl) string {
+func (t train) String(f Format) string {
 	v := make([]string, len(t))
 	for i := range t {
-		v[i] = t[i].String(a)
+		v[i] = t[i].String(f)
 	}
 	return "(" + strings.Join(v, ", ") + ")"
 }
@@ -67,8 +67,8 @@ func (t train) Call(a *Apl, L, R Value) (Value, error) {
 
 type atop [2]Value
 
-func (t atop) String(a *Apl) string {
-	return fmt.Sprintf("(%s %s)", t[0].String(a), t[1].String(a))
+func (t atop) String(f Format) string {
+	return fmt.Sprintf("(%s %s)", t[0].String(f), t[1].String(f))
 }
 
 func (t atop) Call(a *Apl, L, R Value) (Value, error) {
@@ -91,8 +91,8 @@ func (t atop) Call(a *Apl, L, R Value) (Value, error) {
 
 type fork [3]Value
 
-func (fk fork) String(a *Apl) string {
-	return fmt.Sprintf("(%s %s %s)", fk[0].String(a), fk[1].String(a), fk[2].String(a))
+func (fk fork) String(f Format) string {
+	return fmt.Sprintf("(%s %s %s)", fk[0].String(f), fk[1].String(f), fk[2].String(f))
 }
 
 func (fk fork) Call(a *Apl, L, R Value) (Value, error) {

@@ -22,7 +22,7 @@ func plot1(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 	var prop *apl.Dict
 	if d, ok := L.(*apl.Dict); ok {
-		L = d.At(a, apl.String("X"))
+		L = d.At(apl.String("X"))
 		prop = d
 	}
 	x, err := xaxis(a, L, rs[2])
@@ -245,7 +245,7 @@ func plotProperties(a *apl.Apl, p *plot.Plot, prop *apl.Dict) error {
 		if ok == false {
 			return fmt.Errorf("property key must be string: %T", k)
 		}
-		v := prop.At(a, k)
+		v := prop.At(k)
 		if v == nil {
 			return fmt.Errorf("property %s has nil value", s)
 		}

@@ -97,15 +97,15 @@ func makeIndexArray(v []apl.Value) apl.IntArray {
 	}
 }
 
-func getformat(a *apl.Apl, num apl.Value) (string, bool) {
-	if a == nil {
+func getformat(f apl.Format, num apl.Value) (string, bool) {
+	if f.Fmt == nil {
 		return "", false
 	}
-	s := a.Fmt[reflect.TypeOf(num)]
+	s := f.Fmt[reflect.TypeOf(num)]
 	if len(s) > 0 && s[0] == '-' {
 		return s[1:], true
 	}
-	if a.PP < -1 {
+	if f.PP < -1 {
 		return "", true // intended for external interchange (full prec, with -).
 	}
 	return s, false

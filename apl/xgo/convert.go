@@ -14,7 +14,7 @@ type Exporter interface {
 }
 
 // export converts an apl value to a go value.
-func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
+func export(v apl.Value, t reflect.Type) (reflect.Value, error) {
 
 	if e, ok := v.(Exporter); ok {
 		x := e.Export()
@@ -47,7 +47,7 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 		n := apl.ArraySize(ar)
 		s := reflect.MakeSlice(t, n, n)
 		for i := 0; i < n; i++ {
-			if e, err := export(a, ar.At(i), et); err != nil {
+			if e, err := export(ar.At(i), et); err != nil {
 				return zero, err
 			} else {
 				se := s.Index(i)
@@ -73,7 +73,7 @@ func export(a *apl.Apl, v apl.Value, t reflect.Type) (reflect.Value, error) {
 }
 
 // convert converts a go value to an apl value.
-func Convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
+func Convert(v reflect.Value) (apl.Value, error) {
 	switch v.Kind() {
 	case reflect.Int:
 		return apl.Int(int(v.Int())), nil
@@ -94,7 +94,7 @@ func Convert(a *apl.Apl, v reflect.Value) (apl.Value, error) {
 		n := v.Len()
 		ar := apl.MixedArray{Dims: []int{n}, Values: make([]apl.Value, n)}
 		for i := range ar.Values {
-			if e, err := Convert(a, v.Index(i)); err != nil {
+			if e, err := Convert(v.Index(i)); err != nil {
 				return nil, err
 			} else {
 				ar.Values[i] = e

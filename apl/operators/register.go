@@ -68,7 +68,7 @@ func (p primitive) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 	return V, false
 }
-func (p primitive) String(a *apl.Apl) string { return string(p) }
+func (p primitive) String(f apl.Format) string { return string(p) }
 
 // function is both a func and implements the apl.Function interface,
 // by calling itself.

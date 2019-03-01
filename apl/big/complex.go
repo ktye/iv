@@ -21,16 +21,16 @@ func (c Complex) Copy() apl.Value {
 }
 
 // String formats a complex as a string. The polar form is not supported.
-func (c Complex) String(a *apl.Apl) string {
+func (c Complex) String(f apl.Format) string {
 	// TODO parse MAGaDEG
-	format, minus := getformat(a, c)
+	format, minus := getformat(f, c)
 	if format == "" {
-		if a.PP < 0 {
+		if f.PP < 0 {
 			format = "%vJ%v"
-		} else if a.PP == 0 {
+		} else if f.PP == 0 {
 			format = "%.6GJ%.6G"
 		} else {
-			format = fmt.Sprintf("%%.%dGJ%%.%dG", a.PP, a.PP)
+			format = fmt.Sprintf("%%.%dGJ%%.%dG", f.PP, f.PP)
 		}
 	}
 	if strings.Count(format, "%") != 2 {

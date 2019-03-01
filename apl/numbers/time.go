@@ -45,8 +45,8 @@ var layouts = []string{
 	"2006.01.02T15.04.05", // This accepts also fractional seconds.
 }
 
-func (t Time) String(a *apl.Apl) string {
-	format, minus := getformat(a, t)
+func (t Time) String(f apl.Format) string {
+	format, minus := getformat(f, t)
 	if t1 := time.Time(t); t1.Before(y1k) {
 		s := t1.Sub(y0).String()
 		if minus == false {

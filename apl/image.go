@@ -36,8 +36,8 @@ type Image struct {
 	Dims []int
 }
 
-func (i Image) String(a *Apl) string {
-	return i.toIntArray().String(a)
+func (i Image) String(f Format) string {
+	return i.toIntArray().String(f)
 }
 func (i Image) Copy() Value { return i } // Image is copied by reference.
 

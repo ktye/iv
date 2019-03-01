@@ -12,7 +12,7 @@ M ← ((1.2 2.1 3.0;);(;);(7.8912345678;);) ⍝ Multiple values; not allowed in 
 D ← `Time`Name`Mark`Count`Number`Comp`Mult#(D;N;B;I;F;C;M;)
 T← ⍉D
 
-⍝ Print the table in stanard form, which is equal to ⍕T
+⍝ Print the table in standard form, which is equal to ⍕T
 "Default table format:"
 T
 

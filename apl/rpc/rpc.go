@@ -21,7 +21,7 @@ type Conn struct {
 	net.Conn
 }
 
-func (c Conn) String(a *apl.Apl) string {
+func (c Conn) String(f apl.Format) string {
 	remote := c.RemoteAddr()
 	if remote == nil {
 		return fmt.Sprintf("rpc→conn not connected")

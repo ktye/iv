@@ -22,8 +22,8 @@ func (r Rat) Copy() apl.Value {
 	t = t.Set(r.Rat)
 	return Rat{t}
 }
-func (r Rat) String(a *apl.Apl) string {
-	format, minus := getformat(a, r)
+func (r Rat) String(f apl.Format) string {
+	format, minus := getformat(f, r)
 	if format == "" {
 		s := r.Rat.String()
 		if minus == false {

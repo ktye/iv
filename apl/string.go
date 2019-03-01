@@ -10,17 +10,17 @@ import (
 type String string
 
 // String prints a string.
-func (s String) String(a *Apl) string {
-	f := a.Fmt[reflect.TypeOf(s)]
-	if f == "" {
-		if a.PP < 0 {
-			f = "%q"
+func (s String) String(f Format) string {
+	fs := f.Fmt[reflect.TypeOf(s)]
+	if fs == "" {
+		if f.PP < 0 {
+			fs = "%q"
 		}
 	}
-	if f == "" {
+	if fs == "" {
 		return string(s)
 	}
-	return fmt.Sprintf("%q", string(s))
+	return fmt.Sprintf(fs, string(s))
 }
 
 func (s String) Copy() Value {
@@ -58,8 +58,8 @@ type StringArray struct {
 	Strings []string
 }
 
-func (s StringArray) String(a *Apl) string {
-	return ArrayString(a, s)
+func (s StringArray) String(f Format) string {
+	return ArrayString(f, s)
 }
 
 func (s StringArray) Copy() Value {

@@ -108,14 +108,14 @@ func TestUnify(t *testing.T) {
 		a := apl.New(&buf)
 		numbers.Register(a)
 
-		str := tc.in.String(a)
+		str := tc.in.String(a.Format)
 		oks := []bool{tc.ok1, tc.ok2}
 		ts := []reflect.Type{tc.t1, tc.t2}
 		uptype := false
 
 		for k := range oks {
 			out, ok := a.Unify(tc.in, uptype)
-			if got := out.String(a); got != str {
+			if got := out.String(a.Format); got != str {
 				if reflect.TypeOf(tc.in) == listType && uptype == true {
 					// An uptyped list has a different string representation.
 				} else {

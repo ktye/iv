@@ -73,7 +73,7 @@ func TestParse(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[%d] %s: %s", i+1, tc.in, err)
 		}
-		got := p.String(a)
+		got := p.String(a.Format)
 		if got != tc.exp {
 			t.Fatalf("[%d] %s:\nexpected:\n%s\ngot:\n%s", i+1, tc.in, tc.exp, got)
 		}
@@ -101,7 +101,7 @@ func TestMultiline(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[%d] %s: %s", i+1, tc.in, err)
 		}
-		got := p.String(a)
+		got := p.String(a.Format)
 		if got != tc.exp {
 			t.Fatalf("[%d] %s:\nexpected:\n%s\ngot:\n%s", i+1, tc.in, tc.exp, got)
 		}
@@ -136,8 +136,8 @@ func (d dummyPrimitive) Select(a *Apl, l, r Value) (IntArray, error) {
 func (d dummyPrimitive) To(a *Apl, l, r Value) (Value, Value, bool) {
 	return l, r, true
 }
-func (d dummyPrimitive) String(a *Apl) string { return "any" }
-func (d dummyPrimitive) Doc() string          { return "dummy" }
+func (d dummyPrimitive) String(f Format) string { return "any" }
+func (d dummyPrimitive) Doc() string            { return "dummy" }
 
 var dummyfunc dummyFunction
 
@@ -149,7 +149,7 @@ func (d dummyFunction) Call(a *Apl, l, r Value) (Value, error) { return Int(1), 
 type mop struct{}
 
 func (r mop) To(a *Apl, LO, RO Value) (Value, Value, bool) { return LO, RO, true }
-func (r mop) String(a *Apl) string                         { return "any" }
+func (r mop) String(f Format) string                       { return "any" }
 func (r mop) DyadicOp() bool                               { return false }
 func (r mop) Derived(a *Apl, lo, ro Value) Function        { return dummyfunc }
 func (r mop) Select(a *Apl, l Value, lo Value, ro Value, R Value) (IntArray, error) {
@@ -162,7 +162,7 @@ type dot struct {
 }
 
 func (d dot) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
-func (d dot) String(a *Apl) string                       { return "any" }
+func (d dot) String(f Format) string                     { return "any" }
 func (d dot) DyadicOp() bool                             { return true }
 func (d dot) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
 func (d dot) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IntArray, error) {
@@ -173,7 +173,7 @@ func (d dot) Doc() string { return "dot" }
 type brack struct{}
 
 func (d brack) To(a *Apl, l, r Value) (Value, Value, bool) { return l, r, true }
-func (d brack) String(a *Apl) string                       { return "any" }
+func (d brack) String(f Format) string                     { return "any" }
 func (d brack) DyadicOp() bool                             { return true }
 func (d brack) Derived(a *Apl, lo, ro Value) Function      { return dummyfunc }
 func (d brack) Select(a *Apl, l Value, lo Value, ro Value, r Value) (IntArray, error) {
