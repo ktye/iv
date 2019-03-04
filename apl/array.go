@@ -97,9 +97,9 @@ type Array interface {
 // Uniform is an array of a single type.
 // Zero returns the zero element of the type.
 type Uniform interface {
-	Array
+	ArraySetter
 	Zero() Value
-	Make([]int) ArraySetter
+	Make([]int) Uniform
 }
 
 // Reshaper is an array that can reshape itself.
@@ -307,7 +307,7 @@ func (ar IntArray) Set(i int, v Value) error {
 	return fmt.Errorf("cannot set %T to IndexArray", v)
 }
 
-func (s IntArray) Make(shape []int) ArraySetter {
+func (s IntArray) Make(shape []int) Uniform {
 	return IntArray{
 		Dims: shape,
 		Ints: make([]int, prod(shape)),

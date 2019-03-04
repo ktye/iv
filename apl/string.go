@@ -95,7 +95,7 @@ func (s StringArray) Set(i int, v Value) error {
 	return fmt.Errorf("cannot assign %T to StringArray", v)
 }
 
-func (s StringArray) Make(shape []int) ArraySetter {
+func (s StringArray) Make(shape []int) Uniform {
 	return StringArray{
 		Dims:    shape,
 		Strings: make([]string, prod(shape)),
