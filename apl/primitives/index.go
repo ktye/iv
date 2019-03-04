@@ -76,15 +76,20 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return ar.At(int(idx.Ints[0])), nil
 	}
 
-	res := apl.MixedArray{
-		Dims:   apl.CopyShape(idx),
-		Values: make([]apl.Value, apl.ArraySize(idx)),
+	var res apl.ArraySetter
+	if u, ok := ar.(apl.Uniform); ok {
+		res = u.Make(apl.CopyShape(idx))
+	} else {
+		res = apl.MixedArray{
+			Dims:   apl.CopyShape(idx),
+			Values: make([]apl.Value, apl.ArraySize(idx)),
+		}
 	}
 	for i, n := range idx.Ints {
 		if err := apl.ArrayBounds(ar, n); err != nil {
 			return nil, err
 		}
-		res.Values[i] = ar.At(n) // TODO copy?
+		res.Set(i, ar.At(n).Copy())
 	}
 	return res, nil
 }
@@ -681,11 +686,7 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		key := keys[k] // TODO: copy
 		d.K[i] = key
 		srccol := t.At(key).(apl.Uniform)
-		dstcol := srccol.Make([]int{len(rows)})
-		col, ok := dstcol.(apl.ArraySetter)
-		if ok == false {
-			return nil, fmt.Errorf("column is not settable: %T", dstcol)
-		}
+		col := srccol.Make([]int{len(rows)})
 		for n, m := range rows {
 			if err := col.Set(n, srccol.At(m)); err != nil {
 				return nil, err

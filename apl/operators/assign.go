@@ -290,11 +290,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		m := make(map[apl.Value]apl.Value)
 		for k, key := range keys {
 			u := t.At(key).(apl.Uniform)
-			column := u.Make([]int{len(rows)})
-			col, ok := column.(apl.ArraySetter)
-			if ok == false {
-				return fmt.Errorf("table-update: convert array: %T is not settable", column)
-			}
+			col := u.Make([]int{len(rows)})
 			to := ToType(reflect.TypeOf(u.Zero()), nil)
 			for i := range rows {
 				val := ar.At(i*shape[1] + k)

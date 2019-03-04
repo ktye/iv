@@ -77,7 +77,7 @@ func (b BoolArray) Set(i int, v Value) error {
 	return fmt.Errorf("cannot assign %T to BoolArray", v)
 }
 
-func (s BoolArray) Make(shape []int) Array {
+func (s BoolArray) Make(shape []int) ArraySetter {
 	return BoolArray{
 		Dims:  shape,
 		Bools: make([]bool, prod(shape)),

@@ -99,7 +99,7 @@ type Array interface {
 type Uniform interface {
 	Array
 	Zero() Value
-	Make([]int) Array
+	Make([]int) ArraySetter
 }
 
 // Reshaper is an array that can reshape itself.
@@ -107,38 +107,10 @@ type Reshaper interface {
 	Reshape([]int) Value
 }
 
-// ArrayMaker is an array that can allocate a new array of it's type.
-// An array that implements this interface can be assumed to be able to
-// create arrays of itself for shape with elements >= 0.
-type ArrayMaker interface {
-	MakeArray([]int) ArraySetter
-}
-
 // ArraySetter is any Array implementation that has a Set method on top.
 type ArraySetter interface {
 	Array
 	Set(int, Value) error
-}
-
-// MakeArray creates a new array.
-// It makes an array of the same type as the prototype, if it can.
-// Otherwise it returns a mixed array.
-// The prototype may be nil.
-func MakeArray(prototype Array, shape []int) ArraySetter {
-	var am ArrayMaker
-	if prototype != nil {
-		if m, ok := prototype.(ArrayMaker); ok {
-			am = m
-		}
-	}
-
-	if am == nil {
-		g := MixedArray{Dims: shape}
-		g.Values = make([]Value, ArraySize(g))
-		return g
-	} else {
-		return am.MakeArray(shape)
-	}
 }
 
 // ArrayBounds does bounds checking on an array given a flat index.
@@ -335,7 +307,7 @@ func (ar IntArray) Set(i int, v Value) error {
 	return fmt.Errorf("cannot set %T to IndexArray", v)
 }
 
-func (s IntArray) Make(shape []int) Array {
+func (s IntArray) Make(shape []int) ArraySetter {
 	return IntArray{
 		Dims: shape,
 		Ints: make([]int, prod(shape)),

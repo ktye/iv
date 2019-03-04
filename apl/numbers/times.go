@@ -66,7 +66,7 @@ func (t TimeArray) Reshape(shape []int) apl.Value {
 	return res
 }
 
-func (t TimeArray) Make(shape []int) apl.Array {
+func (t TimeArray) Make(shape []int) apl.ArraySetter {
 	return TimeArray{
 		Dims:  shape,
 		Times: make([]time.Time, prod(shape)),

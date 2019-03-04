@@ -48,7 +48,7 @@ func (f FloatArray) Set(i int, v apl.Value) error {
 	return fmt.Errorf("cannot assign %T to FloatArray", v)
 }
 
-func (f FloatArray) Make(shape []int) apl.Array {
+func (f FloatArray) Make(shape []int) apl.ArraySetter {
 	return FloatArray{
 		Dims:   shape,
 		Floats: make([]float64, prod(shape)),

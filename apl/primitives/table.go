@@ -526,14 +526,10 @@ func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) 
 		for _, gv := range groups {
 			g := groupmap[gv]
 			y := column.Make([]int{len(g)})
-			ys, ok := y.(apl.ArraySetter)
-			if ok == false {
-				return nil, fmt.Errorf("array is not settable: %T", y)
-			}
 			for n, m := range g {
-				ys.Set(n, column.At(m)) // TODO: copy
+				y.Set(n, column.At(m)) // TODO: copy
 			}
-			r, err := f.Call(a, nil, ys)
+			r, err := f.Call(a, nil, y)
 			if err != nil {
 				return nil, err
 			}
