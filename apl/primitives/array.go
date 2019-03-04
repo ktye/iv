@@ -2,6 +2,7 @@ package primitives
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 
 	"github.com/ktye/iv/apl"
@@ -117,12 +118,25 @@ func array1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 			Values: make([]apl.Value, apl.ArraySize(ar)),
 			Dims:   apl.CopyShape(ar),
 		}
+		same := true
+		var t reflect.Type
 		for i := range res.Values {
 			val, err := efn(a, nil, ar.At(i))
 			if err != nil {
 				return nil, err
 			}
 			res.Values[i] = val
+			if i == 0 {
+				t = reflect.TypeOf(val)
+			} else if same {
+				if reflect.TypeOf(val) != t {
+					same = false
+				}
+			}
+		}
+		if same {
+			u, _ := a.Unify(res, false)
+			return u, nil
 		}
 		return res, nil
 	}
@@ -154,6 +168,8 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 		}
 		res := apl.MixedArray{Dims: shape}
 		res.Values = make([]apl.Value, apl.ArraySize(res))
+		same := true
+		var t reflect.Type
 		for i := range res.Values {
 			lv := L
 			if isLarray {
@@ -163,11 +179,23 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 			if isRarray {
 				rv = ar.At(i)
 			}
-			if val, err := efn(a, lv, rv); err != nil {
+			val, err := efn(a, lv, rv)
+			if err != nil {
 				return nil, err
 			} else {
 				res.Values[i] = val
 			}
+			if i == 0 {
+				t = reflect.TypeOf(val)
+			} else if same {
+				if reflect.TypeOf(val) != t {
+					same = false
+				}
+			}
+		}
+		if same {
+			u, _ := a.Unify(res, false)
+			return u, nil
 		}
 		return res, nil
 	}
@@ -245,6 +273,8 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 		}
 
 		var err error
+		same := true
+		var t reflect.Type
 		var lv, rv, v apl.Value
 		res := apl.MixedArray{Dims: apl.CopyShape(al)}
 		res.Values = make([]apl.Value, apl.ArraySize(res))
@@ -267,7 +297,18 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 				return nil, err
 			}
 			res.Values[i] = v
+			if i == 0 {
+				t = reflect.TypeOf(v)
+			} else if same {
+				if reflect.TypeOf(v) != t {
+					same = false
+				}
+			}
 			apl.IncArrayIndex(idx, res.Dims)
+		}
+		if same {
+			u, _ := a.Unify(res, false)
+			return u, nil
 		}
 		return res, nil
 	}
