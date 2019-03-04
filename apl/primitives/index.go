@@ -228,7 +228,7 @@ func objDepthSelection(a *apl.Apl, o apl.Object, spec apl.IdxSpec, ia apl.IntArr
 func indexArray(a *apl.Apl, spec apl.IdxSpec, shape []int) (apl.IntArray, error) {
 	intspec, err := spec2ints(a, spec, shape)
 	if err != nil {
-		return apl.IntArray{}, nil
+		return apl.IntArray{}, err
 	}
 
 	// Initially the rank is the same as spec.
