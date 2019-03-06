@@ -16,7 +16,7 @@ type Float struct {
 }
 
 func (f Float) Copy() apl.Value {
-	var re *big.Float
+	re := new(big.Float)
 	re = re.Copy(f.Float)
 	return Float{re}
 }

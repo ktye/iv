@@ -14,7 +14,8 @@ type Complex struct {
 }
 
 func (c Complex) Copy() apl.Value {
-	var re, im *big.Float
+	re := new(big.Float)
+	im := new(big.Float)
 	re = re.Copy(c.re)
 	im = im.Copy(c.im)
 	return Complex{re, im}
