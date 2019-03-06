@@ -475,10 +475,6 @@ func Expand(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 			return apl.EmptyArray{}, nil
 		} else {
 			rs := ar.Shape()
-			if ir, ok := ar.(apl.IntArray); ok {
-				fmt.Println("ar is index array: dims:", ir.Dims)
-			}
-
 			ax := int(axis)
 			if ax < 0 {
 				ax = len(rs) + ax

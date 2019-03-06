@@ -2,6 +2,7 @@ package primitives
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/ktye/iv/apl"
 	. "github.com/ktye/iv/apl/domain"
@@ -60,8 +61,22 @@ func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		Dims:   []int{n},
 		Values: make([]apl.Value, n),
 	}
+	var t reflect.Type
+	same := true
 	for i := range res.Values {
-		res.Values[i] = ar.At(i)
+		v := ar.At(i).Copy()
+		if i == 0 {
+			t = reflect.TypeOf(v)
+		} else if same {
+			if reflect.TypeOf(v) != t {
+				same = false
+			}
+		}
+		res.Values[i] = v
+	}
+	if same {
+		u, _ := a.Unify(res, false)
+		return u, nil
 	}
 	return res, nil
 }
@@ -96,7 +111,7 @@ func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
 		R = r
 		ar, ok := R.(apl.Array)
 		if ok == false {
-			return apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
+			return a.UnifyArray(apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R.Copy()}}), nil
 		}
 
 		rs := ar.Shape()
@@ -133,7 +148,7 @@ func ravelWithAxis(a *apl.Apl, R apl.Value) (apl.Value, error) {
 	// APL2: if the axis is empty, a new last axis of length 1 is appended.
 	if len(x) == 0 {
 		if Rarray == false {
-			return apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}, nil
+			return a.UnifyArray(apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}), nil
 		}
 		shape := apl.CopyShape(ar)
 		shape = append(shape, 1)
@@ -210,11 +225,10 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// Catenate two scalars.
 	if isLarray == false && isRarray == false {
-		v, _ := a.Unify(apl.MixedArray{
-			Values: []apl.Value{L, R}, // TODO: copy?
+		return a.UnifyArray(apl.MixedArray{
+			Values: []apl.Value{L.Copy(), R.Copy()},
 			Dims:   []int{2},
-		}, false)
-		return v, nil
+		}), nil
 	}
 
 	reshapeScalar := func(scalar apl.Value, othershape []int) apl.Array {
@@ -224,9 +238,9 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 		ary.Values = make([]apl.Value, apl.ArraySize(ary))
 		for i := range ary.Values {
-			ary.Values[i] = scalar // TODO: copy?
+			ary.Values[i] = scalar.Copy()
 		}
-		return ary
+		return a.UnifyArray(ary)
 	}
 
 	// If one is scalar, reshape to match the other's shape, with
@@ -299,23 +313,27 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		} else {
 			v = al.At(lc.Index(src))
 		}
-		res.Values[i] = v // TODO: copy?
+		res.Values[i] = v.Copy()
 		apl.IncArrayIndex(dst, newshape)
 	}
-	return res, nil
+	return a.UnifyArray(res), nil
 }
 
 func catenateLists(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	l, lok := L.(apl.List)
 	r, rok := R.(apl.List)
 	if lok == false {
-		return append(apl.List{L}, r...), nil // TODO: copy
+		l = apl.List{L}
 	} else if rok == false {
-		return append(l, R), nil // TODO: copy
+		r = apl.List{R}
 	}
 	res := make(apl.List, len(l)+len(r))
-	copy(res, l)          // TODO: copy
-	copy(res[len(l):], r) // TODO: copy
+	for i, v := range l {
+		res[i] = v.Copy()
+	}
+	for i, v := range r {
+		res[i+len(l)] = v.Copy()
+	}
 	return res, nil
 }
 
@@ -326,7 +344,7 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 		if x != 0 {
 			return nil, fmt.Errorf("cannot laminate two scalar for given axis")
 		}
-		return apl.MixedArray{Dims: []int{2}, Values: []apl.Value{L, R}}, nil
+		return a.UnifyArray(apl.MixedArray{Dims: []int{2}, Values: []apl.Value{L.Copy(), R.Copy()}}), nil
 	}
 
 	reshape := func(scalar apl.Value, shape []int) apl.Array {
@@ -335,9 +353,9 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 		}
 		ary.Values = make([]apl.Value, apl.ArraySize(ary))
 		for i := range ary.Values {
-			ary.Values[i] = scalar // TODO: copy?
+			ary.Values[i] = scalar.Copy()
 		}
-		return ary
+		return a.UnifyArray(ary)
 	}
 
 	if lok == false {
@@ -385,10 +403,10 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 		} else {
 			v = ar.At(ic.Index(src))
 		}
-		res.Values[i] = v // TODO: copy?
+		res.Values[i] = v.Copy()
 		apl.IncArrayIndex(dst, shape)
 	}
-	return res, nil
+	return a.UnifyArray(res), nil
 }
 
 func catenateFirst(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
@@ -401,7 +419,7 @@ func catenateFirst(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 func table(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		return apl.MixedArray{Dims: []int{1, 1}, Values: []apl.Value{R}}, nil
+		return a.UnifyArray(apl.MixedArray{Dims: []int{1, 1}, Values: []apl.Value{R}}), nil
 	}
 	rs := ar.Shape()
 
@@ -422,7 +440,7 @@ func table(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 func enlist(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	r, ok := R.(apl.List)
 	if ok == false {
-		return apl.List{R}, nil // TODO: copy
+		return apl.List{R.Copy()}, nil
 	}
 
 	var f func(l apl.List) apl.List
@@ -431,9 +449,9 @@ func enlist(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		for _, e := range l {
 			if v, ok := e.(apl.List); ok {
 				v = f(v)
-				res = append(res, v...) // TODO: copy
+				res = append(res, v...)
 			} else {
-				res = append(res, e) // TODO: copy
+				res = append(res, e.Copy())
 			}
 		}
 		return res

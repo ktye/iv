@@ -32,7 +32,8 @@ func (v array) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		Values: []apl.Value{V},
 		Dims:   []int{1},
 	}
-	return propagate(a, ga, v.child)
+	u, _ := a.Unify(ga, false)
+	return propagate(a, u, v.child)
 }
 func (v array) String(f apl.Format) string {
 	name := "array"

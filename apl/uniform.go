@@ -134,3 +134,9 @@ func (a *Apl) Unify(A Array, uptype bool) (resultarray Array, resultok bool) {
 	}
 	return A, false
 }
+
+// UnifyArray tries to unify the input array without uptyping.
+func (a *Apl) UnifyArray(A Array) Array {
+	u, _ := a.Unify(A, false)
+	return u
+}
