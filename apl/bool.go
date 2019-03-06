@@ -47,6 +47,7 @@ func (b BoolArray) String(f Format) string {
 
 func (b BoolArray) Copy() Value {
 	r := BoolArray{Dims: CopyShape(b), Bools: make([]bool, len(b.Bools))}
+	copy(r.Bools, b.Bools)
 	return r
 }
 

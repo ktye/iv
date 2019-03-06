@@ -194,8 +194,7 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 			}
 		}
 		if same {
-			u, _ := a.Unify(res, false)
-			return u, nil
+			return a.UnifyArray(res), nil
 		}
 		return res, nil
 	}

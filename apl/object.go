@@ -97,12 +97,12 @@ func (d *Dict) Copy() Value {
 	r := Dict{}
 	if d.K != nil {
 		r.K = make([]Value, len(d.K))
-		for i := range r.K {
+		for i := range d.K {
 			r.K[i] = d.K[i].Copy()
 		}
 	}
 	if d.M != nil {
-		d.M = make(map[Value]Value)
+		r.M = make(map[Value]Value)
 		for k, v := range d.M {
 			r.M[k.Copy()] = v.Copy()
 		}

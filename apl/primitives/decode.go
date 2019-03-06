@@ -49,7 +49,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		Dims:   apl.CopyShape(al),
 	}
 	for i := range p.Values {
-		p.Values[i] = al.At(i) // TODO: copy?
+		p.Values[i] = al.At(i).Copy()
 	}
 	N := ls[len(ls)-1]
 
@@ -70,7 +70,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 
 	dot := operators.Scalarproduct(a, apl.Primitive("+"), apl.Primitive("×"))
-	return dot.Call(a, p, ar)
+	return dot.Call(a, a.UnifyArray(p), ar)
 }
 
 // extendAxis extends the axis of length 1 to n
@@ -83,8 +83,7 @@ func extendAxis(ar apl.Array, axis, n int) (apl.Array, []int) {
 	for i := range res.Values {
 		copy(idx, ridx)
 		idx[axis] = 0
-		v := ar.At(ic.Index(idx))
-		res.Values[i] = v // TODO copy?
+		res.Values[i] = ar.At(ic.Index(idx)).Copy()
 		apl.IncArrayIndex(ridx, res.Dims)
 	}
 	return res, res.Dims
@@ -135,7 +134,7 @@ func encode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if len(ls) == 1 && rok == false {
 		ravelL := make([]apl.Value, ls[0])
 		for i := range ravelL {
-			ravelL[i] = al.At(i)
+			ravelL[i] = al.At(i).Copy()
 		}
 		return encodeVecScalar(a, ravelL, R)
 	}
@@ -151,16 +150,16 @@ func encodeVecScalar(a *apl.Apl, L []apl.Value, R apl.Value) (apl.Value, error) 
 	mod := arith2("|", abs2)
 
 	// Two vectors Z (len ⍴A) and C (len 1+⍴A)
-	var err error
 	Z := make([]apl.Value, len(L))
 	C := make([]apl.Value, len(L)+1)
 	C[len(C)-1] = R
 	for i := len(Z) - 1; i >= 0; i-- {
 		// Z[i] ← L[i] ⊤ C[i+1]
-		Z[i], err = mod(a, L[i], C[i+1])
+		v, err := mod(a, L[i], C[i+1])
 		if err != nil {
 			return nil, err
 		}
+		Z[i] = v.Copy()
 
 		// If L[i] is 0: C[i] ← 0
 		a0, err := eq(a, L[i], apl.Int(0))
@@ -179,10 +178,10 @@ func encodeVecScalar(a *apl.Apl, L []apl.Value, R apl.Value) (apl.Value, error) 
 			if err != nil {
 				return nil, err
 			}
-			C[i] = d
+			C[i] = d.Copy()
 		}
 	}
-	return apl.MixedArray{Dims: []int{len(Z)}, Values: Z}, nil
+	return a.UnifyArray(apl.MixedArray{Dims: []int{len(Z)}, Values: Z}), nil
 }
 
 func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
@@ -226,7 +225,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 					return err
 				}
 			}
-			vec[i] = v
+			vec[i] = v.Copy()
 			u, err := fmul(a, v, p)
 			if err != nil {
 				return err
@@ -258,7 +257,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 			return err
 		}
 		for i := range vec {
-			res.Values[i*n+off] = vec[i] // TODO copy?
+			res.Values[i*n+off] = vec[i].Copy()
 		}
 		return nil
 	}
@@ -272,7 +271,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 			if err != nil {
 				return err
 			}
-			rad[i] = v
+			rad[i] = v.Copy()
 		}
 		return nil
 	}
@@ -297,7 +296,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	for i := 0; i < NL; i++ {
 		// Build radix vec from the first axis of L
 		for k := 0; k < len(rad); k++ {
-			rad[k] = al.At(k*NL + i)
+			rad[k] = al.At(k*NL + i).Copy()
 		}
 		powerradix(rad)
 
@@ -314,7 +313,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 			off++
 		}
 	}
-	return res, nil
+	return a.UnifyArray(res), nil
 }
 
 /* There should be a simpler algorithm for encodeArray:

@@ -49,11 +49,15 @@ func keys(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		}
 		return apl.StringArray{Dims: []int{len(s)}, Strings: s}, nil
 	} else {
-		v := obj.Keys()
-		return apl.MixedArray{
-			Dims:   []int{len(v)},
-			Values: v,
-		}, nil
+		keyval := obj.Keys()
+		values := make([]apl.Value, len(keyval))
+		for i, v := range keyval {
+			values[i] = v.Copy()
+		}
+		return a.UnifyArray(apl.MixedArray{
+			Dims:   []int{len(values)},
+			Values: values,
+		}), nil
 	}
 }
 
@@ -62,9 +66,9 @@ func dict(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	if ok == false {
 		return &apl.Dict{
-			K: []apl.Value{L},
+			K: []apl.Value{L.Copy()},
 			M: map[apl.Value]apl.Value{
-				L: R,
+				L: R.Copy(),
 			},
 		}, nil
 	}
@@ -78,7 +82,7 @@ func dict(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if ok == false {
 		mr := apl.MixedArray{Dims: []int{ls[0]}, Values: make([]apl.Value, ls[0])}
 		for i := range mr.Values {
-			mr.Values[i] = R // TODO: copy?
+			mr.Values[i] = R.Copy()
 		}
 		ar = mr
 	}
@@ -90,8 +94,8 @@ func dict(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	k := make([]apl.Value, al.Size())
 	m := make(map[apl.Value]apl.Value)
 	for i := 0; i < al.Size(); i++ {
-		l := al.At(i)
-		m[l] = ar.At(i)
+		l := al.At(i).Copy()
+		m[l] = ar.At(i).Copy()
 		k[i] = l
 	}
 	return &apl.Dict{
