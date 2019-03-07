@@ -107,12 +107,12 @@ func takedrop(a *apl.Apl, L, R apl.Value, take bool) (apl.Value, error) {
 	// If R is a scalar, set it's shape to (⍴,L)⍴1.
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		r := apl.MixedArray{Values: []apl.Value{R}} // TODO copy?
+		r := apl.MixedArray{Values: []apl.Value{R.Copy()}}
 		r.Dims = make([]int, len(ai.Ints))
 		for i := range r.Dims {
 			r.Dims[i] = 1
 		}
-		ar = r
+		ar = a.UnifyArray(r)
 	}
 	rs := ar.Shape()
 
@@ -254,7 +254,7 @@ func cut(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}
 	if len(idx) == 1 {
-		return r[idx[0]:], nil // TODO: copy
+		return r[idx[0]:].Copy(), nil
 	}
 	res := make(apl.List, len(idx))
 	for i := range res {
@@ -262,7 +262,7 @@ func cut(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		if i < len(idx)-1 {
 			stp = idx[i+1]
 		}
-		res[i] = r[idx[i]:stp] // TODO: copy
+		res[i] = r[idx[i]:stp].Copy()
 	}
 	return res, nil
 }
@@ -306,7 +306,7 @@ func takeChannel2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // sendChannel sends the value R to the channel L and returns R.
 func sendChannel(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	c := L.(apl.Channel)
-	c[1] <- R // TODO: copy?
+	c[1] <- R.Copy()
 	return R, nil
 }
 

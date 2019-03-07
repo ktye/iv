@@ -57,7 +57,7 @@ func roll(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 			}
 		}
 	}
-	return res, nil
+	return a.UnifyArray(res), nil
 }
 
 // rollNumber returns a random integer upto n, which must be integer.

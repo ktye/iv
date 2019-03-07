@@ -50,10 +50,10 @@ func (s strvec) To(a *apl.Apl, v apl.Value) (apl.Value, bool) {
 		return v, false
 	}
 	n := apl.ArraySize(ar)
-	vec := apl.MixedArray{Dims: []int{n}, Values: make([]apl.Value, n)}
+	vec := apl.StringArray{Dims: []int{n}, Strings: make([]string, n)}
 	for i := 0; i < n; i++ {
 		if s, ok := ar.At(i).(apl.String); ok {
-			vec.Values[i] = s
+			vec.Strings[i] = string(s)
 		} else {
 			return v, false
 		}
@@ -65,21 +65,13 @@ func (s strvec) String(f apl.Format) string {
 }
 
 func strcat(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	ar := R.(apl.MixedArray)
-	var b strings.Builder
-	for _, s := range ar.Values {
-		b.WriteString(string(s.(apl.String)))
-	}
-	return apl.String(b.String()), nil
+	ar := R.(apl.StringArray)
+	return apl.String(strings.Join(ar.Strings, "")), nil
 }
 
 func strjoin(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
-	ar := R.(apl.MixedArray)
-	v := make([]string, len(ar.Values))
-	for i, s := range ar.Values {
-		v[i] = string(s.(apl.String))
-	}
-	return apl.String(strings.Join(v, string(L.(apl.String)))), nil
+	v := R.(apl.StringArray)
+	return apl.String(strings.Join(v.Strings, string(L.(apl.String)))), nil
 }
 
 func runesplit(a *apl.Apl, _, R apl.Value) (apl.Value, error) {

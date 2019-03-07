@@ -76,15 +76,7 @@ func index(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return ar.At(int(idx.Ints[0])), nil
 	}
 
-	var res apl.ArraySetter
-	if u, ok := ar.(apl.Uniform); ok {
-		res = u.Make(apl.CopyShape(idx))
-	} else {
-		res = apl.MixedArray{
-			Dims:   apl.CopyShape(idx),
-			Values: make([]apl.Value, apl.ArraySize(idx)),
-		}
-	}
+	res := apl.MakeArray(ar, apl.CopyShape(idx))
 	for i, n := range idx.Ints {
 		if err := apl.ArrayBounds(ar, n); err != nil {
 			return nil, err
@@ -269,7 +261,7 @@ func indexArray(a *apl.Apl, spec apl.IdxSpec, shape []int) (apl.IntArray, error)
 // spec is origin dependent, the result has always origin 0.
 func spec2ints(a *apl.Apl, spec apl.IdxSpec, shape []int) ([][]int, error) {
 	if len(spec) != len(shape) {
-		return nil, fmt.Errorf("indexing: array and index specification have different rank")
+		return nil, fmt.Errorf("indexing: array and index specification have different rank: %d != %d", len(spec), len(shape))
 	}
 
 	to := ToIndexArray(nil)
@@ -415,12 +407,12 @@ func listIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	for i, k := range idx {
 		v := lst[k]
 		if i == len(idx)-1 {
-			return v, nil // TODO: copy?
+			return v.Copy(), nil
 		} else {
 			lst = v.(apl.List)
 		}
 	}
-	return lst, nil // TODO: copy?
+	return lst, nil
 }
 
 // listSelection returns the index for selective assignment.
@@ -575,12 +567,12 @@ func tableSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 			return idx, fmt.Errorf("table-select-func: %s", err)
 		}
 
-		to := ToIndexArray(nil)
-		ints, ok := to.To(a, v)
+		to := ToBoolArray(nil)
+		bools, ok := to.To(a, v)
 		if ok == false {
 			return idx, fmt.Errorf("table-select-func: does not return a boolean vector: %T", v)
 		}
-		if v, err := where(a, nil, ints); err != nil {
+		if v, err := where(a, nil, bools); err != nil {
 			return idx, fmt.Errorf("table-select-func: %s", err)
 		} else {
 			ar := v.(apl.IntArray)
@@ -670,12 +662,12 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	// Return a single value.
 	if conv && len(rows) == 1 && len(cols) == 1 {
-		return t.At(keys[cols[0]]).(apl.Array).At(rows[0]), nil // TODO copy
+		return t.At(keys[cols[0]]).(apl.Array).At(rows[0]).Copy(), nil
 	}
 
 	// Return a single column as an array.
 	if conv && len(cols) == 1 {
-		return t.At(keys[cols[0]]), nil // TODO copy
+		return t.At(keys[cols[0]]).Copy(), nil
 	}
 
 	res := apl.Table{Rows: len(rows)}
@@ -683,12 +675,12 @@ func tableIndex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	d.K = make([]apl.Value, len(cols))
 	d.M = make(map[apl.Value]apl.Value)
 	for i, k := range cols {
-		key := keys[k] // TODO: copy
+		key := keys[k].Copy()
 		d.K[i] = key
 		srccol := t.At(key).(apl.Uniform)
 		col := srccol.Make([]int{len(rows)})
 		for n, m := range rows {
-			if err := col.Set(n, srccol.At(m)); err != nil {
+			if err := col.Set(n, srccol.At(m).Copy()); err != nil {
 				return nil, err
 			}
 		}

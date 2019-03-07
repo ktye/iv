@@ -57,9 +57,7 @@ func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		Ints: make([]int, len(shape)),
 		Dims: []int{len(shape)},
 	}
-	for i, n := range shape {
-		ret.Ints[i] = n
-	}
+	copy(ret.Ints, shape)
 	return ret, nil
 }
 
@@ -77,7 +75,6 @@ func rho2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	l := L.(apl.IntArray)
 	shape := make([]int, len(l.Ints))
 	copy(shape, l.Ints)
-
 	if rs, ok := R.(apl.Reshaper); ok {
 		return rs.Reshape(shape), nil
 	}

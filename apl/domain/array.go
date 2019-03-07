@@ -125,6 +125,55 @@ func (v vector) String(f apl.Format) string {
 	return name + " " + v.child.String(f)
 }
 
+func ToBoolArray(child SingleDomain) SingleDomain {
+	return boolarray{child, true}
+}
+
+func IsBoolArray(child SingleDomain) SingleDomain {
+	return indexarray{child, false}
+}
+
+type boolarray struct {
+	child SingleDomain
+	conv  bool
+}
+
+func (ba boolarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
+	_, ok := V.(apl.BoolArray)
+	if ba.conv == false && ok == false {
+		return V, false
+	} else if ba.conv == false && ok {
+		return propagate(a, V, ba.child)
+	} else if ok {
+		return propagate(a, V, ba.child)
+	}
+
+	iav, ok := indexarray{nil, true}.To(a, V)
+	if ok == false {
+		return V, false
+	}
+	ia := iav.(apl.IntArray)
+	b := apl.BoolArray{Dims: apl.CopyShape(ia), Bools: make([]bool, len(ia.Ints))}
+	for i, n := range ia.Ints {
+		if n < 0 || n > 1 {
+			return V, false
+		} else if n == 1 {
+			b.Bools[i] = true
+		}
+	}
+	return propagate(a, b, ba.child)
+}
+func (ba boolarray) String(f apl.Format) string {
+	name := "boolarray"
+	if ba.conv == true {
+		name = "toboolarray"
+	}
+	if ba.child == nil {
+		return name
+	}
+	return name + " " + ba.child.String(f)
+}
+
 // ToIndexArray accepts arrays that contain only numbers that are convertibel to ints.
 // It accepts also scalars.
 // Size-0 arrays are returns as empty.

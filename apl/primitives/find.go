@@ -31,8 +31,8 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	ar := R.(apl.Array)
 	rs := ar.Shape()
 
-	res := apl.IntArray{Dims: apl.CopyShape(ar)}
-	res.Ints = make([]int, apl.ArraySize(res))
+	res := apl.BoolArray{Dims: apl.CopyShape(ar)}
+	res.Bools = make([]bool, apl.ArraySize(res))
 
 	// If the rank of L is arger than the rank of R, nothing is found.
 	if len(ls) > len(rs) {
@@ -61,9 +61,9 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	feq := arith2("=", compare("="))
 	ic, idx := apl.NewIdxConverter(rs)
-	for i := range res.Ints {
-		if nl > len(res.Ints)-i {
-			res.Ints[i] = 0
+	for i := range res.Bools {
+		if nl > len(res.Bools)-i {
+			res.Bools[i] = false
 		} else {
 			iseq := true
 			for k := 0; k < len(idx); k++ {
@@ -81,7 +81,7 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				apl.IncArrayIndex(idx, ls)
 			}
 			if iseq {
-				res.Ints[i] = 1
+				res.Bools[i] = true
 			}
 		}
 	}

@@ -89,7 +89,7 @@ func domino2(a *apl.Apl, RHS, R apl.Value) (apl.Value, error) {
 	// We have no special QR algorithm for the general case.
 	if rs[0] > rs[1] {
 		conj := array1("+", add)
-		h, err := conj(a, nil, ar) // TODO copy?
+		h, err := conj(a, nil, ar)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +125,7 @@ func domino2(a *apl.Apl, RHS, R apl.Value) (apl.Value, error) {
 	for i := range A {
 		A[i] = make([]apl.Value, n)
 		for k := range A[i] {
-			A[i][k] = ar.At(i*n + k)
+			A[i][k] = ar.At(i*n + k).Copy()
 		}
 	}
 
@@ -141,7 +141,7 @@ func domino2(a *apl.Apl, RHS, R apl.Value) (apl.Value, error) {
 	for k := 0; k < ls[1]; k++ {
 		// Copy column k of RHS to b.
 		for i := 0; i < n; i++ {
-			b[i] = al.At(i*ls[1] + k)
+			b[i] = al.At(i*ls[1] + k).Copy()
 		}
 
 		// Solve for x.
@@ -149,10 +149,10 @@ func domino2(a *apl.Apl, RHS, R apl.Value) (apl.Value, error) {
 
 		// Copy x to result array.
 		for i := 0; i < n; i++ {
-			res.Values[i*ls[1]+k] = x[i] // TODO copy
+			res.Values[i*ls[1]+k] = x[i].Copy()
 		}
 	}
-	return res, nil
+	return a.UnifyArray(res), nil
 }
 
 // LU decomposition.

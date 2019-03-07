@@ -29,7 +29,7 @@ func init() {
 	register(primitive{
 		symbol: "⍸",
 		doc:    "where",
-		Domain: Monadic(ToIndexArray(nil)),
+		Domain: Monadic(ToBoolArray(nil)),
 		fn:     where,
 	})
 	register(primitive{
@@ -113,11 +113,11 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return apl.Bool(false), nil
 	}
 
-	res := apl.IntArray{
-		Dims: apl.CopyShape(al),
-		Ints: make([]int, apl.ArraySize(al)),
+	res := apl.BoolArray{
+		Dims:  apl.CopyShape(al),
+		Bools: make([]bool, apl.ArraySize(al)),
 	}
-	for k := range res.Ints {
+	for k := range res.Bools {
 		l := al.At(k)
 		ok = false
 		for i := 0; i < n; i++ {
@@ -128,7 +128,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			}
 		}
 		if ok {
-			res.Ints[k] = 1
+			res.Bools[k] = true
 		}
 	}
 	return res, nil
@@ -138,7 +138,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 // In Dyalog where returns a nested index array for higher dimensional arrays.
 // Here only vectors are supported.
 func where(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	ar := R.(apl.IntArray)
+	ar := R.(apl.BoolArray)
 	shape := ar.Shape()
 	if apl.ArraySize(ar) == 0 {
 		return apl.EmptyArray{}, nil
@@ -149,18 +149,16 @@ func where(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 
 	count := 0
-	for _, n := range ar.Ints {
-		if n == 1 {
+	for _, n := range ar.Bools {
+		if n == true {
 			count++
-		} else if n != 0 {
-			return nil, fmt.Errorf("where: right argument must be a boolean array")
 		}
 	}
 
 	res := apl.IntArray{Dims: []int{count}, Ints: make([]int, count)}
 	n := 0
-	for i, v := range ar.Ints {
-		if v == 1 {
+	for i, v := range ar.Bools {
+		if v == true {
 			res.Ints[n] = i + a.Origin
 			n++
 		}

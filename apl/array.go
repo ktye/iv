@@ -126,6 +126,18 @@ func ArraySize(v Array) int {
 	return prod(v.Shape())
 }
 
+// MakeArray tries to return an array of a uniform type, if the given prototype is uniform.
+// It uses the given shape of the shape of the prototype if it is nil.
+func MakeArray(prototype Array, shape []int) ArraySetter {
+	if shape == nil {
+		shape = CopyShape(prototype)
+	}
+	if u, ok := prototype.(Uniform); ok {
+		return u.Make(shape)
+	}
+	return MixedArray{Dims: shape, Values: make([]Value, prod(shape))}
+}
+
 func prod(shape []int) int {
 	if len(shape) == 0 {
 		return 0

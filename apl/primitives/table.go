@@ -26,7 +26,7 @@ func table1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 		d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
 		var err error
 		for i, k := range keys {
-			d.K[i] = k // TODO: copy?
+			d.K[i] = k.Copy()
 			v := src.At(k)
 			if v == nil {
 				return nil, fmt.Errorf("missing value for key %s", k.String(apl.Format{}))
@@ -43,7 +43,7 @@ func table1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 					return nil, err
 				}
 			}
-			d.M[k] = v
+			d.M[k.Copy()] = v.Copy()
 		}
 
 		if istable {
@@ -103,8 +103,8 @@ func tableBoth(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 			if err != nil {
 				return nil, err
 			}
-			d.K[i] = k
-			d.M[k] = v
+			d.K[i] = k.Copy()
+			d.M[k.Copy()] = v.Copy()
 		}
 
 		// Loop over all keys in the right dict, only use keys that are not present in left.
@@ -124,8 +124,8 @@ func tableBoth(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 			if err != nil {
 				return nil, err
 			}
-			d.K = append(d.K, k)
-			d.M[k] = v
+			d.K = append(d.K, k.Copy())
+			d.M[k.Copy()] = v.Copy()
 		}
 
 		if istable {
@@ -165,7 +165,7 @@ func tableAny(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value,
 		var err error
 		var v, r, l apl.Value
 		for i, k := range keys {
-			l = o.At(k) // TODO: copy?
+			l = o.At(k)
 			r = R
 			if leftarray {
 				l, r = L, l
@@ -178,8 +178,8 @@ func tableAny(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value,
 			if err != nil {
 				return nil, err
 			}
-			d.K[i] = k
-			d.M[k] = v
+			d.K[i] = k.Copy()
+			d.M[k.Copy()] = v.Copy()
 		}
 
 		if istable {
@@ -256,7 +256,7 @@ func catenateTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error) {
 	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
 	var err error
 	for i, k := range keys {
-		d.K[i] = k // TODO: copy?
+		d.K[i] = k.Copy()
 		v := o.At(k)
 		if leftarray {
 			rv = v
@@ -267,7 +267,7 @@ func catenateTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		d.M[k] = v
+		d.M[k.Copy()] = v.Copy()
 	}
 
 	if istable {
@@ -297,14 +297,14 @@ func catenateTwoTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error
 	d := apl.Dict{K: make([]apl.Value, len(keys)), M: make(map[apl.Value]apl.Value)}
 	if first {
 		for i, k := range keys {
-			d.K[i] = k // TODO: Copy?
-			d.M[k] = l.At(k)
+			d.K[i] = k.Copy()
+			d.M[k.Copy()] = l.At(k).Copy()
 		}
 		for _, k := range r.Keys() {
 			if _, ok := d.M[k]; !ok {
-				d.K = append(d.K, k)
+				d.K = append(d.K, k.Copy())
 			}
-			d.M[k] = r.At(k)
+			d.M[k.Copy()] = r.At(k).Copy()
 		}
 	} else {
 		rkeys := r.Keys()
@@ -312,20 +312,20 @@ func catenateTwoTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error
 			return nil, fmt.Errorf("catenate table on first axis: tables have different number of columns")
 		}
 		for i, k := range keys {
-			d.K[i] = k // TODO: Copy?
+			d.K[i] = k.Copy()
 			lv := l.At(k)
 			rv := r.At(k)
 			if rv == nil {
 				if istable {
 					return nil, fmt.Errorf("catenate table on first axis: tables have different columns")
 				}
-				d.M[k] = lv
+				d.M[k.Copy()] = lv.Copy()
 			} else {
 				v, err := catenate(a, lv, rv)
 				if err != nil {
 					return nil, err
 				}
-				d.M[k] = v
+				d.M[k.Copy()] = v.Copy()
 			}
 		}
 		for _, k := range rkeys {
@@ -333,8 +333,8 @@ func catenateTwoTables(a *apl.Apl, L, R apl.Value, first bool) (apl.Value, error
 				if istable {
 					return nil, fmt.Errorf("catenate table on first axis: tables have different columns")
 				}
-				d.K = append(d.K, k)
-				d.M[k] = r.At(k)
+				d.K = append(d.K, k.Copy())
+				d.M[k.Copy()] = r.At(k).Copy()
 			}
 		}
 	}
@@ -370,8 +370,8 @@ func table2array(a *apl.Apl, t apl.Table) (apl.Array, error) {
 	for k, key := range keys {
 		col := t.At(key).(apl.Array)
 		for i := 0; i < rows; i++ {
-			v := col.At(i)
-			res.Values[i*n+k] = v // TODO: copy
+			v := col.At(i).Copy()
+			res.Values[i*n+k] = v
 		}
 	}
 	u, _ := a.Unify(res, true)
@@ -421,7 +421,7 @@ func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) 
 			vars := make(map[string]apl.Value)
 			for _, key := range keys {
 				if s, ok := key.(apl.String); ok {
-					vars[string(s)] = t.At(key)
+					vars[string(s)] = t.At(key).Copy()
 				}
 			}
 			if len(keys) > 0 {
@@ -527,7 +527,7 @@ func tableQuery(a *apl.Apl, t apl.Table, agg, grp apl.Value) (apl.Value, error) 
 			g := groupmap[gv]
 			y := column.Make([]int{len(g)})
 			for n, m := range g {
-				y.Set(n, column.At(m)) // TODO: copy
+				y.Set(n, column.At(m).Copy())
 			}
 			r, err := f.Call(a, nil, y)
 			if err != nil {

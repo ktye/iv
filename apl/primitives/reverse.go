@@ -75,17 +75,13 @@ func reverse(a *apl.Apl, R apl.Value, axis int) (apl.Value, error) {
 		return nil, fmt.Errorf("reverse: axis out of range: %d  (rank %d)", axis, len(shape))
 	}
 
-	res := apl.MixedArray{
-		Dims: apl.CopyShape(ar),
-	}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
-
+	res := apl.MakeArray(ar, nil)
 	ic, src := apl.NewIdxConverter(shape)
 	dst := make([]int, len(shape)) // dst index vector
-	for i := range res.Values {
+	for i := 0; i < res.Size(); i++ {
 		copy(src, dst) // sic: copy dst over src
 		src[axis] = shape[axis] - src[axis] - 1
-		res.Values[i] = ar.At(ic.Index(src)) // TODO copy ?
+		res.Set(i, ar.At(ic.Index(src)).Copy())
 		apl.IncArrayIndex(dst, shape)
 	}
 	return res, nil
@@ -143,12 +139,9 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		n := int(al.At(0).(apl.Int))
 		size := shape[0]
 
-		res := apl.MixedArray{
-			Dims:   []int{shape[0]},
-			Values: make([]apl.Value, size),
-		}
-		for i := range res.Values {
-			res.Values[i] = ar.At(rot(i, n, size)) // TODO: copy?
+		res := apl.MakeArray(ar, []int{shape[0]})
+		for i := 0; i < size; i++ {
+			res.Set(i, ar.At(rot(i, n, size)).Copy())
 		}
 		return res, nil
 	}
@@ -188,15 +181,12 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		}
 	}
 
-	res := apl.MixedArray{
-		Dims:   apl.CopyShape(ar),
-		Values: make([]apl.Value, apl.ArraySize(ar)),
-	}
+	res := apl.MakeArray(ar, nil)
 	lic, idx := apl.NewIdxConverter(lshape)
 	ric, src := apl.NewIdxConverter(shape)
 	dst := make([]int, len(shape))
 	axsize := shape[axis]
-	for i := range res.Values {
+	for i := 0; i < res.Size(); i++ {
 		// Calculate the rotation number n.
 		// Copy dst over idx, omitting axis
 		copy(idx, dst[:axis])
@@ -204,7 +194,7 @@ func rotate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		n := int(al.At(lic.Index(idx)).(apl.Int))
 		copy(src, dst)                        // sic: copy dst over src
 		src[axis] = rot(dst[axis], n, axsize) // replace the axis by it's rotation
-		res.Values[i] = ar.At(ric.Index(src)) // TODO copy ?
+		res.Set(i, ar.At(ric.Index(src)).Copy())
 		apl.IncArrayIndex(dst, shape)
 	}
 	return res, nil

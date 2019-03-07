@@ -54,7 +54,7 @@ func grade(up bool) func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error) {
 	}
 }
 
-// gradeSetup preparse grading.
+// gradeSetup prepares grading.
 func gradeSetup(a *apl.Apl, R apl.Value) (sortIndexes, error) {
 	ar := R.(apl.Array)
 	shape := ar.Shape()
@@ -69,7 +69,7 @@ func gradeSetup(a *apl.Apl, R apl.Value) (sortIndexes, error) {
 	if len(shape) == 1 {
 		// In the vector case, wrap the elements to a single element slice.
 		for i := range b {
-			b[i] = []apl.Value{ar.At(i)} // TODO: copy?
+			b[i] = []apl.Value{ar.At(i).Copy()}
 		}
 	} else {
 		subsize := apl.ArraySize(apl.MixedArray{Dims: shape[1:]})
@@ -77,7 +77,7 @@ func gradeSetup(a *apl.Apl, R apl.Value) (sortIndexes, error) {
 		for i := range b {
 			b[i] = make([]apl.Value, subsize)
 			for k := range b[i] {
-				b[i][k] = ar.At(off + k) // TODO: copy?
+				b[i][k] = ar.At(off + k).Copy()
 			}
 			off += subsize
 		}
