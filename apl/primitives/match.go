@@ -38,6 +38,9 @@ func init() {
 // depth reports the level of nesting.
 // Nested arrays are not supported, so depth is always 1 for arrays and 0 for scalars.
 func depth(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
+	if l, ok := R.(apl.List); ok {
+		return apl.Int(l.Depth()), nil
+	}
 	if _, ok := R.(apl.Array); ok {
 		return apl.Int(1), nil
 	}

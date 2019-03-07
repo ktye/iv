@@ -240,21 +240,24 @@ var testCases = []struct {
 	{"2!3J2", "1J5", small},                               // binomial complex
 
 	{"⍝ Match, Not match, tally, depth", "apl/primitives/match.go", 0},
-	{"≡5", "0", 0},          // depth
-	{"≡⍳0", "1", 0},         // depth for empty array
-	{`≡"alpha"`, "0", 0},    // a string is a scalarin APLv.
-	{"≢2 3 4⍴⍳10", "2", 0},  // tally
-	{"≢2", "1", 0},          // tally
-	{"≢⍳0", "0", 0},         // tally
-	{"1 2 3≡1 2 3", "1", 0}, // match
-	{"3≡1⍴3", "0", 0},       // match shape
-	{`""≡⍳0`, "0", 0},       // match empty string
-	{`''≡⍳0`, "1", 0},       // this is false in other APLs (here '' is an empty array).
-	{"2.0-1.0≡1>0", "1", 0}, // compare numbers of different type
-	{"1≢2", "1", 0},         // not match
-	{"1≢1", "0", 0},         // not match
-	{"3≢1⍴3", "1", 0},       // not match
-	{`""≢⍳0`, "1", 0},       // not match
+	{"≡5", "0", 0},                  // depth
+	{"≡⍳0", "1", 0},                 // depth for empty array
+	{"≡(1;2;3;)", "1", 0},           // depth of a list
+	{"≡(1;(2;3;);)", "2", 0},        // depth of a nested list
+	{"≡(1;(2;(1;2;);3;);)", "3", 0}, // depth of a nested list
+	{`≡"alpha"`, "0", 0},            // a string is a scalar in APLv.
+	{"≢2 3 4⍴⍳10", "2", 0},          // tally
+	{"≢2", "1", 0},                  // tally
+	{"≢⍳0", "0", 0},                 // tally
+	{"1 2 3≡1 2 3", "1", 0},         // match
+	{"3≡1⍴3", "0", 0},               // match shape
+	{`""≡⍳0`, "0", 0},               // match empty string
+	{`''≡⍳0`, "1", 0},               // this is false in other APLs (here '' is an empty array).
+	{"2.0-1.0≡1>0", "1", 0},         // compare numbers of different type
+	{"1≢2", "1", 0},                 // not match
+	{"1≢1", "0", 0},                 // not match
+	{"3≢1⍴3", "1", 0},               // not match
+	{`""≢⍳0`, "1", 0},               // not match
 
 	{"⍝ Left tack, right tack", "apl/primitives/tack.go", 0},
 	{"⊣1 2 3", "1 2 3", 0},      // monadic left: same

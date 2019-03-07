@@ -51,6 +51,18 @@ func (l List) SetDeep(idx []int, v Value) error {
 	return err
 }
 
+func (l List) Depth() int {
+	max := 1
+	for _, e := range l {
+		if el, ok := e.(List); ok {
+			if d := el.Depth(); 1+d > max {
+				max = 1 + d
+			}
+		}
+	}
+	return max
+}
+
 func (l List) getset(idx []int, v Value) (Value, error) {
 	if len(idx) == 0 {
 		return nil, fmt.Errorf("empty index")
