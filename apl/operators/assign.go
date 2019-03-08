@@ -422,9 +422,6 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 
 // assignObject assigns R to index keys of a object.
 func assignObject(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Function, R apl.Value) error {
-	if f != nil {
-		return fmt.Errorf("TODO: object: modified indexed assignment")
-	}
 	if len(idx.Ints) > 1 && idx.Ints[0] < 0 {
 		return assignObjectDepth(a, obj, idx, f, R)
 	} else if len(idx.Ints) == 1 && idx.Ints[0] < 0 {
@@ -448,12 +445,19 @@ func assignObject(a *apl.Apl, obj apl.Object, idx apl.IntArray, f apl.Function, 
 			return fmt.Errorf("assign object: index out of range")
 		}
 		k := keys[n]
-		v := R // TODO: copy?
+		v := R // Set copies.
 		if vectorize == true {
 			if err := apl.ArrayBounds(ar, i); err != nil {
 				return err
 			}
 			v = ar.At(i)
+		}
+		if f != nil {
+			if nv, err := f.Call(a, obj.At(k), v); err != nil {
+				return fmt.Errorf("mod assign object: %s", err)
+			} else {
+				v = nv
+			}
 		}
 		if err := obj.Set(k, v); err != nil {
 			return err
@@ -509,5 +513,5 @@ func assignList(a *apl.Apl, l apl.List, idx apl.IntArray, f apl.Function, R apl.
 		}
 		R = v
 	}
-	return l.SetDeep(idx.Ints, R)
+	return l.SetDeep(idx.Ints, R) // SetDeep copies.
 }

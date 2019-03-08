@@ -68,9 +68,9 @@ func (d *Dict) Set(key Value, v Value) error {
 		d.M = make(map[Value]Value)
 	}
 	if _, ok := d.M[key]; ok == false {
-		d.K = append(d.K, key)
+		d.K = append(d.K, key.Copy())
 	}
-	d.M[key] = v
+	d.M[key.Copy()] = v.Copy()
 	return nil
 }
 

@@ -948,6 +948,7 @@ var testCases = []struct {
 	{"D←`a`b`c#1⋄D⋄#D", "a: 1\nb: 1\nc: 1\na b c", 0},
 	{"D←`a`b`c#1 2 3⋄G←D[`a`c]⋄G", "a: 1\nc: 3", 0},
 	{"D←`a`b#(1;(`c`d#`F`G);)⋄D[`b;`d]←123⋄D[`b]", "c: F\nd: 123", 0},
+	{"D←`a`b#(1;2;)⋄D[`b]+←3⋄D", "a: 1\nb: 5", 0},
 
 	{"⍝ Table, transpose a dict to create a table", "apl/primitives/transpose.go", 0},
 	{"⍉`a`b#1 2", "a b\n1 2", 0},

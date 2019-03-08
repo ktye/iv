@@ -47,7 +47,7 @@ func (l List) GetDeep(idx []int) (Value, error) {
 }
 
 func (l List) SetDeep(idx []int, v Value) error {
-	_, err := l.getset(idx, v)
+	_, err := l.getset(idx, v.Copy())
 	return err
 }
 
