@@ -19,9 +19,17 @@ type Plot struct {
 	xgo.Value
 }
 
+func (p Plot) Copy() apl.Value {
+	return p
+}
+
 // Line embeds a *plot.Line (from package ktye/plot).
 type Line struct {
 	xgo.Value
+}
+
+func (l Line) Copy() apl.Value {
+	return l
 }
 
 // String overwrites the stringer if gui is 0.
