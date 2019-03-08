@@ -38,10 +38,10 @@ func unique(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 			}
 		}
 		if u {
-			values = append(values, v) // TODO copy?
+			values = append(values, v.Copy())
 		}
 	}
-	return apl.MixedArray{Values: values, Dims: []int{len(values)}}, nil
+	return a.UnifyArray(apl.MixedArray{Values: values, Dims: []int{len(values)}}), nil
 }
 
 // union of L and R, both are vectors.
@@ -67,7 +67,7 @@ func union(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				}
 			}
 			if u {
-				values = append(values, v) // TODO copy?
+				values = append(values, v.Copy())
 			}
 		}
 		return nil
@@ -78,5 +78,5 @@ func union(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if err := appendvec(ar); err != nil {
 		return nil, err
 	}
-	return apl.MixedArray{Dims: []int{len(values)}, Values: values}, nil
+	return a.UnifyArray(apl.MixedArray{Dims: []int{len(values)}, Values: values}), nil
 }

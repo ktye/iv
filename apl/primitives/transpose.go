@@ -57,13 +57,11 @@ func transpose(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := apl.MixedArray{
-		Values: make([]apl.Value, len(idx)),
-		Dims:   shape,
-	}
+
 	ar := R.(apl.Array)
+	res := apl.MakeArray(ar, shape)
 	for i, k := range idx {
-		res.Values[i] = ar.At(k)
+		res.Set(i, ar.At(k).Copy())
 	}
 	return res, nil
 }
@@ -162,7 +160,7 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	keys := o.Keys()
 	n := 0
 	for i, k := range keys {
-		col := o.At(k)
+		col := o.At(k).Copy()
 		if col == nil {
 			return nil, fmt.Errorf("table: column %s does not exist", k.String(apl.Format{}))
 		}
@@ -190,11 +188,11 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 		} else if size != n {
 			return nil, fmt.Errorf("table: columns have different sizes")
 		}
-		tab.K = append(tab.K, k) // TODO: copy k
+		tab.K = append(tab.K, k.Copy())
 		if tab.Dict.M == nil {
 			tab.Dict.M = make(map[apl.Value]apl.Value)
 		}
-		tab.M[k] = u // TODO: copy
+		tab.M[k] = u // already copied
 	}
 	tab.Rows = n
 	return tab, nil
@@ -202,5 +200,5 @@ func transposeObject(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 
 // transposeTable returns a Dict by transposing a table.
 func transposeTable(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
-	return R.(apl.Table).Dict, nil // TODO: copy
+	return R.(apl.Table).Dict.Copy(), nil
 }
