@@ -51,7 +51,7 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Function) (ap
 	if v, ok := R.(apl.Array); ok {
 		ar = v
 	} else {
-		ar = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}
+		ar = a.UnifyArray(apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}})
 	}
 
 	var scalar apl.Value
@@ -91,7 +91,7 @@ func assignVector(a *apl.Apl, names []string, R apl.Value, mod apl.Function) (ap
 // Mod may be a dyadic modifying function.
 func assignScalar(a *apl.Apl, name string, indexes apl.Value, f apl.Function, R apl.Value) error {
 	if f == nil && indexes == nil {
-		return a.Assign(name, R)
+		return a.Assign(name, R.Copy())
 	}
 
 	w, env := a.LookupEnv(name)
@@ -104,7 +104,7 @@ func assignScalar(a *apl.Apl, name string, indexes apl.Value, f apl.Function, R 
 		return fmt.Errorf("assign %s: %s", name, err)
 	}
 	if v != nil {
-		return a.AssignEnv(name, v, env)
+		return a.AssignEnv(name, v.Copy(), env)
 	}
 	return nil
 }
@@ -196,10 +196,10 @@ func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R
 	if av, ok := R.(apl.Array); ok {
 		src = av
 		if apl.ArraySize(av) == 1 {
-			scalar = av.At(0)
+			scalar = av.At(0).Copy()
 		}
 	} else {
-		scalar = R
+		scalar = R.Copy()
 	}
 	if scalar != nil {
 		// Scalar or 1-element assignment.
@@ -245,7 +245,7 @@ func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R
 			if err := apl.ArrayBounds(src, i); err != nil {
 				return ar, err
 			}
-			if err := modAssign(int(d), src.At(i)); err != nil {
+			if err := modAssign(int(d), src.At(i).Copy()); err != nil {
 				return ar, err
 			}
 		}
@@ -265,7 +265,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		if i < 0 || i >= len(keys) {
 			return fmt.Errorf("table-update: col idx out of range")
 		}
-		keys[i] = all[cols[i]]
+		keys[i] = all[cols[i]].Copy()
 	}
 
 	if ar, ok := R.(apl.Array); ok {
@@ -312,30 +312,61 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 	} else if _, ok := R.(apl.Object); ok == false {
 		// convert scalar R to dict.
 		d := apl.Dict{
-			K: keys, // It should be ok to share.
+			K: keys,
 			M: make(map[apl.Value]apl.Value),
 		}
 		for _, k := range keys {
-			d.M[k] = R // TODO: copy
+			d.M[k] = R.Copy()
 		}
 		R = &d
 	}
 
-	// TODO: this version of modified table assignment works on scalar values.
-	// Maybe it should work on arrays or a subtable instead.
-	update := func(col apl.ArraySetter, i int, v apl.Value) (err error) {
+	// set applies the modify function if available, assigns to the indexes of the old column
+	// and makes sure the result is uniform.
+	set := func(col apl.Uniform, newcol apl.Array) (apl.Uniform, error) {
 		if f != nil {
-			ot := reflect.TypeOf(v)
-			v, err = f.Call(a, col.At(i), v)
-			nt := reflect.TypeOf(v)
-			if ot != nt {
-				return fmt.Errorf("mod changed type from %s to %s", ot, nt)
+			left := apl.MakeArray(col, []int{len(rows)})
+			for i := range rows {
+				left.Set(i, col.At(rows[i]))
 			}
+			v, err := f.Call(a, left, newcol)
 			if err != nil {
-				return err
+				return nil, err
+			}
+			vr, ok := v.(apl.Array)
+			if ok == false {
+				return nil, fmt.Errorf("mod does not return an array")
+			} else if s := vr.Shape(); len(s) != 1 {
+				return nil, fmt.Errorf("mod does not return a vector")
+			} else if s[0] != len(rows) {
+				return nil, fmt.Errorf("mod returns vector of wrong size")
+			}
+			if ur, ok := a.Unify(vr, true); ok == false {
+				return nil, fmt.Errorf("modified vector cannot be unified")
+			} else {
+				newcol = ur.(apl.Uniform)
 			}
 		}
-		return col.Set(i, v)
+		rs := col.Shape()
+		if reflect.TypeOf(newcol) != reflect.TypeOf(col) {
+			nc := apl.MixedArray{Dims: []int{rs[0]}, Values: make([]apl.Value, rs[0])}
+			for i := range nc.Values {
+				nc.Values[i] = col.At(i)
+			}
+			for i, k := range rows {
+				nc.Values[k] = newcol.At(i).Copy()
+			}
+			ur, ok := a.Unify(nc, true)
+			if ok == false {
+				return nil, fmt.Errorf("cannot unify array")
+			}
+			return ur.(apl.Uniform), nil
+		} else {
+			for i, k := range rows {
+				col.Set(k, newcol.At(i).Copy())
+			}
+			return col, nil
+		}
 	}
 
 	o, ok := R.(apl.Object)
@@ -353,42 +384,36 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		}
 	}
 	for _, key := range keys {
-		column := t.Dict.At(key)
-		col, ok := column.(apl.ArraySetter)
-		if ok == false {
-			return fmt.Errorf("table-update: column is not settable: %T", column)
-		}
-		u := column.(apl.Uniform)
-
+		col := t.Dict.At(key).(apl.Uniform)
+		var err error
 		if rt, ok := R.(apl.Table); ok {
-			rc := rt.At(key)
-			to := ToType(reflect.TypeOf(column), nil)
-			nc, ok := to.To(a, rc)
-			if ok == false {
-				return fmt.Errorf("table-update: cannot convert %T to %T", rc, column)
+			rc := rt.At(key).(apl.Uniform)
+			if s := rc.Shape(); len(s) != 1 || s[0] != len(rows) {
+				return fmt.Errorf("table-update: right table has %d rows instead of %d", s[0], len(rows))
 			}
-			ru := nc.(apl.Uniform)
-			for i, n := range rows {
-				if err := update(col, n, ru.At(i)); err != nil {
-					return fmt.Errorf("table-update: %s", err)
-				}
+			subcol := apl.MakeArray(rc, []int{len(rows)})
+			for i := range rows {
+				subcol.Set(i, rc.At(i).Copy())
+			}
+			col, err = set(col, subcol)
+			if err != nil {
+				return fmt.Errorf("table-update: %s", err)
 			}
 		} else {
-			z := u.Zero()
-			to := ToType(reflect.TypeOf(z), nil)
+			subcol := apl.MixedArray{Dims: []int{len(rows)}, Values: make([]apl.Value, len(rows))}
 			rv := o.At(key)
-			v, ok := to.To(a, rv)
-			if ok == false {
-				return fmt.Errorf("table-update: cannot convert %T to %T", rv, z)
+			if _, ok := rv.(apl.Array); ok {
+				return fmt.Errorf("table-update: dict contains an array, should be scalar")
 			}
-			for _, n := range rows {
-				if err := update(col, n, v); err != nil {
-					return fmt.Errorf("table-update: %s", err)
-				}
+			for i := range subcol.Values {
+				subcol.Values[i] = rv.Copy()
 			}
-
+			col, err = set(col, a.UnifyArray(subcol))
+			if err != nil {
+				return fmt.Errorf("table-update: %s", err)
+			}
 		}
-		if err := t.Dict.Set(key, column); err != nil {
+		if err := t.Dict.Set(key, col); err != nil {
 			return fmt.Errorf("table-update: %s", err)
 		}
 	}
