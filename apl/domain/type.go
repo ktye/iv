@@ -27,6 +27,7 @@ func (t typ) String(f apl.Format) string {
 	if t.conv {
 		name = "totype"
 	}
+	name += " " + t.t.String()
 	if t.child == nil {
 		return name
 	}
