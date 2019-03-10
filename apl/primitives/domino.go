@@ -115,8 +115,7 @@ func domino2(a *apl.Apl, RHS, R apl.Value) (apl.Value, error) {
 		ls = al.Shape()
 	}
 
-	res := apl.MixedArray{Dims: []int{rs[0], ls[1]}}
-	res.Values = make([]apl.Value, apl.Prod(res.Dims))
+	res := apl.NewMixed([]int{rs[0], ls[1]})
 
 	// A is a copy of ar as a 2d slice of Values.
 	// It will be overwritten by LU.

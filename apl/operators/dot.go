@@ -69,24 +69,20 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 			// TODO fill function?
 			return nil, fmt.Errorf("inner: empty rhs array")
 		}
-		u := apl.MixedArray{Dims: []int{rs[0]}}
-		v := make([]apl.Value, rs[0])
-		for i := range v {
-			v[i] = l.Copy()
+		u := apl.NewMixed([]int{rs[0]})
+		for i := range u.Values {
+			u.Values[i] = l.Copy()
 		}
-		u.Values = v
 		al = a.UnifyArray(u)
 	} else if rok == false {
 		ls := al.Shape()
 		if ls == nil || ls[0] == 0 {
 			return nil, fmt.Errorf("inner: empty lhs array")
 		}
-		u := apl.MixedArray{Dims: []int{ls[len(ls)-1]}}
-		v := make([]apl.Value, ls[0])
-		for i := range v {
-			v[i] = r.Copy()
+		u := apl.NewMixed([]int{ls[len(ls)-1]})
+		for i := range u.Values {
+			u.Values[i] = r.Copy()
 		}
-		u.Values = v
 		ar = a.UnifyArray(u)
 	}
 
@@ -123,8 +119,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	shape := make([]int, len(ls)+len(rs)-2)
 	copy(shape, ls[:len(ls)-1])
 	copy(shape[len(ls)-1:], rs[1:])
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.Prod(shape))
+	res := apl.NewMixed(shape)
 
 	// Iterate of all elements of the resulting array.
 	ic, idx := apl.NewIdxConverter(shape)
@@ -184,8 +179,7 @@ func outer(a *apl.Apl, L, R apl.Value, f, g apl.Function) (apl.Value, error) {
 	shape := make([]int, 0, len(ls)+len(rs))
 	shape = append(shape, apl.CopyShape(al)...)
 	shape = append(shape, apl.CopyShape(ar)...)
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.Prod(shape))
+	res := apl.NewMixed(shape)
 
 	lc, lidx := apl.NewIdxConverter(ls)
 	rc, ridx := apl.NewIdxConverter(rs)

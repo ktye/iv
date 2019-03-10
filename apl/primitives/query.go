@@ -42,10 +42,7 @@ func roll(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	if ar.Size() == 0 {
 		return apl.EmptyArray{}, nil
 	}
-	res := apl.MixedArray{
-		Dims:   apl.CopyShape(ar),
-		Values: make([]apl.Value, ar.Size()),
-	}
+	res := apl.NewMixed(apl.CopyShape(ar))
 	for i := range res.Values {
 		if z, ok := ar.At(i).(apl.Number); ok == false {
 			return nil, fmt.Errorf("roll: array value is not numeric")

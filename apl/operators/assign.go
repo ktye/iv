@@ -151,8 +151,7 @@ func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R
 
 	// Try to keep the original array type, upgrade only if needed.
 	upgrade := func() {
-		ga := apl.MixedArray{Dims: apl.CopyShape(ar)}
-		ga.Values = make([]apl.Value, apl.Prod(ga.Dims))
+		ga := apl.NewMixed(apl.CopyShape(ar))
 		for i := range ga.Values {
 			if i >= ar.Size() {
 				return
@@ -349,7 +348,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 		}
 		rs := col.Shape()
 		if reflect.TypeOf(newcol) != reflect.TypeOf(col) {
-			nc := apl.MixedArray{Dims: []int{rs[0]}, Values: make([]apl.Value, rs[0])}
+			nc := apl.NewMixed([]int{rs[0]})
 			for i := range nc.Values {
 				nc.Values[i] = col.At(i)
 			}
@@ -400,7 +399,7 @@ func assignTable(a *apl.Apl, t apl.Table, idx apl.IntArray, f apl.Function, R ap
 				return fmt.Errorf("table-update: %s", err)
 			}
 		} else {
-			subcol := apl.MixedArray{Dims: []int{len(rows)}, Values: make([]apl.Value, len(rows))}
+			subcol := apl.NewMixed([]int{len(rows)})
 			rv := o.At(key)
 			if _, ok := rv.(apl.Array); ok {
 				return fmt.Errorf("table-update: dict contains an array, should be scalar")

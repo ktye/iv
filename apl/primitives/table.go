@@ -362,10 +362,7 @@ func dict2table(d *apl.Dict) (apl.Table, error) {
 func table2array(a *apl.Apl, t apl.Table) (apl.Array, error) {
 	keys := t.Keys()
 	rows := t.Rows
-	res := apl.MixedArray{
-		Dims:   []int{rows, len(keys)},
-		Values: make([]apl.Value, len(keys)*rows),
-	}
+	res := apl.NewMixed([]int{rows, len(keys)})
 	n := len(keys)
 	for k, key := range keys {
 		col := t.At(key).(apl.Array)

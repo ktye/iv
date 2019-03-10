@@ -114,10 +114,7 @@ func array1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 	efn := arith1(symbol, fn)
 	return func(a *apl.Apl, _ apl.Value, R apl.Value) (apl.Value, error) {
 		ar := R.(apl.Array)
-		res := apl.MixedArray{
-			Dims:   apl.CopyShape(ar),
-			Values: make([]apl.Value, ar.Size()),
-		}
+		res := apl.NewMixed(apl.CopyShape(ar))
 		same := true
 		var t reflect.Type
 		for i := range res.Values {
@@ -166,8 +163,7 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 		} else {
 			shape = apl.CopyShape(al)
 		}
-		res := apl.MixedArray{Dims: shape}
-		res.Values = make([]apl.Value, apl.Prod(res.Dims))
+		res := apl.NewMixed(shape)
 		same := true
 		var t reflect.Type
 		for i := range res.Values {
@@ -275,8 +271,7 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 		same := true
 		var t reflect.Type
 		var lv, rv, v apl.Value
-		res := apl.MixedArray{Dims: apl.CopyShape(al)}
-		res.Values = make([]apl.Value, apl.Prod(res.Dims))
+		res := apl.NewMixed(apl.CopyShape(al))
 		idx := make([]int, len(res.Dims))
 		ic, rdx := apl.NewIdxConverter(rightShape)
 		for i := range res.Values {

@@ -289,8 +289,7 @@ func takeChannel2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 	shape := make([]int, len(ai.Ints))
 	copy(shape, ai.Ints)
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.Prod(shape))
+	res := apl.NewMixed(shape)
 
 	c := R.(apl.Channel)
 	for i := range res.Values {

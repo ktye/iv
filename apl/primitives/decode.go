@@ -44,10 +44,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// The result of decode is a scalar product between a power matrix and R.
 	// The power matrix multiplies L along the last axis recursively from right to left,
 	// similar as the Index method of apl.IdxConverter.
-	p := apl.MixedArray{
-		Dims:   apl.CopyShape(al),
-		Values: make([]apl.Value, al.Size()),
-	}
+	p := apl.NewMixed(apl.CopyShape(al))
 	for i := range p.Values {
 		p.Values[i] = al.At(i).Copy()
 	}
@@ -75,9 +72,9 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 // extendAxis extends the axis of length 1 to n
 func extendAxis(ar apl.Array, axis, n int) (apl.Array, []int) {
-	res := apl.MixedArray{Dims: apl.CopyShape(ar)}
-	res.Dims[axis] = n
-	res.Values = make([]apl.Value, apl.Prod(res.Dims))
+	dims := apl.CopyShape(ar)
+	dims[axis] = n
+	res := apl.NewMixed(dims)
 	ridx := make([]int, len(res.Dims))
 	ic, idx := apl.NewIdxConverter(ar.Shape())
 	for i := range res.Values {
@@ -203,8 +200,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	shape := make([]int, len(ls)+len(rs))
 	copy(shape[:len(ls)], ls)
 	copy(shape[len(ls):], rs)
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.Prod(res.Dims))
+	res := apl.NewMixed(shape)
 
 	// enc represents r in the given radix power vector and sets the result to vec.
 	enc := func(rad []apl.Value, r apl.Value, vec []apl.Value) error {

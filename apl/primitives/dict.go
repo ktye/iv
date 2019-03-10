@@ -80,7 +80,7 @@ func dict(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	ar, ok := R.(apl.Array)
 	if ok == false {
-		mr := apl.MixedArray{Dims: []int{ls[0]}, Values: make([]apl.Value, ls[0])}
+		mr := apl.NewMixed([]int{ls[0]})
 		for i := range mr.Values {
 			mr.Values[i] = R.Copy()
 		}

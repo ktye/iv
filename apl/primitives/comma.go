@@ -56,10 +56,7 @@ func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 
 	ar, _ := r.(apl.Array)
-	res := apl.MixedArray{
-		Dims:   []int{ar.Size()},
-		Values: make([]apl.Value, ar.Size()),
-	}
+	res := apl.NewMixed([]int{ar.Size()})
 	var t reflect.Type
 	same := true
 	for i := range res.Values {
@@ -232,10 +229,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	reshapeScalar := func(scalar apl.Value, othershape []int) apl.Array {
 		othershape[x] = 1
-		ary := apl.MixedArray{
-			Dims: othershape,
-		}
-		ary.Values = make([]apl.Value, apl.Prod(ary.Dims))
+		ary := apl.NewMixed(othershape)
 		for i := range ary.Values {
 			ary.Values[i] = scalar.Copy()
 		}
@@ -293,10 +287,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			return nil, fmt.Errorf("catenate: all axis lengths except for the catenation axis must match")
 		}
 	}
-	res := apl.MixedArray{
-		Dims: newshape,
-	}
-	res.Values = make([]apl.Value, apl.Prod(res.Dims))
+	res := apl.NewMixed(newshape)
 
 	// Iterate over combined elements, taking from L or R.
 	split := sl[x]
@@ -347,10 +338,7 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 	}
 
 	reshape := func(scalar apl.Value, shape []int) apl.Array {
-		ary := apl.MixedArray{
-			Dims: shape,
-		}
-		ary.Values = make([]apl.Value, apl.Prod(ary.Dims))
+		ary := apl.NewMixed(shape)
 		for i := range ary.Values {
 			ary.Values[i] = scalar.Copy()
 		}
@@ -389,8 +377,7 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 
 	// Iterate over the result and copy values from L or R depending,
 	// if the the index at axis x is 0 or 1.
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.Prod(shape))
+	res := apl.NewMixed(shape)
 	dst := make([]int, len(shape))
 	ic, src := apl.NewIdxConverter(ls)
 	for i := range res.Values {

@@ -79,8 +79,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 
 			subshape := apl.CopyShape(x)
 			subshape = subshape[len(subshape)-rank:]
-			cell := apl.MixedArray{Dims: subshape}
-			cell.Values = make([]apl.Value, apl.Prod(cell.Dims))
+			cell := apl.NewMixed(subshape)
 			m := len(cell.Values)
 			for i := range cell.Values {
 				cell.Values[i] = x.At(n*m + i).Copy()
@@ -209,8 +208,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			if vr, ok := results[n].(apl.Array); ok == false {
 				if len(common) > 0 {
 					// Reshape scalar to common shape.
-					ga := apl.MixedArray{Dims: common}
-					ga.Values = make([]apl.Value, apl.Prod(ga.Dims))
+					ga := apl.NewMixed(common)
 					for i := range ga.Values {
 						ga.Values[i] = results[n].Copy()
 					}
@@ -256,10 +254,11 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		}
 
 		// The result has the shape: frame, conform
-		res := apl.MixedArray{}
-		res.Dims = append(res.Dims, frame...)
-		res.Dims = append(res.Dims, common...)
-		res.Values = make([]apl.Value, apl.Prod(res.Dims))
+		resdims := make([]int, len(frame)+len(common))
+		copy(resdims, frame)
+		copy(resdims[len(frame):], common)
+		res := apl.NewMixed(resdims)
+
 		if len(common) == 0 {
 			if len(results) != len(res.Values) {
 				return nil, fmt.Errorf("rank: unexpected number of scalar results %d instead of %d", len(results), len(res.Values)) // Should not happen

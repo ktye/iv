@@ -140,7 +140,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			}
 		}
 
-		res := apl.MixedArray{Dims: apl.CopyShape(ar), Values: make([]apl.Value, ar.Size())}
+		res := apl.NewMixed(apl.CopyShape(ar))
 		k := 0
 		for i := range res.Values {
 			if mask[i] {

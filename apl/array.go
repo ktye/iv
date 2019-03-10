@@ -130,7 +130,7 @@ func MakeArray(prototype Array, shape []int) ArraySetter {
 	if u, ok := prototype.(Uniform); ok {
 		return u.Make(shape)
 	}
-	return MixedArray{Dims: shape, Values: make([]Value, Prod(shape))}
+	return NewMixed(shape)
 }
 
 func Prod(shape []int) int {
@@ -193,6 +193,13 @@ func IncArrayIndex(idx []int, shape []int) {
 	}
 }
 
+func NewMixed(shape []int) MixedArray {
+	return MixedArray{
+		Dims:   shape,
+		Values: make([]Value, Prod(shape)),
+	}
+}
+
 // MixedArray is an n-dimensional array that can hold any Value.
 type MixedArray struct {
 	Values []Value
@@ -232,8 +239,7 @@ func (v MixedArray) Size() int {
 }
 
 func (v MixedArray) Reshape(shape []int) Value {
-	res := MixedArray{Dims: shape}
-	res.Values = make([]Value, Prod(shape))
+	res := NewMixed(shape)
 	k := 0
 	for i := range res.Values {
 		res.Values[i] = v.Values[k]

@@ -92,10 +92,7 @@ func rhoChannel(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	newarray := func() apl.MixedArray {
 		s := make([]int, len(al.Ints))
 		copy(s, al.Ints)
-		return apl.MixedArray{
-			Dims:   s,
-			Values: make([]apl.Value, size),
-		}
+		return apl.NewMixed(s)
 	}
 	res := newarray()
 

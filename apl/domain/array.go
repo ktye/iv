@@ -104,15 +104,12 @@ func (v vector) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	// Create a new general array.
-	ret := apl.MixedArray{
-		Values: make([]apl.Value, as),
-		Dims:   []int{as},
-	}
+	ret := apl.NewMixed([]int{as})
 	for i := 0; i < as; i++ {
 		s := ar.At(i)
 		ret.Values[i] = s
 	}
-	return propagate(a, ret, v.child)
+	return propagate(a, a.UnifyArray(ret), v.child)
 }
 func (v vector) String(f apl.Format) string {
 	name := "vector"

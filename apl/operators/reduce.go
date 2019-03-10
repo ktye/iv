@@ -210,11 +210,7 @@ func reduct(a *apl.Apl, f apl.Function, l, r apl.Value, axis int) (apl.Value, er
 	}
 
 	// Create a new array with the given axis removed.
-	values := make([]apl.Value, apl.Prod(dims))
-	v := apl.MixedArray{
-		Dims:   dims,
-		Values: values,
-	}
+	v := apl.NewMixed(dims)
 
 	vec := make([]apl.Value, n)
 	ic, sidx := apl.NewIdxConverter(shape)
@@ -283,10 +279,7 @@ func scanfunc(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, 
 
 	// The result has the same shape as R.
 	dims := apl.CopyShape(ar)
-	res := apl.MixedArray{
-		Values: make([]apl.Value, apl.Prod(dims)),
-		Dims:   dims,
-	}
+	res := apl.NewMixed(dims)
 
 	if len(dims) == 0 {
 		return apl.EmptyArray{}, nil
@@ -821,8 +814,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 		return nil, fmt.Errorf("n-wise reduction: length error")
 	}
 
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.Prod(res.Dims))
+	res := apl.NewMixed(shape)
 	if len(res.Values) == 0 {
 		return res, nil
 	}

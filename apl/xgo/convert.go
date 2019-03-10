@@ -92,7 +92,7 @@ func Convert(v reflect.Value) (apl.Value, error) {
 
 	case reflect.Slice:
 		n := v.Len()
-		ar := apl.MixedArray{Dims: []int{n}, Values: make([]apl.Value, n)}
+		ar := apl.NewMixed([]int{n})
 		for i := range ar.Values {
 			if e, err := Convert(v.Index(i)); err != nil {
 				return nil, err

@@ -55,9 +55,7 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 		return f.Call(a, nil, R)
 	}
 
-	res := apl.MixedArray{Dims: apl.CopyShape(ar)}
-	res.Values = make([]apl.Value, apl.Prod(res.Dims))
-
+	res := apl.NewMixed(apl.CopyShape(ar))
 	for i := range res.Values {
 		v, err := f.Call(a, nil, ar.At(i))
 		if err != nil {
@@ -169,8 +167,7 @@ func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 		lv = L
 	}
 
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.Prod(res.Dims))
+	res := apl.NewMixed(shape)
 	for i := range res.Values {
 		if rok == true {
 			rv = ar.At(i)
