@@ -2,13 +2,11 @@
 package apl
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"reflect"
 
 	"github.com/ktye/iv/apl/scan"
-	// _ "github.com/ktye/iv/apl/funcs" // Register default funcs
 )
 
 // New starts a new interpreter.
@@ -46,7 +44,6 @@ type Apl struct {
 	symbols    map[rune]string
 	pkg        map[string]*env
 	scaninit   bool
-	debug      bool
 }
 
 type Format struct {
@@ -76,19 +73,11 @@ func (a *Apl) LoadPkg(r io.Reader, file string, pkg string) (err error) {
 // It returns a Program which can be evaluated.
 func (a *Apl) Parse(line string) (Program, error) {
 	tokens, err := a.Scan(line)
-	if a.debug {
-		fmt.Fprintf(a.stdout, "%s\n", scan.PrintTokens(tokens))
-	}
-
 	if err != nil {
 		return nil, err
 	}
 
 	p, err := a.parse(tokens)
-	if a.debug {
-		fmt.Fprintf(a.stdout, "%s\n", p.String(a.Format))
-	}
-
 	if err != nil {
 		return nil, err
 	} else {
@@ -116,10 +105,6 @@ func (a *Apl) Scan(line string) ([]scan.Token, error) {
 		a.scaninit = true
 	}
 	return a.Scanner.Scan(line)
-}
-
-func (a *Apl) SetDebug(d bool) {
-	a.debug = d
 }
 
 func (a *Apl) SetOutput(w io.Writer) {

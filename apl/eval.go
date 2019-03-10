@@ -19,14 +19,6 @@ func (a *Apl) Eval(p Program) (err error) {
 			err = fmt.Errorf("panic: %s\n%s", r, string(debug.Stack()))
 		}
 	}()
-	v := make([]string, len(p))
-	if a.debug {
-		for i, e := range p {
-			v[i] = e.String(a.Format)
-		}
-		fmt.Fprintln(a.stdout, strings.Join(v, " ⋄ "))
-	}
-
 	write := func(val Value) {
 		switch v := val.(type) {
 		case Image:
@@ -45,10 +37,6 @@ func (a *Apl) Eval(p Program) (err error) {
 		val, err = expr.Eval(a)
 		if err != nil {
 			return err
-		}
-
-		if a.debug {
-			fmt.Fprintf(a.stdout, "%T\n", val)
 		}
 		if isAssignment(expr) == false {
 			switch v := val.(type) {
