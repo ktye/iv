@@ -44,7 +44,7 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 
 	ar, ok := R.(apl.Array)
 	if ok {
-		if apl.ArraySize(ar) == 0 {
+		if ar.Size() == 0 {
 			// TODO: Fill function of LO should be applied
 			// with the prototype of R.
 			// The result has the same shape as R.
@@ -56,7 +56,7 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 	}
 
 	res := apl.MixedArray{Dims: apl.CopyShape(ar)}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(res.Dims))
 
 	for i := range res.Values {
 		v, err := f.Call(a, nil, ar.At(i))
@@ -132,10 +132,10 @@ func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 	if rok == false && lok == false {
 		return f.Call(a, L, R)
 	}
-	if rok == true && apl.ArraySize(ar) == 0 {
+	if rok == true && ar.Size() == 0 {
 		return apl.EmptyArray{}, nil // TODO fill function
 	}
-	if lok == true && apl.ArraySize(al) == 0 {
+	if lok == true && al.Size() == 0 {
 		return apl.EmptyArray{}, nil // TODO fill function
 	}
 
@@ -170,7 +170,7 @@ func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 	}
 
 	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(res.Dims))
 	for i := range res.Values {
 		if rok == true {
 			rv = ar.At(i)

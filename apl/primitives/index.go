@@ -92,7 +92,7 @@ func indexSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 
 	// Special case for empty brackets.
 	if len(spec) == 0 {
-		ai := apl.IntArray{Dims: apl.CopyShape(ar), Ints: make([]int, apl.ArraySize(ar))}
+		ai := apl.IntArray{Dims: apl.CopyShape(ar), Ints: make([]int, ar.Size())}
 		for i := range ai.Ints {
 			ai.Ints[i] = i
 		}
@@ -234,8 +234,8 @@ func indexArray(a *apl.Apl, spec apl.IdxSpec, shape []int) (apl.IntArray, error)
 	for i := range intspec {
 		res.Dims[i] = len(intspec[i])
 	}
+	res.Ints = make([]int, apl.Prod(res.Dims))
 
-	res.Ints = make([]int, apl.ArraySize(res))
 	ic, src := apl.NewIdxConverter(shape)
 	dst := make([]int, len(res.Dims))
 	for i := range res.Ints {

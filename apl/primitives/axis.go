@@ -71,7 +71,7 @@ func splitCatAxis(a *apl.Apl, L, R apl.Value) (apl.Value, int, bool, error) {
 
 	var x apl.Value
 	if xr, ok := ax.A.(apl.Array); ok {
-		if apl.ArraySize(xr) != 1 {
+		if xr.Size() != 1 {
 			return nil, 0, false, fmt.Errorf(",: axis must be a scalar or single element array")
 		} else {
 			x = xr.At(0)

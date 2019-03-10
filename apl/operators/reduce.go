@@ -210,7 +210,7 @@ func reduct(a *apl.Apl, f apl.Function, l, r apl.Value, axis int) (apl.Value, er
 	}
 
 	// Create a new array with the given axis removed.
-	values := make([]apl.Value, apl.ArraySize(apl.MixedArray{Dims: dims}))
+	values := make([]apl.Value, apl.Prod(dims))
 	v := apl.MixedArray{
 		Dims:   dims,
 		Values: values,
@@ -284,7 +284,7 @@ func scanfunc(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, 
 	// The result has the same shape as R.
 	dims := apl.CopyShape(ar)
 	res := apl.MixedArray{
-		Values: make([]apl.Value, apl.ArraySize(ar)),
+		Values: make([]apl.Value, apl.Prod(dims)),
 		Dims:   dims,
 	}
 
@@ -320,7 +320,7 @@ func scanfunc(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, 
 	lidx[axis] = 1
 	ic, idx := apl.NewIdxConverter(dims)
 	vec := make([]apl.Value, dims[axis])
-	for i := 0; i < apl.ArraySize(apl.MixedArray{Dims: lidx}); i++ {
+	for i := 0; i < apl.Prod(lidx); i++ {
 		// Build the scan vector, by iterating over the axis.
 		for k := range vec {
 			idx[axis] = k
@@ -398,7 +398,7 @@ func Replicate(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 		ai = apl.IntArray{
 			Dims: []int{rs[axis]},
 		}
-		ai.Ints = make([]int, apl.ArraySize(ai))
+		ai.Ints = make([]int, apl.Prod(ai.Dims))
 		for i := range ai.Ints {
 			ai.Ints[i] = n
 		}
@@ -646,7 +646,7 @@ func compress(a *apl.Apl, L, R apl.Value, axis int) (apl.Value, error) {
 	res := apl.MakeArray(ar, shape)
 	ridx := make([]int, len(rs))
 	n := 0
-	for i := 0; i < apl.ArraySize(ar); i++ {
+	for i := 0; i < ar.Size(); i++ {
 		if b := ridx[axis]; ai.Ints[b] == 1 {
 			res.Set(n, ar.At(i).Copy())
 			n++
@@ -822,7 +822,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 	}
 
 	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(res.Dims))
 	if len(res.Values) == 0 {
 		return res, nil
 	}
@@ -856,7 +856,7 @@ func nwise(a *apl.Apl, f apl.Function, L, R apl.Value, axis int) (apl.Value, err
 	vec := make([]apl.Value, axlen)
 	xs := apl.CopyShape(ar)
 	xs[axis] = 1
-	outer := apl.ArraySize(apl.MixedArray{Dims: xs})
+	outer := apl.Prod(xs)
 	ic, idx := apl.NewIdxConverter(rs)
 	dc, dst := apl.NewIdxConverter(res.Dims)
 	for i := 0; i < outer; i++ {

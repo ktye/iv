@@ -128,7 +128,7 @@ func jsonArray(f Format, v Array) string {
 			return "[" + strings.Join(S.Strings[:S.Dims[0]], ",") + "]"
 		}
 		vec := make([]string, S.Dims[0])
-		inc := prod(S.Dims[1:])
+		inc := Prod(S.Dims[1:])
 		for i := 0; i < S.Dims[0]; i++ {
 			sub := StringArray{Dims: S.Dims[1:], Strings: S.Strings[i*inc:]}
 			vec[i] = vector(sub)
@@ -210,7 +210,7 @@ func (a *Apl) ScanRankArray(s io.RuneScanner, rank int) (Value, error) {
 				if shape == nil {
 					shape = []int{len(values)}
 				} else {
-					p := prod(shape)
+					p := Prod(shape)
 					shape = append([]int{len(values) / p}, shape...)
 				}
 			}
@@ -253,19 +253,19 @@ func (a *Apl) ScanRankArray(s io.RuneScanner, rank int) (Value, error) {
 	if rank < 0 {
 		// For rank < 0, we read everything. Data could be closed or not.
 		rank = len(shape)
-		if prod(shape) == len(values) {
+		if Prod(shape) == len(values) {
 			rank = len(shape) - 1
 		}
 	}
 	for i := 0; i <= rank-len(shape); i++ {
-		p := prod(shape)
+		p := Prod(shape)
 		if len(shape) == 0 {
 			p = 1
 		} else if p == 0 {
 			return nil, fmt.Errorf("parse array: divide by zero: values: %v shape: %v", values, shape)
 		}
 		shape = append([]int{len(values) / p}, shape...)
-		if prod(shape) != len(values) {
+		if Prod(shape) != len(values) {
 			return nil, fmt.Errorf("parse array: array is not rectangular: ×/%v ≠ %v", shape, len(values))
 		}
 		// Continue and fill leading 1s if the rank is higher than data.

@@ -32,14 +32,14 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	rs := ar.Shape()
 
 	res := apl.BoolArray{Dims: apl.CopyShape(ar)}
-	res.Bools = make([]bool, apl.ArraySize(res))
+	res.Bools = make([]bool, apl.Prod(res.Dims))
 
 	// If the rank of L is arger than the rank of R, nothing is found.
 	if len(ls) > len(rs) {
 		return res, nil
 	}
 
-	// If the rank of L is smaller than the rank of R, fill is with ones
+	// If the rank of L is smaller than the rank of R, fill it with ones
 	// at the beginning.
 	if d := len(rs) - len(ls); d > 0 {
 		shape := apl.CopyShape(ar)
@@ -50,14 +50,14 @@ func find(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 				shape[i] = ls[i-d]
 			}
 		}
-		l := apl.MixedArray{Dims: shape, Values: make([]apl.Value, apl.ArraySize(al))}
-		for i := range l.Values {
-			l.Values[i] = al.At(i)
+		l := apl.MakeArray(al, shape)
+		for i := 0; i < l.Size(); i++ {
+			l.Set(i, al.At(i).Copy())
 		}
 		al = l
 		ls = shape
 	}
-	nl := apl.ArraySize(al)
+	nl := al.Size()
 
 	feq := arith2("=", compare("="))
 	ic, idx := apl.NewIdxConverter(rs)

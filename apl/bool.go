@@ -81,7 +81,7 @@ func (b BoolArray) Set(i int, v Value) error {
 func (s BoolArray) Make(shape []int) Uniform {
 	return BoolArray{
 		Dims:  shape,
-		Bools: make([]bool, prod(shape)),
+		Bools: make([]bool, Prod(shape)),
 	}
 }
 
@@ -99,7 +99,7 @@ func makeBoolArray(v []Value) BoolArray {
 func (b BoolArray) Reshape(shape []int) Value {
 	res := BoolArray{
 		Dims:  shape,
-		Bools: make([]bool, prod(shape)),
+		Bools: make([]bool, Prod(shape)),
 	}
 	k := 0
 	for i := range res.Bools {

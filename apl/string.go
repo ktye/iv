@@ -98,7 +98,7 @@ func (s StringArray) Set(i int, v Value) error {
 func (s StringArray) Make(shape []int) Uniform {
 	return StringArray{
 		Dims:    shape,
-		Strings: make([]string, prod(shape)),
+		Strings: make([]string, Prod(shape)),
 	}
 }
 
@@ -116,7 +116,7 @@ func makeStringArray(v []Value) StringArray {
 func (s StringArray) Reshape(shape []int) Value {
 	res := StringArray{
 		Dims:    shape,
-		Strings: make([]string, prod(shape)),
+		Strings: make([]string, Prod(shape)),
 	}
 	k := 0
 	for i := range res.Strings {

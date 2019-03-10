@@ -21,7 +21,7 @@ func selection(op func(*apl.Apl, apl.Value, apl.Value) apl.Function) func(*apl.A
 			return ai, fmt.Errorf("cannot select from %T", R)
 		}
 		ai.Dims = apl.CopyShape(ar)
-		ai.Ints = make([]int, apl.ArraySize(ai))
+		ai.Ints = make([]int, apl.Prod(ai.Dims))
 		for i := range ai.Ints {
 			ai.Ints[i] = i + 1
 		}
@@ -60,7 +60,7 @@ func selectSimple(f func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)) fun
 			return ai, fmt.Errorf("cannot select from %T", R)
 		}
 		ai.Dims = apl.CopyShape(ar)
-		ai.Ints = make([]int, apl.ArraySize(ai))
+		ai.Ints = make([]int, apl.Prod(ai.Dims))
 		for i := range ai.Ints {
 			ai.Ints[i] = i + 1
 		}

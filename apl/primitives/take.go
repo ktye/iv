@@ -193,7 +193,7 @@ func takeDropSelection(a *apl.Apl, L, R apl.Value, take bool) (apl.IntArray, err
 	// Take/drop from an index array instead of R of the same shape.
 	// Take/drop fills with zeros, so count with origin 1 temporarily.
 	r := apl.IntArray{Dims: apl.CopyShape(ar)}
-	r.Ints = make([]int, apl.ArraySize(r))
+	r.Ints = make([]int, ar.Size())
 	for i := range r.Ints {
 		r.Ints[i] = i + 1
 	}
@@ -290,7 +290,7 @@ func takeChannel2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	shape := make([]int, len(ai.Ints))
 	copy(shape, ai.Ints)
 	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(shape))
 
 	c := R.(apl.Channel)
 	for i := range res.Values {

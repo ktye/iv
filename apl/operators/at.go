@@ -26,7 +26,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 		rs := ar.Shape()
 
 		// If g is a function, it must return a boolean mask.
-		mask := make([]bool, apl.ArraySize(ar))
+		mask := make([]bool, ar.Size())
 		var replshape []int
 		if fg, ok := g.(apl.Function); ok {
 			v, err := fg.Call(a, nil, ar)
@@ -37,7 +37,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			if ok == false {
 				return nil, fmt.Errorf("at: function g did not return an array: %T", v)
 			}
-			size := apl.ArraySize(av)
+			size := av.Size()
 			if size != len(mask) {
 				return nil, fmt.Errorf("at: array returned by function g has wrong size")
 			}
@@ -69,7 +69,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			if len(gi.Dims) != 1 {
 				return nil, fmt.Errorf("at: g should have rank 1: %d", len(gi.Dims))
 			}
-			n := apl.ArraySize(ar) / rs[0]
+			n := ar.Size() / rs[0]
 			for _, major := range gi.Ints {
 				major -= a.Origin
 				if major < 0 || major >= rs[0] {
@@ -125,7 +125,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 		if ok == false {
 			re = a.UnifyArray(apl.MixedArray{Dims: []int{1}, Values: []apl.Value{vr}})
 		}
-		if n := apl.ArraySize(re); n == 1 {
+		if n := re.Size(); n == 1 {
 			for i := range repl {
 				repl[i] = re.At(0)
 			}
@@ -140,7 +140,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			}
 		}
 
-		res := apl.MixedArray{Dims: apl.CopyShape(ar), Values: make([]apl.Value, apl.ArraySize(ar))}
+		res := apl.MixedArray{Dims: apl.CopyShape(ar), Values: make([]apl.Value, ar.Size())}
 		k := 0
 		for i := range res.Values {
 			if mask[i] {

@@ -121,11 +121,6 @@ func ArrayBounds(v Array, i int) error {
 	return nil
 }
 
-// ArraySize returns the product of the array shape.
-func ArraySize(v Array) int {
-	return prod(v.Shape())
-}
-
 // MakeArray tries to return an array of a uniform type, if the given prototype is uniform.
 // It uses the given shape of the shape of the prototype if it is nil.
 func MakeArray(prototype Array, shape []int) ArraySetter {
@@ -135,10 +130,10 @@ func MakeArray(prototype Array, shape []int) ArraySetter {
 	if u, ok := prototype.(Uniform); ok {
 		return u.Make(shape)
 	}
-	return MixedArray{Dims: shape, Values: make([]Value, prod(shape))}
+	return MixedArray{Dims: shape, Values: make([]Value, Prod(shape))}
 }
 
-func prod(shape []int) int {
+func Prod(shape []int) int {
 	if len(shape) == 0 {
 		return 0
 	}
@@ -238,7 +233,7 @@ func (v MixedArray) Size() int {
 
 func (v MixedArray) Reshape(shape []int) Value {
 	res := MixedArray{Dims: shape}
-	res.Values = make([]Value, ArraySize(res))
+	res.Values = make([]Value, Prod(shape))
 	k := 0
 	for i := range res.Values {
 		res.Values[i] = v.Values[k]
@@ -263,7 +258,7 @@ func (e EmptyArray) Reshape(s []int) Value {
 		return e
 	}
 	res := IntArray{Dims: s}
-	res.Ints = make([]int, ArraySize(res))
+	res.Ints = make([]int, Prod(s))
 	for i := range res.Ints {
 		res.Ints[i] = 0
 	}
@@ -322,7 +317,7 @@ func (ar IntArray) Set(i int, v Value) error {
 func (s IntArray) Make(shape []int) Uniform {
 	return IntArray{
 		Dims: shape,
-		Ints: make([]int, prod(shape)),
+		Ints: make([]int, Prod(shape)),
 	}
 }
 
@@ -341,7 +336,7 @@ func (ar IntArray) Reshape(shape []int) Value {
 	if len(ar.Ints) == 0 {
 		return EmptyArray{}
 	}
-	size := prod(shape)
+	size := Prod(shape)
 	rv := IntArray{
 		Ints: make([]int, size),
 		Dims: shape,

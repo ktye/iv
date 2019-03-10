@@ -37,9 +37,9 @@ func (ars arrays) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 	if isLarray && isRarray {
 		// 0-Size arrays are converted to empty arrays.
 		// TODO: is this correct?
-		if apl.ArraySize(al) == 0 {
+		if al.Size() == 0 {
 			return apl.EmptyArray{}, ar, true
-		} else if apl.ArraySize(ar) == 0 {
+		} else if ar.Size() == 0 {
 			return al, apl.EmptyArray{}, true
 		}
 		lshape := al.Shape()
@@ -56,10 +56,10 @@ func (ars arrays) To(a *apl.Apl, L, R apl.Value) (apl.Value, apl.Value, bool) {
 			}
 		}
 		// Convert single element arrays to scalars.
-		if apl.ArraySize(al) == 1 {
+		if al.Size() == 1 {
 			return al.At(0), ar, true
 		}
-		if apl.ArraySize(ar) == 1 {
+		if ar.Size() == 1 {
 			return al, ar.At(0), true
 		}
 		return L, R, false
@@ -115,8 +115,8 @@ func array1(symbol string, fn func(*apl.Apl, apl.Value) (apl.Value, bool)) func(
 	return func(a *apl.Apl, _ apl.Value, R apl.Value) (apl.Value, error) {
 		ar := R.(apl.Array)
 		res := apl.MixedArray{
-			Values: make([]apl.Value, apl.ArraySize(ar)),
 			Dims:   apl.CopyShape(ar),
+			Values: make([]apl.Value, ar.Size()),
 		}
 		same := true
 		var t reflect.Type
@@ -167,7 +167,7 @@ func array2(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value, b
 			shape = apl.CopyShape(al)
 		}
 		res := apl.MixedArray{Dims: shape}
-		res.Values = make([]apl.Value, apl.ArraySize(res))
+		res.Values = make([]apl.Value, apl.Prod(res.Dims))
 		same := true
 		var t reflect.Type
 		for i := range res.Values {
@@ -276,7 +276,7 @@ func arrayAxis(symbol string, fn func(*apl.Apl, apl.Value, apl.Value) (apl.Value
 		var t reflect.Type
 		var lv, rv, v apl.Value
 		res := apl.MixedArray{Dims: apl.CopyShape(al)}
-		res.Values = make([]apl.Value, apl.ArraySize(res))
+		res.Values = make([]apl.Value, apl.Prod(res.Dims))
 		idx := make([]int, len(res.Dims))
 		ic, rdx := apl.NewIdxConverter(rightShape)
 		for i := range res.Values {

@@ -39,12 +39,12 @@ func roll(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 			}
 		}
 	}
-	if apl.ArraySize(ar) == 0 {
+	if ar.Size() == 0 {
 		return apl.EmptyArray{}, nil
 	}
 	res := apl.MixedArray{
-		Values: make([]apl.Value, apl.ArraySize(ar)),
 		Dims:   apl.CopyShape(ar),
+		Values: make([]apl.Value, ar.Size()),
 	}
 	for i := range res.Values {
 		if z, ok := ar.At(i).(apl.Number); ok == false {

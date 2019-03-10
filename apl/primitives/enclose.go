@@ -49,9 +49,8 @@ func (s strvec) To(a *apl.Apl, v apl.Value) (apl.Value, bool) {
 	if ok == false {
 		return v, false
 	}
-	n := apl.ArraySize(ar)
-	vec := apl.StringArray{Dims: []int{n}, Strings: make([]string, n)}
-	for i := 0; i < n; i++ {
+	vec := apl.StringArray{Dims: []int{ar.Size()}, Strings: make([]string, ar.Size())}
+	for i := 0; i < vec.Size(); i++ {
 		if s, ok := ar.At(i).(apl.String); ok {
 			vec.Strings[i] = string(s)
 		} else {

@@ -37,7 +37,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 
 		// p, q and r are the values of RO.
 		var p, q, r int
-		if n := apl.ArraySize(ai); n < 1 || n > 3 {
+		if n := ai.Size(); n < 1 || n > 3 {
 			return nil, fmt.Errorf("rank: RO vector has %d elements, must be between 1..3", n)
 		} else if n == 1 {
 			p, q, r = int(ai.Ints[0]), int(ai.Ints[0]), int(ai.Ints[0])
@@ -80,7 +80,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			subshape := apl.CopyShape(x)
 			subshape = subshape[len(subshape)-rank:]
 			cell := apl.MixedArray{Dims: subshape}
-			cell.Values = make([]apl.Value, apl.ArraySize(cell))
+			cell.Values = make([]apl.Value, apl.Prod(cell.Dims))
 			m := len(cell.Values)
 			for i := range cell.Values {
 				cell.Values[i] = x.At(n*m + i).Copy()
@@ -92,7 +92,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		subcells := func(x apl.Array, rank int) int {
 			s := x.Shape()
 			// The number is the product of the frame of x with respect to rank.
-			return apl.ArraySize(apl.MixedArray{Dims: s[:len(s)-rank]})
+			return apl.Prod(s[:len(s)-rank])
 		}
 
 		var err error
@@ -210,7 +210,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 				if len(common) > 0 {
 					// Reshape scalar to common shape.
 					ga := apl.MixedArray{Dims: common}
-					ga.Values = make([]apl.Value, apl.ArraySize(ga))
+					ga.Values = make([]apl.Value, apl.Prod(ga.Dims))
 					for i := range ga.Values {
 						ga.Values[i] = results[n].Copy()
 					}
@@ -259,7 +259,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 		res := apl.MixedArray{}
 		res.Dims = append(res.Dims, frame...)
 		res.Dims = append(res.Dims, common...)
-		res.Values = make([]apl.Value, apl.ArraySize(res))
+		res.Values = make([]apl.Value, apl.Prod(res.Dims))
 		if len(common) == 0 {
 			if len(results) != len(res.Values) {
 				return nil, fmt.Errorf("rank: unexpected number of scalar results %d instead of %d", len(results), len(res.Values)) // Should not happen
@@ -267,7 +267,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			res.Values = results
 			return a.UnifyArray(res), nil
 		}
-		commonsize := apl.ArraySize(apl.MixedArray{Dims: common})
+		commonsize := apl.Prod(common)
 		off := 0
 		for i := range results {
 			if len(common) == 0 {

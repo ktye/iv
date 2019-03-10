@@ -85,7 +85,7 @@ func (v vector) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	if len(shape) == 1 {
 		return propagate(a, V, v.child)
 	}
-	as := apl.ArraySize(ar)
+	as := ar.Size()
 
 	// Handle empty case.
 	if as == 0 {
@@ -230,13 +230,13 @@ func (ia indexarray) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 	}
 
 	// Empty array.
-	if apl.ArraySize(ar) == 0 {
+	if ar.Size() == 0 {
 		return propagate(a, apl.EmptyArray{}, ia.child)
 	}
 
 	// Make a new array and try to convert all values.
 	res := apl.IntArray{
-		Ints: make([]int, apl.ArraySize(ar)),
+		Ints: make([]int, ar.Size()),
 		Dims: apl.CopyShape(ar),
 	}
 

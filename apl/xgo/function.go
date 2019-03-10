@@ -56,7 +56,7 @@ func (f Function) Call(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		if len(rs) > 1 {
 			return nil, fmt.Errorf("function argument has rank %d", len(rs))
 		}
-		if n := apl.ArraySize(ar); n != args {
+		if n := ar.Size(); n != args {
 			return nil, fmt.Errorf("function %s requires %d arguments, R has size %d", f.Name, args, n)
 		} else {
 			for i := 0; i < args; i++ {

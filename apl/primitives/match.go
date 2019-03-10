@@ -95,7 +95,7 @@ func match(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			}
 		}
 		feq := arith2("=", compare("="))
-		for i := 0; i < apl.ArraySize(ar); i++ {
+		for i := 0; i < ar.Size(); i++ {
 			if iseq, err := feq(a, ar.At(i), al.At(i)); err != nil {
 				return nil, err
 			} else if iseq.(apl.Bool) == false {

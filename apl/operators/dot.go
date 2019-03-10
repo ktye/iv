@@ -124,7 +124,7 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 	copy(shape, ls[:len(ls)-1])
 	copy(shape[len(ls)-1:], rs[1:])
 	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(shape))
 
 	// Iterate of all elements of the resulting array.
 	ic, idx := apl.NewIdxConverter(shape)
@@ -185,7 +185,7 @@ func outer(a *apl.Apl, L, R apl.Value, f, g apl.Function) (apl.Value, error) {
 	shape = append(shape, apl.CopyShape(al)...)
 	shape = append(shape, apl.CopyShape(ar)...)
 	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(shape))
 
 	lc, lidx := apl.NewIdxConverter(ls)
 	rc, ridx := apl.NewIdxConverter(rs)

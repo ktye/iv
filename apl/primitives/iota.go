@@ -64,7 +64,7 @@ func indexof(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	al := L.(apl.Array) // vector
 	ar := R.(apl.Array)
 
-	nl := apl.ArraySize(al)
+	nl := al.Size()
 	notfound := nl + a.Origin
 	vals := make([]apl.Value, nl)
 	for i := range vals {
@@ -81,7 +81,7 @@ func indexof(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	}
 
 	ai := apl.IntArray{
-		Ints: make([]int, apl.ArraySize(ar)),
+		Ints: make([]int, ar.Size()),
 		Dims: apl.CopyShape(ar),
 	}
 	for i := range ai.Ints {
@@ -100,7 +100,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 			Values: []apl.Value{R},
 		}
 	}
-	n := apl.ArraySize(ar)
+	n := ar.Size()
 
 	al, ok := L.(apl.Array)
 	if !ok {
@@ -115,7 +115,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 
 	res := apl.BoolArray{
 		Dims:  apl.CopyShape(al),
-		Bools: make([]bool, apl.ArraySize(al)),
+		Bools: make([]bool, al.Size()),
 	}
 	for k := range res.Bools {
 		l := al.At(k)
@@ -140,7 +140,7 @@ func membership(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 func where(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	ar := R.(apl.BoolArray)
 	shape := ar.Shape()
-	if apl.ArraySize(ar) == 0 {
+	if ar.Size() == 0 {
 		return apl.EmptyArray{}, nil
 	}
 
@@ -193,7 +193,7 @@ func intervalindex(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	rs := ar.Shape()
 	rn := 1
 	if len(rs) > 1 {
-		rn = apl.ArraySize(apl.MixedArray{Dims: rs[1:]})
+		rn = apl.Prod(rs[1:])
 	}
 
 	al := L.(apl.Array)

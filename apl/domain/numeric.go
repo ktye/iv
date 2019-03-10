@@ -31,7 +31,7 @@ func (n number) To(a *apl.Apl, V apl.Value) (apl.Value, bool) {
 		if n.convert == false {
 			return V, false
 		}
-		if n := apl.ArraySize(ar); n != 1 {
+		if n := ar.Size(); n != 1 {
 			return V, false
 		}
 		v := ar.At(0)

@@ -45,8 +45,8 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// The power matrix multiplies L along the last axis recursively from right to left,
 	// similar as the Index method of apl.IdxConverter.
 	p := apl.MixedArray{
-		Values: make([]apl.Value, apl.ArraySize(al)),
 		Dims:   apl.CopyShape(al),
+		Values: make([]apl.Value, al.Size()),
 	}
 	for i := range p.Values {
 		p.Values[i] = al.At(i).Copy()
@@ -77,7 +77,7 @@ func decode(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 func extendAxis(ar apl.Array, axis, n int) (apl.Array, []int) {
 	res := apl.MixedArray{Dims: apl.CopyShape(ar)}
 	res.Dims[axis] = n
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(res.Dims))
 	ridx := make([]int, len(res.Dims))
 	ic, idx := apl.NewIdxConverter(ar.Shape())
 	for i := range res.Values {
@@ -204,7 +204,7 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	copy(shape[:len(ls)], ls)
 	copy(shape[len(ls):], rs)
 	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(res.Dims))
 
 	// enc represents r in the given radix power vector and sets the result to vec.
 	enc := func(rad []apl.Value, r apl.Value, vec []apl.Value) error {
@@ -279,17 +279,17 @@ func encodeArray(a *apl.Apl, al apl.Array, R apl.Value) (apl.Value, error) {
 	// Number of iterations over L omitting the first axis
 	NL := 1
 	if len(ls) > 1 {
-		NL = apl.ArraySize(apl.MixedArray{Dims: ls[1:]})
+		NL = apl.Prod(ls[1:])
 	}
 	// Number of iterations over R
 	NR := 0
 	if rok {
-		NR = apl.ArraySize(ar)
+		NR = ar.Size()
 	}
 	// Number of result elements divided by length of first axis
 	NN := 1
 	if len(shape) > 1 {
-		NN = apl.ArraySize(apl.MixedArray{Dims: shape[1:]})
+		NN = apl.Prod(shape[1:])
 	}
 	rad := make([]apl.Value, shape[0])
 	off := 0

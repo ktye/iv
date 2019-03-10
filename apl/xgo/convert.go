@@ -44,7 +44,7 @@ func export(v apl.Value, t reflect.Type) (reflect.Value, error) {
 			return zero, fmt.Errorf("expected slice: %T", v)
 		}
 		et := t.Elem()
-		n := apl.ArraySize(ar)
+		n := ar.Size()
 		s := reflect.MakeSlice(t, n, n)
 		for i := 0; i < n; i++ {
 			if e, err := export(ar.At(i), et); err != nil {

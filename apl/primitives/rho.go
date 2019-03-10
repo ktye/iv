@@ -64,7 +64,7 @@ func rho1(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 // Rho2 is dyadic reshape, L is empty or index array, R is array.
 func rho2(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	// L is empty, returns empty.
-	if apl.ArraySize(L.(apl.Array)) == 0 {
+	if L.(apl.Array).Size() == 0 {
 		return apl.EmptyArray{}, nil
 	}
 
@@ -88,7 +88,7 @@ func rhoChannel(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		return R, nil
 	}
 	al := L.(apl.IntArray)
-	size := prod(al.Ints)
+	size := apl.Prod(al.Ints)
 	newarray := func() apl.MixedArray {
 		s := make([]int, len(al.Ints))
 		copy(s, al.Ints)
@@ -142,15 +142,4 @@ func rhoChannel(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		}
 	}()
 	return out, nil
-}
-
-func prod(shape []int) int {
-	if len(shape) == 0 {
-		return 0
-	}
-	n := shape[0]
-	for i := 1; i < len(shape); i++ {
-		n *= shape[i]
-	}
-	return n
 }

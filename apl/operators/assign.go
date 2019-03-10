@@ -152,7 +152,7 @@ func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R
 	// Try to keep the original array type, upgrade only if needed.
 	upgrade := func() {
 		ga := apl.MixedArray{Dims: apl.CopyShape(ar)}
-		ga.Values = make([]apl.Value, apl.ArraySize(ga))
+		ga.Values = make([]apl.Value, apl.Prod(ga.Dims))
 		for i := range ga.Values {
 			if i >= ar.Size() {
 				return
@@ -195,7 +195,7 @@ func assignValue(a *apl.Apl, dst apl.Value, indexes apl.Value, f apl.Function, R
 	var scalar apl.Value
 	if av, ok := R.(apl.Array); ok {
 		src = av
-		if apl.ArraySize(av) == 1 {
+		if av.Size() == 1 {
 			scalar = av.At(0).Copy()
 		}
 	} else {

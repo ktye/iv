@@ -18,7 +18,7 @@ func selection(f func(*apl.Apl, apl.Value, apl.Value) (apl.Value, error)) func(*
 			return ai, fmt.Errorf("cannot select from %T", R)
 		}
 		ai.Dims = apl.CopyShape(ar)
-		ai.Ints = make([]int, apl.ArraySize(ai))
+		ai.Ints = make([]int, ar.Size())
 		for i := range ai.Ints {
 			ai.Ints[i] = i
 		}

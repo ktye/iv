@@ -56,10 +56,9 @@ func ravel(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	}
 
 	ar, _ := r.(apl.Array)
-	n := apl.ArraySize(ar)
 	res := apl.MixedArray{
-		Dims:   []int{n},
-		Values: make([]apl.Value, n),
+		Dims:   []int{ar.Size()},
+		Values: make([]apl.Value, ar.Size()),
 	}
 	var t reflect.Type
 	same := true
@@ -86,7 +85,7 @@ func ravelSelection(a *apl.Apl, L, R apl.Value) (apl.IntArray, error) {
 	if ok == false {
 		return apl.IntArray{}, fmt.Errorf("ravel: cannot select from non-array: %T", R)
 	}
-	ai := apl.IntArray{Dims: []int{apl.ArraySize(ar)}}
+	ai := apl.IntArray{Dims: []int{ar.Size()}}
 	ai.Ints = make([]int, ai.Dims[0])
 	for i := range ai.Ints {
 		ai.Ints[i] = i
@@ -217,9 +216,9 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	ar, isRarray := R.(apl.Array)
 
 	// Left or right is an empty array
-	if isLarray && apl.ArraySize(al) == 0 {
+	if isLarray && al.Size() == 0 {
 		return R, nil
-	} else if isRarray && apl.ArraySize(ar) == 0 {
+	} else if isRarray && ar.Size() == 0 {
 		return L, nil
 	}
 
@@ -236,7 +235,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		ary := apl.MixedArray{
 			Dims: othershape,
 		}
-		ary.Values = make([]apl.Value, apl.ArraySize(ary))
+		ary.Values = make([]apl.Value, apl.Prod(ary.Dims))
 		for i := range ary.Values {
 			ary.Values[i] = scalar.Copy()
 		}
@@ -297,7 +296,7 @@ func catenate(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 	res := apl.MixedArray{
 		Dims: newshape,
 	}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(res.Dims))
 
 	// Iterate over combined elements, taking from L or R.
 	split := sl[x]
@@ -351,7 +350,7 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 		ary := apl.MixedArray{
 			Dims: shape,
 		}
-		ary.Values = make([]apl.Value, apl.ArraySize(ary))
+		ary.Values = make([]apl.Value, apl.Prod(ary.Dims))
 		for i := range ary.Values {
 			ary.Values[i] = scalar.Copy()
 		}
@@ -391,7 +390,7 @@ func laminate(a *apl.Apl, L, R apl.Value, x int) (apl.Value, error) {
 	// Iterate over the result and copy values from L or R depending,
 	// if the the index at axis x is 0 or 1.
 	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res.Values = make([]apl.Value, apl.Prod(shape))
 	dst := make([]int, len(shape))
 	ic, src := apl.NewIdxConverter(ls)
 	for i := range res.Values {

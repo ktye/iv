@@ -32,7 +32,7 @@ func TestIdx(t *testing.T) {
 	for _, tc := range testCases {
 		ar := MixedArray{Dims: tc.shape}
 		ic, idx := NewIdxConverter(tc.shape)
-		for i := 0; i < ArraySize(ar); i++ {
+		for i := 0; i < ar.Size(); i++ {
 			n := ic.Index(idx)
 			if n != i {
 				t.Fatalf("expected %d got %d", i, n)

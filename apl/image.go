@@ -50,7 +50,7 @@ func (i Image) Shape() []int {
 	return i.Dims
 }
 func (i Image) Size() int {
-	return prod(i.Dims)
+	return Prod(i.Dims)
 }
 func (i Image) Set(k int, v Value) error {
 	num, ok := v.(Number)
@@ -72,7 +72,7 @@ func (i Image) Set(k int, v Value) error {
 }
 
 func (i Image) toIntArray() IntArray {
-	ints := make([]int, prod(i.Dims))
+	ints := make([]int, Prod(i.Dims))
 	shape := make([]int, len(i.Dims))
 	copy(shape, i.Dims)
 	idx := 0
