@@ -113,9 +113,8 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 				if out {
 					tmp.Values[k] = apl.Int(0)
 				} else {
-					tmp.Values[k] = ar.At(ic.Index(dst)) // TODO copy?
+					tmp.Values[k] = ar.At(ic.Index(dst)).Copy()
 				}
-
 				apl.IncArrayIndex(sdx, tmp.Dims)
 			}
 
@@ -128,11 +127,11 @@ func stencil(a *apl.Apl, f, RO apl.Value) apl.Function {
 			if _, ok := v.(apl.Array); ok {
 				return nil, fmt.Errorf("stencil function must return a scalar, not an array")
 			}
-			res.Values[i] = v
+			res.Values[i] = v.Copy()
 
 			apl.IncArrayIndex(idx, rs)
 		}
-		return res, nil
+		return a.UnifyArray(res), nil
 	}
 	return function(derived)
 }

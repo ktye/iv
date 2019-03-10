@@ -44,7 +44,7 @@ func power(a *apl.Apl, f, g apl.Value) apl.Function {
 					return nil, err
 				}
 			}
-			return v, nil
+			return v.Copy(), nil
 		} else {
 			// RO g is a function.
 			var err error
@@ -60,20 +60,21 @@ func power(a *apl.Apl, f, g apl.Value) apl.Function {
 				if err != nil {
 					return nil, err
 				}
-				v, err = gn.Call(a, fR, r)
+				v, err = gn.Call(a, fR.Copy(), r)
 				if err != nil {
 					return nil, err
 				}
-				nv, ok := to.To(a, v)
+				nv, ok := to.To(a, v.Copy())
 				if ok == false {
 					return nil, fmt.Errorf("power: gY must be an integer: %T", v)
 				}
 				n := int(nv.(apl.Int))
 
+				r = fR.Copy()
 				if n == 1 {
-					return fR, nil
+					return r, nil
 				}
-				r = fR
+
 			}
 		}
 	}

@@ -27,7 +27,7 @@ func compose(a *apl.Apl, f, g apl.Value) apl.Function {
 				if err != nil {
 					return nil, err
 				}
-				return fn.Call(a, nil, v)
+				return fn.Call(a, nil, v.Copy())
 			} else if isgunc {
 				// Form II: A∘g R
 				return gn.Call(a, f, R)
@@ -42,7 +42,7 @@ func compose(a *apl.Apl, f, g apl.Value) apl.Function {
 				if err != nil {
 					return nil, err
 				}
-				return fn.Call(a, L, v)
+				return fn.Call(a, L, v.Copy())
 			}
 		}
 		return nil, fmt.Errorf("compose: cannot handle %T %T ∘ %T %T", L, f, g, R)

@@ -21,7 +21,7 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 		// g selects values from R.
 		ar, ok := R.(apl.Array)
 		if ok == false {
-			ar = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}}
+			ar = a.UnifyArray(apl.MixedArray{Dims: []int{1}, Values: []apl.Value{R}})
 		}
 		rs := ar.Shape()
 
@@ -85,9 +85,6 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			replshape[0] = gi.Dims[0]
 		}
 
-		res := apl.MixedArray{Dims: apl.CopyShape(ar)}
-		res.Values = make([]apl.Value, apl.ArraySize(res))
-
 		// Number of replacements.
 		n := 0
 		for _, v := range mask {
@@ -98,20 +95,19 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 
 		repl := make([]apl.Value, n)
 		var vr apl.Value
-
 		if fn, ok := f.(apl.Function); ok {
 			// Apply fn to the sub-array of R as a whole.
 			if replshape == nil {
 				replshape = []int{n}
 			}
-			re := apl.MixedArray{Dims: replshape, Values: repl}
+			re := apl.MakeArray(ar, replshape)
 			n := 0
 			for i, m := range mask {
 				if m {
 					if err := apl.ArrayBounds(ar, i); err != nil {
 						return nil, err
 					}
-					re.Values[n] = ar.At(i)
+					re.Set(n, ar.At(i).Copy())
 					n++
 				}
 			}
@@ -127,11 +123,11 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 
 		re, ok := vr.(apl.Array)
 		if ok == false {
-			re = apl.MixedArray{Dims: []int{1}, Values: []apl.Value{vr}}
+			re = a.UnifyArray(apl.MixedArray{Dims: []int{1}, Values: []apl.Value{vr}})
 		}
 		if n := apl.ArraySize(re); n == 1 {
 			for i := range repl {
-				repl[i] = re.At(0) // TODO: copy?
+				repl[i] = re.At(0)
 			}
 		} else if n != len(repl) {
 			return nil, fmt.Errorf("at: number of replacements does not match selection")
@@ -144,19 +140,20 @@ func at(a *apl.Apl, f, g apl.Value) apl.Function {
 			}
 		}
 
+		res := apl.MixedArray{Dims: apl.CopyShape(ar), Values: make([]apl.Value, apl.ArraySize(ar))}
 		k := 0
 		for i := range res.Values {
 			if mask[i] {
-				res.Values[i] = repl[k]
+				res.Values[i] = repl[k].Copy()
 				k++
 			} else {
 				if err := apl.ArrayBounds(ar, i); err != nil {
 					return nil, err
 				}
-				res.Values[i] = ar.At(i)
+				res.Values[i] = ar.At(i).Copy()
 			}
 		}
-		return res, nil
+		return a.UnifyArray(res), nil
 	}
 	return function(derived)
 }

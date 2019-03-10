@@ -72,10 +72,10 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 		u := apl.MixedArray{Dims: []int{rs[0]}}
 		v := make([]apl.Value, rs[0])
 		for i := range v {
-			v[i] = l
+			v[i] = l.Copy()
 		}
 		u.Values = v
-		al = u
+		al = a.UnifyArray(u)
 	} else if rok == false {
 		ls := al.Shape()
 		if ls == nil || ls[0] == 0 {
@@ -84,10 +84,10 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 		u := apl.MixedArray{Dims: []int{ls[len(ls)-1]}}
 		v := make([]apl.Value, ls[0])
 		for i := range v {
-			v[i] = r
+			v[i] = r.Copy()
 		}
 		u.Values = v
-		ar = u
+		ar = a.UnifyArray(u)
 	}
 
 	// The result is a new array with a shape of both arrays combined, without the inner dimension.
@@ -117,21 +117,21 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 				}
 			}
 		}
-		return v, nil
+		return v.Copy(), nil
 	}
 
 	shape := make([]int, len(ls)+len(rs)-2)
 	copy(shape, ls[:len(ls)-1])
 	copy(shape[len(ls)-1:], rs[1:])
-	result := apl.MixedArray{Dims: shape}
-	result.Values = make([]apl.Value, apl.ArraySize(result))
+	res := apl.MixedArray{Dims: shape}
+	res.Values = make([]apl.Value, apl.ArraySize(res))
 
 	// Iterate of all elements of the resulting array.
 	ic, idx := apl.NewIdxConverter(shape)
 	lic, lidx := apl.NewIdxConverter(ls)
 	ric, ridx := apl.NewIdxConverter(rs)
 	split := len(ls) - 1
-	for i := range result.Values {
+	for i := range res.Values {
 		ic.Indexes(i, idx)
 
 		// Split the indexes in idx into the original indexes of both arrays.
@@ -153,9 +153,9 @@ func inner(a *apl.Apl, l, r apl.Value, f, g apl.Function) (apl.Value, error) {
 				}
 			}
 		}
-		result.Values[i] = v
+		res.Values[i] = v.Copy()
 	}
-	return result, nil
+	return a.UnifyArray(res), nil
 }
 
 // A scalarProducter implements a ScalarProduct which receives an argument of the same type.
@@ -197,10 +197,8 @@ func outer(a *apl.Apl, L, R apl.Value, f, g apl.Function) (apl.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.Values[i] = v // TODO copy?
-
+		res.Values[i] = v.Copy()
 		apl.IncArrayIndex(dst, shape)
 	}
-
-	return res, nil
+	return a.UnifyArray(res), nil
 }

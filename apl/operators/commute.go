@@ -18,7 +18,7 @@ func commute(a *apl.Apl, f, _ apl.Value) apl.Function {
 	derived := func(a *apl.Apl, L, R apl.Value) (apl.Value, error) {
 		f := f.(apl.Function)
 		if L == nil {
-			L = R
+			L = R.Copy()
 		}
 		return f.Call(a, R, L)
 	}

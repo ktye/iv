@@ -83,9 +83,9 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 			cell.Values = make([]apl.Value, apl.ArraySize(cell))
 			m := len(cell.Values)
 			for i := range cell.Values {
-				cell.Values[i] = x.At(n*m + i)
+				cell.Values[i] = x.At(n*m + i).Copy()
 			}
-			return cell, nil
+			return a.UnifyArray(cell), nil
 		}
 
 		// subcells returns the number of rank-cells of x.
@@ -153,7 +153,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 				if err != nil {
 					return nil, err
 				}
-				results = append(results, v)
+				results = append(results, v.Copy())
 			}
 		} else {
 			// Monadic context: p specifies rank of R.
@@ -179,7 +179,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 					if err != nil {
 						return nil, err
 					}
-					results = append(results, v)
+					results = append(results, v.Copy())
 				}
 			}
 			if doSend {
@@ -212,9 +212,9 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 					ga := apl.MixedArray{Dims: common}
 					ga.Values = make([]apl.Value, apl.ArraySize(ga))
 					for i := range ga.Values {
-						ga.Values[i] = results[n] // TODO copy?
+						ga.Values[i] = results[n].Copy()
 					}
-					results[n] = ga
+					results[n] = a.UnifyArray(ga)
 				}
 			} else {
 				// If rank is smaller than common rank,
@@ -251,7 +251,7 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 						return nil, err
 					}
 				}
-				results[n] = vr
+				results[n] = vr.Copy()
 			}
 		}
 
@@ -265,22 +265,22 @@ func rank(a *apl.Apl, LO, RO apl.Value) apl.Function {
 				return nil, fmt.Errorf("rank: unexpected number of scalar results %d instead of %d", len(results), len(res.Values)) // Should not happen
 			}
 			res.Values = results
-			return res, nil
+			return a.UnifyArray(res), nil
 		}
 		commonsize := apl.ArraySize(apl.MixedArray{Dims: common})
 		off := 0
 		for i := range results {
 			if len(common) == 0 {
-				res.Values[i] = results[i]
+				res.Values[i] = results[i].Copy()
 			} else {
 				vr := results[i].(apl.Array)
 				for n := 0; n < commonsize; n++ {
-					res.Values[off+n] = vr.At(n) // TODO copy?
+					res.Values[off+n] = vr.At(n).Copy()
 				}
 				off += commonsize
 			}
 		}
-		return res, nil
+		return a.UnifyArray(res), nil
 	}
 	return function(derived)
 }
@@ -351,11 +351,16 @@ func Take(a *apl.Apl, ai apl.IntArray, ar apl.Array, x []int) (apl.Array, error)
 		}
 	}
 
-	res := apl.MixedArray{Dims: shape}
-	res.Values = make([]apl.Value, apl.ArraySize(res))
+	res := apl.MakeArray(ar, shape)
+	var z apl.Value
+	if u, ok := res.(apl.Uniform); ok {
+		z = u.Zero()
+	} else {
+		z = apl.Int(0)
+	}
 	idx := make([]int, len(shape))
 	ic, src := apl.NewIdxConverter(ar.Shape())
-	for i := range res.Values {
+	for i := 0; i < res.Size(); i++ {
 		copy(src, idx)
 		zero := false
 		for k, n := range off {
@@ -365,9 +370,9 @@ func Take(a *apl.Apl, ai apl.IntArray, ar apl.Array, x []int) (apl.Array, error)
 			}
 		}
 		if zero {
-			res.Values[i] = apl.Int(0) // TODO: fill element of R?
+			res.Set(i, z)
 		} else {
-			res.Values[i] = ar.At(ic.Index(src)) // TODO: copy?
+			res.Set(i, ar.At(ic.Index(src)).Copy())
 		}
 		apl.IncArrayIndex(idx, shape)
 	}

@@ -66,9 +66,9 @@ func each1(a *apl.Apl, R apl.Value, f apl.Function) (apl.Value, error) {
 		if _, ok := v.(apl.Array); ok {
 			return nil, fmt.Errorf("each: result must be a scalar")
 		}
-		res.Values[i] = v
+		res.Values[i] = v.Copy()
 	}
-	return res, nil
+	return a.UnifyArray(res), nil
 }
 
 func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
@@ -78,7 +78,7 @@ func eachList(a *apl.Apl, l apl.List, f apl.Function) (apl.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		res[i] = v
+		res[i] = v.Copy()
 	}
 	return res, nil
 }
@@ -101,11 +101,11 @@ func channelEach(a *apl.Apl, _, _ apl.Value) apl.Function {
 		c := apl.NewChannel()
 		ar, ok := R.(apl.Array)
 		if ok == false {
-			all = []apl.Value{R}
+			all = []apl.Value{R.Copy()}
 		} else {
 			all = make([]apl.Value, ar.Size())
 			for i := range all {
-				all[i] = ar.At(i) // TODO: copy?
+				all[i] = ar.At(i).Copy()
 			}
 		}
 		go c.SendAll(all)
@@ -185,9 +185,9 @@ func each2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 		if _, ok := v.(apl.Array); ok {
 			return nil, fmt.Errorf("each: result must be a scalar")
 		}
-		res.Values[i] = v
+		res.Values[i] = v.Copy()
 	}
-	return res, nil
+	return a.UnifyArray(res), nil
 }
 
 func eachList2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
@@ -217,7 +217,7 @@ func eachList2(a *apl.Apl, L, R apl.Value, f apl.Function) (apl.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		res[i] = v
+		res[i] = v.Copy()
 	}
 	return res, nil
 }
