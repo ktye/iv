@@ -17,11 +17,8 @@
 - [cmd/lui](cmd/lui): APL gui application
 - [cmd/iv](cmd/iv): a program similar to awk with an APL backend but for streaming n-dimensional data
 
-# status
-What you find in TESTS.md is what works. It has not yet been used for anything else.
-
-Next tasks:
-- [ ] decide when to copy
-- [ ] make use of uniform type arrays
-- [ ] *this is a stack, not a task list*
-- [ ] learn APL
+# A random loop through pattern space
+```
+⎕IO←0
+j←{(⍳2*⍺){⎕←(?∘⍴⌷⊢)⍸~1↓⌽0,(⍺⍴2)⊤⍵}⍣≡1⍴⍵} ⍝ not done..
+```
