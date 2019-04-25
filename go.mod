@@ -7,17 +7,14 @@ go 1.12
 // work with the standard library alone.
 
 require (
-	github.com/atotto/clipboard v0.1.2 // indirect
 	github.com/caio/go-tdigest v2.3.0+incompatible
 	github.com/eaburns/T v0.0.0-20190217122806-dbc7887ff15c
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/ktye/plot v0.0.0-20190313115457-f0482d904546
-	github.com/ktye/ui v0.0.0-20190210201213-3c0b096c17bb
+	github.com/ktye/plot v0.0.0-20190418145510-8e0ab7910c77
+	github.com/ktye/ui v1.0.0
+	github.com/leesper/go_rng v0.0.0-20171009123644-5344a9259b21 // indirect
 	github.com/mattn/go-sixel v0.0.0-20190216163338-cdfbdd9946b1
-	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
-	github.com/soniakeys/quant v1.0.0 // indirect
 	github.com/sv/kdbgo v0.11.1-0.20180806165624-70ef73f51093
-	golang.org/x/exp v0.0.0-20190316020145-860388717186 // indirect
-	golang.org/x/image v0.0.0-20190227222117-0694c2d4d067
-	golang.org/x/mobile v0.0.0-20190319155245-9487ef54b94a // indirect
+	golang.org/x/image v0.0.0-20190417020941-4e30a6eb7d9a
+	gonum.org/v1/gonum v0.0.0-20190424212039-2a1643c79af2 // indirect
 )

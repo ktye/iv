@@ -7,6 +7,7 @@ import (
 
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/xgo"
+	"github.com/ktye/iv/cmd/lui/font"
 	"github.com/ktye/ui"
 )
 
@@ -17,6 +18,7 @@ var window *ui.Window
 func Loop(top ui.Widget) {
 	w := ui.New(nil)
 	w.SetKeyTranslator(ui.AplKeyboard{})
+	w.SetFont(font.APL385(), 20)
 	w.Top.W = top
 	w.Render()
 	window = w
