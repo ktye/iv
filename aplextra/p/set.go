@@ -9,7 +9,7 @@ import (
 	"github.com/golang/freetype/truetype"
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/domain"
-	aplfont "github.com/ktye/iv/cmd/lui/font"
+	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/plot"
 	"github.com/ktye/plot/color"
 )
@@ -84,7 +84,7 @@ func setFontSizes(a *apl.Apl, _, R apl.Value) (apl.Value, error) {
 	sizes[0] = float64(big)
 	sizes[1] = float64(small)
 
-	ttf := aplfont.APL385()
+	ttf := apl385.TTF()
 	f, err := truetype.Parse(ttf)
 	if err != nil {
 		return nil, err

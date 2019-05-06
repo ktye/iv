@@ -1,5 +1,5 @@
-// Package font embedds APL385 unicode.
-package font
+// Package apl385 embedds APL385 unicode truetype font.
+package apl385
 
 import (
 	"archive/zip"
@@ -7,15 +7,13 @@ import (
 	"strings"
 )
 
-// APL385 returns the font in ttf format.
-func APL385() []byte {
-
+// TTF returns the APL385-Unicode font in trutype format.
+func TTF() []byte {
 	r := strings.NewReader(data)
 	zr, err := zip.NewReader(r, r.Size())
 	if err != nil {
 		panic(err)
 	}
-
 	for _, f := range zr.File {
 		if f.Name == "APL385.ttf" {
 			rc, err := f.Open()
