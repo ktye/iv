@@ -5,7 +5,6 @@
 
 # contents
 - [apl: an extendable and embeddable APL interpreter written in go](apl)
-- [aplextra: extension packages to apl requiring 3rd party software](aplextra)
 - Documentation
   - [REF.md](REF.md) reference of all standard primitives and operators
   - [TESTS.md](TESTS.md) output of test coverage which gives an overview of the state of affairs
@@ -14,7 +13,6 @@
 
 # programs
 - [cmd/apl](cmd/apl): APL interpreter as a command line program
-- [cmd/lui](cmd/lui): APL gui application
 - [cmd/iv](cmd/iv): a program similar to awk with an APL backend but for streaming n-dimensional data
 
 # A random loop through pattern space
