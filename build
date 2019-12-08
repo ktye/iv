@@ -1,0 +1,7 @@
+set -e
+cd cmd/iv  && GOOS=linux   GOARCH=amd64 go build -o ../../ivL     main.go && cd -
+cd cmd/iv  && GOOS=darwin  GOARCH=amd64 go build -o ../../ivM     main.go && cd -
+cd cmd/iv  && GOOS=windows GOARCH=amd64 go build -o ../../iv.exe  main.go && cd -
+cd cmd/apl && GOOS=linux   GOARCH=amd64 go build -o ../../aplL    main.go && cd -
+cd cmd/apl && GOOS=darwin  GOARCH=amd64 go build -o ../../aplM    main.go && cd -
+cd cmd/apl && GOOS=windows GOARCH=amd64 go build -o ../../apl.exe main.go && cd -
