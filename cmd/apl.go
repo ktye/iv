@@ -34,11 +34,13 @@ func Apl(a *apl.Apl, stdin io.Reader, args []string) error {
 
 	// Run interactively.
 	scanner := bufio.NewScanner(stdin)
+	fmt.Printf("        ")
 	for scanner.Scan() {
 		s := scanner.Text()
 		if err := a.ParseAndEval(s); err != nil {
 			fmt.Println(err)
 		}
+		fmt.Printf("        ")
 	}
 	return nil
 }

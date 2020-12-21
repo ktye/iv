@@ -35,6 +35,7 @@ All this does not exist, is or will be done differently.
     - big: bigint, bigrat
     - precise: bigfloat, bigcomplex
   - towers are separated, they cannot be mixed within an expression, but can be changed at runtime (if they are compiled in)
+    - `big→set 1`
 - Overloading primitives and operators
   - adding the packages `primitives.Register(a)` and `operators.Register(a)` adds the default implementation to the interpreter.
   - a user package (e.g. to interface any application dependend go type) may overload each primitive function or operator.
